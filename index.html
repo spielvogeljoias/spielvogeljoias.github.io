@@ -286,13 +286,54 @@
   }
   .field textarea { resize: vertical; min-height: 60px; }
 
-  .photo-preview {
-    width: 100%;
-    height: 140px;
-    object-fit: cover;
+  .photos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .photo-thumb {
+    position: relative;
+    width: 78px;
+    height: 78px;
     border-radius: 4px;
-    margin-top: 8px;
-    display: none;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb .remove-photo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    color: var(--cream);
+    border: none;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb .remove-photo:hover { background: var(--danger); }
+
+  .photo-count-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.7);
+    color: var(--cream);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
   }
 
   .modal-actions {
@@ -369,9 +410,9 @@
     </div>
 
     <div class="field">
-      <label>Foto da peça</label>
-      <input type="file" id="fieldPhoto" accept="image/*">
-      <img id="photoPreview" class="photo-preview">
+      <label>Fotos da peça</label>
+      <div class="photos-grid" id="photosGrid"></div>
+      <input type="file" id="fieldPhoto" accept="image/*" multiple>
       <div class="upload-status" id="uploadStatus"></div>
     </div>
 
@@ -450,14 +491,13 @@ const fieldModel = document.getElementById("fieldModel");
 const fieldInvestment = document.getElementById("fieldInvestment");
 const fieldNotes = document.getElementById("fieldNotes");
 const fieldPhoto = document.getElementById("fieldPhoto");
-const photoPreview = document.getElementById("photoPreview");
+const photosGrid = document.getElementById("photosGrid");
 const uploadStatus = document.getElementById("uploadStatus");
 const deleteBtn = document.getElementById("deleteBtn");
 const toastEl = document.getElementById("toast");
 
 let currentCards = [];
-let pendingPhotoFile = null;
-let existingPhotoUrl = null;
+let photosDraft = []; // fotos (base64) da encomenda sendo criada/editada agora
 
 function showToast(msg) {
   toastEl.textContent = msg;
@@ -469,6 +509,23 @@ function formatDate(ts) {
   if (!ts) return "";
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString("pt-BR");
+}
+
+function renderPhotosGrid() {
+  photosGrid.innerHTML = "";
+  photosDraft.forEach((photoData, index) => {
+    const thumb = document.createElement("div");
+    thumb.className = "photo-thumb";
+    thumb.innerHTML = `
+      <img src="${photoData}">
+      <button type="button" class="remove-photo" title="Remover esta foto">×</button>
+    `;
+    thumb.querySelector(".remove-photo").addEventListener("click", () => {
+      photosDraft.splice(index, 1);
+      renderPhotosGrid();
+    });
+    photosGrid.appendChild(thumb);
+  });
 }
 
 function renderBoard() {
@@ -492,10 +549,16 @@ function renderBoard() {
     }
 
     cardsInCol.forEach(card => {
+      const photos = card.photos || (card.photoUrl ? [card.photoUrl] : []);
       const cardEl = document.createElement("div");
       cardEl.className = "card";
       cardEl.innerHTML = `
-        ${card.photoUrl ? `<img class="card-photo" src="${card.photoUrl}">` : ""}
+        ${photos[0] ? `
+          <div style="position:relative;">
+            <img class="card-photo" src="${photos[0]}">
+            ${photos.length > 1 ? `<span class="photo-count-badge">+${photos.length - 1}</span>` : ""}
+          </div>
+        ` : ""}
         <p class="card-client">${card.client || "Sem nome"}</p>
         ${card.model ? `<p class="card-model">${card.model}</p>` : ""}
         ${card.investment ? `<p class="card-investment">${card.investment}</p>` : ""}
@@ -540,10 +603,9 @@ function openAddModal() {
   fieldInvestment.value = "";
   fieldNotes.value = "";
   fieldPhoto.value = "";
-  photoPreview.style.display = "none";
+  photosDraft = [];
+  renderPhotosGrid();
   uploadStatus.textContent = "";
-  pendingPhotoFile = null;
-  existingPhotoUrl = null;
   deleteBtn.style.display = "none";
   modalOverlay.classList.remove("hidden");
 }
@@ -556,14 +618,9 @@ function openEditModal(card) {
   fieldInvestment.value = card.investment || "";
   fieldNotes.value = card.notes || "";
   fieldPhoto.value = "";
-  pendingPhotoFile = null;
-  existingPhotoUrl = card.photoUrl || null;
-  if (card.photoUrl) {
-    photoPreview.src = card.photoUrl;
-    photoPreview.style.display = "block";
-  } else {
-    photoPreview.style.display = "none";
-  }
+  // Compatibilidade com encomendas antigas que tinham só photoUrl (uma foto)
+  photosDraft = card.photos ? [...card.photos] : (card.photoUrl ? [card.photoUrl] : []);
+  renderPhotosGrid();
   uploadStatus.textContent = "";
   deleteBtn.style.display = "inline-block";
   modalOverlay.classList.remove("hidden");
@@ -573,16 +630,21 @@ function closeModal() {
   modalOverlay.classList.add("hidden");
 }
 
-fieldPhoto.addEventListener("change", () => {
-  const file = fieldPhoto.files[0];
-  if (!file) return;
-  pendingPhotoFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    photoPreview.src = e.target.result;
-    photoPreview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+fieldPhoto.addEventListener("change", async () => {
+  const files = Array.from(fieldPhoto.files || []);
+  if (files.length === 0) return;
+  uploadStatus.textContent = "Comprimindo foto(s)...";
+  for (const file of files) {
+    try {
+      const compressed = await compressImage(file);
+      photosDraft.push(compressed);
+      renderPhotosGrid();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  uploadStatus.textContent = `${files.length > 1 ? "Fotos adicionadas" : "Foto adicionada"}, clique em Salvar pra confirmar.`;
+  fieldPhoto.value = "";
 });
 
 document.getElementById("addBtn").addEventListener("click", openAddModal);
@@ -604,20 +666,13 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   saveBtnEl.disabled = true;
   saveBtnEl.textContent = "Salvando...";
 
-  let photoUrl = existingPhotoUrl;
-
   try {
-    if (pendingPhotoFile) {
-      uploadStatus.textContent = "Comprimindo foto...";
-      photoUrl = await compressImage(pendingPhotoFile);
-      const sizeKB = Math.round(photoUrl.length / 1024);
-      if (sizeKB > 900) {
-        uploadStatus.textContent = "Foto muito grande mesmo comprimida, tenta outra.";
-        saveBtnEl.disabled = false;
-        saveBtnEl.textContent = "Salvar";
-        return;
-      }
-      uploadStatus.textContent = `Foto pronta (${sizeKB}KB)`;
+    const totalSizeKB = Math.round(photosDraft.join("").length / 1024);
+    if (totalSizeKB > 900) {
+      uploadStatus.textContent = `Fotos somam ${totalSizeKB}KB, passou do limite. Remova alguma antes de salvar.`;
+      saveBtnEl.disabled = false;
+      saveBtnEl.textContent = "Salvar";
+      return;
     }
 
     const data = {
@@ -625,7 +680,8 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
       model: fieldModel.value.trim(),
       investment: fieldInvestment.value.trim(),
       notes: fieldNotes.value.trim(),
-      photoUrl: photoUrl || null,
+      photos: photosDraft,
+      photoUrl: firebase.firestore.FieldValue.delete(), // remove campo antigo de foto única, se existir
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -633,6 +689,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
       await db.collection(COLLECTION).doc(id).update(data);
       showToast("Encomenda atualizada");
     } else {
+      delete data.photoUrl; // não existe ainda em documento novo, não precisa tentar apagar
       data.status = COLUMNS[0];
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection(COLLECTION).add(data);
