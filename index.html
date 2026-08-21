@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spielvogel Joias — Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     IDENTIDADE VISUAL — TROQUE AQUI QUANDO A LOHANA MANDAR
+     O LOGO E A PALETA REAL DA SPIELVOGEL. É só mudar estas
+     variáveis, o resto do arquivo não precisa ser mexido.
+     ============================================================ */
+  :root {
+    --bg: #141210;              /* fundo principal, quase preto */
+    --bg-elevated: #1c1a17;     /* fundo dos cards/colunas */
+    --gold: #C9A24B;            /* dourado, cor de destaque */
+    --gold-soft: #8f7a4d;       /* dourado apagado, secundário */
+    --cream: #F3EDE1;           /* texto principal sobre fundo escuro */
+    --cream-dim: #b8b0a0;       /* texto secundário */
+    --line: #2c2822;            /* linhas/bordas sutis */
+    --danger: #b5544a;
+
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: var(--font-body);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 28px 20px 22px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* LOGO — substitua este bloco por <img src="logo.png" alt="Spielvogel Joias">
+     quando a logo real chegar. Por enquanto é um placeholder tipográfico. */
+  .logo-placeholder {
+    font-family: var(--font-display);
+    font-size: 30px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .logo-sub {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .btn {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    padding: 10px 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn:hover { background: var(--gold); color: var(--bg); }
+  .btn-solid {
+    background: var(--gold);
+    color: var(--bg);
+  }
+  .btn-solid:hover { background: var(--gold-soft); }
+  .btn-text {
+    border: none;
+    background: none;
+    color: var(--cream-dim);
+    font-size: 13px;
+    padding: 4px 8px;
+  }
+  .btn-text:hover { color: var(--gold); background: none; }
+  .btn-danger { border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: var(--cream); }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(240px, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  @media (max-width: 1100px) {
+    .board {
+      grid-auto-flow: column;
+      grid-auto-columns: 82%;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 8px;
+    }
+    .column { scroll-snap-align: start; min-width: 82%; }
+  }
+
+  .column {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 12px;
+    min-height: 120px;
+  }
+
+  .column-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--gold);
+    text-align: center;
+    margin: 0 0 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .column-count {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--gold-soft); }
+
+  .card-photo {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: block;
+    background: var(--line);
+  }
+
+  .card-client {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--cream);
+    margin: 0 0 2px;
+  }
+
+  .card-model {
+    font-size: 13px;
+    color: var(--gold);
+    margin: 0 0 6px;
+    font-style: italic;
+  }
+
+  .card-investment {
+    font-size: 13px;
+    color: var(--cream-dim);
+    margin: 0 0 8px;
+  }
+
+  .card-notes {
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin: 0 0 10px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+  }
+
+  .move-buttons { display: flex; gap: 4px; }
+  .move-buttons button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--gold);
+    width: 26px;
+    height: 26px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .move-buttons button:disabled {
+    color: var(--line);
+    cursor: default;
+  }
+  .move-buttons button:not(:disabled):hover { border-color: var(--gold); }
+
+  .empty-column {
+    text-align: center;
+    color: var(--cream-dim);
+    font-size: 12px;
+    padding: 20px 6px;
+    opacity: 0.6;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .modal h2 {
+    font-family: var(--font-display);
+    color: var(--gold);
+    margin: 0 0 18px;
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 9px 10px;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .photos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .photo-thumb {
+    position: relative;
+    width: 78px;
+    height: 78px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb .remove-photo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    color: var(--cream);
+    border: none;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb .remove-photo:hover { background: var(--danger); }
+
+  .photo-count-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.7);
+    color: var(--cream);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .pdf-thumb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--line);
+    color: var(--gold);
+    text-decoration: none;
+    padding: 4px;
+    text-align: center;
+  }
+  .pdf-thumb .pdf-label {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .pdf-thumb .pdf-name {
+    color: var(--cream-dim);
+    font-size: 9px;
+    margin-top: 3px;
+    max-width: 68px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .attachment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--gold-soft);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .upload-status {
+    font-size: 12px;
+    color: var(--gold-soft);
+    margin-top: 6px;
+    min-height: 16px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-placeholder">SPIELVOGEL JOIAS</div>
+  <div class="logo-sub">Painel de Encomendas</div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button class="btn btn-solid" id="addBtn">+ Nova Encomenda</button>
+  </div>
+  <div class="board" id="board"></div>
+</main>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Nova Encomenda</h2>
+    <input type="hidden" id="cardId">
+
+    <div class="field">
+      <label>Nome do cliente</label>
+      <input type="text" id="fieldClient" placeholder="Ex: Caio Fernandes">
+    </div>
+
+    <div class="field">
+      <label>Modelo da joia</label>
+      <input type="text" id="fieldModel" placeholder="Ex: Anel Ziel">
+    </div>
+
+    <div class="field">
+      <label>Investimento combinado</label>
+      <input type="text" id="fieldInvestment" placeholder="Ex: R$ 3.200,00">
+    </div>
+
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="fieldNotes" placeholder="Detalhes, prazos, combinações..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Fotos e arquivos (PDF, contrato, termo...)</label>
+      <div class="photos-grid" id="filesGrid"></div>
+      <input type="file" id="fieldPhoto" accept="image/*,application/pdf" multiple>
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-text btn-danger" id="deleteBtn" style="display:none;">Excluir</button>
+      <div style="flex:1;"></div>
+      <button class="btn-text" id="cancelBtn">Cancelar</button>
+      <button class="btn btn-solid" id="saveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     FIREBASE — SDKs via CDN (modo compat, mais simples de editar
+     direto no navegador do GitHub sem build step)
+     ============================================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DO FIREBASE
+   Troque pelos valores do SEU projeto Firebase (crie um novo,
+   separado dos outros paineis, ex: "spielvogel-painel").
+   Você pega esses valores em:
+   Configurações do projeto > Geral > Seus apps > SDK setup
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBY2aOX2FSTdjdOH9Nqyi4lAVkfsLws9ek",
+  authDomain: "spielvogel-painel.firebaseapp.com",
+  projectId: "spielvogel-painel",
+  storageBucket: "spielvogel-painel.firebasestorage.app",
+  messagingSenderId: "368754911719",
+  appId: "1:368754911719:web:c452ad8cca48410de33542"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = "encomendas";
+/* Sem Firebase Storage: as fotos são comprimidas no navegador e guardadas
+   como texto (base64) direto dentro do próprio documento no Firestore.
+   Isso evita precisar do plano pago do Firebase. Cada documento tem um
+   limite de 1MB, por isso a compressão abaixo mantém a foto bem leve. */
+function compressImage(file, maxWidth = 700, quality = 0.6) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* PDFs e outros arquivos não são comprimidos, só convertidos pra base64
+   direto. Por isso PDFs escaneados/pesados podem estourar o limite de 1MB
+   do documento, mas um PDF gerado digitalmente (como os contratos da
+   Authentic) costuma ser bem leve e cabe tranquilo. */
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+const COLUMNS = ["Em Aprovação", "A Fazer", "Pré-Produção", "Em Execução", "Finalizados"];
+
+const boardEl = document.getElementById("board");
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const cardIdInput = document.getElementById("cardId");
+const fieldClient = document.getElementById("fieldClient");
+const fieldModel = document.getElementById("fieldModel");
+const fieldInvestment = document.getElementById("fieldInvestment");
+const fieldNotes = document.getElementById("fieldNotes");
+const fieldPhoto = document.getElementById("fieldPhoto");
+const filesGrid = document.getElementById("filesGrid");
+const uploadStatus = document.getElementById("uploadStatus");
+const deleteBtn = document.getElementById("deleteBtn");
+const toastEl = document.getElementById("toast");
+
+let currentCards = [];
+let filesDraft = []; // anexos (fotos e PDFs) da encomenda sendo criada/editada agora, cada um {name, type, data}
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(() => toastEl.classList.remove("show"), 2200);
+}
+
+function formatDate(ts) {
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString("pt-BR");
+}
+
+function renderFilesGrid() {
+  filesGrid.innerHTML = "";
+  filesDraft.forEach((item, index) => {
+    const thumb = document.createElement("div");
+    thumb.className = "photo-thumb";
+    if (item.type === "image") {
+      thumb.innerHTML = `
+        <img src="${item.data}">
+        <button type="button" class="remove-photo" title="Remover">×</button>
+      `;
+    } else {
+      thumb.innerHTML = `
+        <a href="${item.data}" target="_blank" download="${item.name}" class="pdf-thumb">
+          <span class="pdf-label">PDF</span>
+          <span class="pdf-name">${item.name}</span>
+        </a>
+        <button type="button" class="remove-photo" title="Remover">×</button>
+      `;
+    }
+    thumb.querySelector(".remove-photo").addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      filesDraft.splice(index, 1);
+      renderFilesGrid();
+    });
+    filesGrid.appendChild(thumb);
+  });
+}
+
+function renderBoard() {
+  boardEl.innerHTML = "";
+  COLUMNS.forEach((colName, colIndex) => {
+    const colEl = document.createElement("div");
+    colEl.className = "column";
+
+    const cardsInCol = currentCards.filter(c => c.status === colName);
+
+    colEl.innerHTML = `
+      <div class="column-title">${colName}</div>
+      <div class="column-count">${cardsInCol.length} ${cardsInCol.length === 1 ? "item" : "itens"}</div>
+    `;
+
+    if (cardsInCol.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-column";
+      empty.textContent = "Nenhuma encomenda aqui";
+      colEl.appendChild(empty);
+    }
+
+    cardsInCol.forEach(card => {
+      // Compatibilidade com formatos antigos: files (novo) > photos (array simples) > photoUrl (uma foto só)
+      const files = card.files
+        || (card.photos ? card.photos.map(p => ({ type: "image", data: p })) : null)
+        || (card.photoUrl ? [{ type: "image", data: card.photoUrl }] : []);
+      const firstImage = files.find(f => f.type === "image");
+      const cardEl = document.createElement("div");
+      cardEl.className = "card";
+      cardEl.innerHTML = `
+        ${firstImage ? `
+          <div style="position:relative;">
+            <img class="card-photo" src="${firstImage.data}">
+            ${files.length > 1 ? `<span class="photo-count-badge">+${files.length - 1}</span>` : ""}
+          </div>
+        ` : (files.length > 0 ? `<div class="attachment-badge">📎 ${files.length} anexo${files.length > 1 ? "s" : ""}</div>` : "")}
+        <p class="card-client">${card.client || "Sem nome"}</p>
+        ${card.model ? `<p class="card-model">${card.model}</p>` : ""}
+        ${card.investment ? `<p class="card-investment">${card.investment}</p>` : ""}
+        ${card.notes ? `<p class="card-notes">${card.notes}</p>` : ""}
+        <div class="card-actions">
+          <div class="move-buttons">
+            <button data-dir="-1" ${colIndex === 0 ? "disabled" : ""}>◀</button>
+            <button data-dir="1" ${colIndex === COLUMNS.length - 1 ? "disabled" : ""}>▶</button>
+          </div>
+        </div>
+      `;
+
+      cardEl.querySelectorAll(".move-buttons button").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const dir = parseInt(btn.dataset.dir, 10);
+          moveCard(card, colIndex + dir);
+        });
+      });
+
+      cardEl.addEventListener("click", () => openEditModal(card));
+      colEl.appendChild(cardEl);
+    });
+
+    boardEl.appendChild(colEl);
+  });
+}
+
+function moveCard(card, newIndex) {
+  if (newIndex < 0 || newIndex >= COLUMNS.length) return;
+  db.collection(COLLECTION).doc(card.id).update({
+    status: COLUMNS[newIndex],
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => showToast(`Movido para "${COLUMNS[newIndex]}"`));
+}
+
+function openAddModal() {
+  modalTitle.textContent = "Nova Encomenda";
+  cardIdInput.value = "";
+  fieldClient.value = "";
+  fieldModel.value = "";
+  fieldInvestment.value = "";
+  fieldNotes.value = "";
+  fieldPhoto.value = "";
+  filesDraft = [];
+  renderFilesGrid();
+  uploadStatus.textContent = "";
+  deleteBtn.style.display = "none";
+  modalOverlay.classList.remove("hidden");
+}
+
+function openEditModal(card) {
+  modalTitle.textContent = "Editar Encomenda";
+  cardIdInput.value = card.id;
+  fieldClient.value = card.client || "";
+  fieldModel.value = card.model || "";
+  fieldInvestment.value = card.investment || "";
+  fieldNotes.value = card.notes || "";
+  fieldPhoto.value = "";
+  // Compatibilidade com encomendas antigas (photos ou photoUrl)
+  filesDraft = card.files
+    ? [...card.files]
+    : (card.photos ? card.photos.map(p => ({ name: "foto.jpg", type: "image", data: p }))
+    : (card.photoUrl ? [{ name: "foto.jpg", type: "image", data: card.photoUrl }] : []));
+  renderFilesGrid();
+  uploadStatus.textContent = "";
+  deleteBtn.style.display = "inline-block";
+  modalOverlay.classList.remove("hidden");
+}
+
+function closeModal() {
+  modalOverlay.classList.add("hidden");
+}
+
+fieldPhoto.addEventListener("change", async () => {
+  const files = Array.from(fieldPhoto.files || []);
+  if (files.length === 0) return;
+  uploadStatus.textContent = "Processando arquivo(s)...";
+  for (const file of files) {
+    try {
+      const isImage = file.type.startsWith("image/");
+      const data = isImage ? await compressImage(file) : await readFileAsDataURL(file);
+      filesDraft.push({ name: file.name, type: isImage ? "image" : "pdf", data });
+      renderFilesGrid();
+    } catch (err) {
+      console.error(err);
+      showToast(`Não consegui processar ${file.name}`);
+    }
+  }
+  uploadStatus.textContent = "Anexo(s) prontos, clique em Salvar pra confirmar.";
+  fieldPhoto.value = "";
+});
+
+document.getElementById("addBtn").addEventListener("click", openAddModal);
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const id = cardIdInput.value;
+  const client = fieldClient.value.trim();
+
+  if (!client) {
+    showToast("Preencha ao menos o nome do cliente");
+    return;
+  }
+
+  const saveBtnEl = document.getElementById("saveBtn");
+  saveBtnEl.disabled = true;
+  saveBtnEl.textContent = "Salvando...";
+
+  try {
+    const totalSizeKB = Math.round(filesDraft.reduce((sum, f) => sum + f.data.length, 0) / 1024);
+    if (totalSizeKB > 900) {
+      uploadStatus.textContent = `Anexos somam ${totalSizeKB}KB, passou do limite. Remova algum antes de salvar.`;
+      saveBtnEl.disabled = false;
+      saveBtnEl.textContent = "Salvar";
+      return;
+    }
+
+    const data = {
+      client,
+      model: fieldModel.value.trim(),
+      investment: fieldInvestment.value.trim(),
+      notes: fieldNotes.value.trim(),
+      files: filesDraft,
+      photos: firebase.firestore.FieldValue.delete(),   // remove formato antigo, se existir
+      photoUrl: firebase.firestore.FieldValue.delete(), // remove formato antigo, se existir
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (id) {
+      await db.collection(COLLECTION).doc(id).update(data);
+      showToast("Encomenda atualizada");
+    } else {
+      delete data.photos;
+      delete data.photoUrl; // não existem ainda em documento novo, não precisa tentar apagar
+      data.status = COLUMNS[0];
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection(COLLECTION).add(data);
+      showToast("Encomenda criada");
+    }
+
+    closeModal();
+  } catch (err) {
+    console.error(err);
+    showToast("Erro ao salvar, tenta de novo");
+  } finally {
+    saveBtnEl.disabled = false;
+    saveBtnEl.textContent = "Salvar";
+  }
+});
+
+deleteBtn.addEventListener("click", async () => {
+  const id = cardIdInput.value;
+  if (!id) return;
+  if (!confirm("Excluir esta encomenda? Essa ação não pode ser desfeita.")) return;
+  await db.collection(COLLECTION).doc(id).delete();
+  showToast("Encomenda excluída");
+  closeModal();
+});
+
+// Sincronização em tempo real
+db.collection(COLLECTION).orderBy("createdAt", "asc").onSnapshot(snapshot => {
+  currentCards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderBoard();
+}, err => {
+  console.error("Erro ao carregar dados:", err);
+  boardEl.innerHTML = '<p style="text-align:center;color:#b5544a;grid-column:1/-1;">Erro ao conectar com o banco de dados. Confira a configuração do Firebase no topo do código.</p>';
+});
+</script>
+
+</body>
+</html>
