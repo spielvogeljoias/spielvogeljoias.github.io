@@ -63,8 +63,9 @@
   .toolbar {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
+    align-items: center;
   }
 
   .search-input {
@@ -102,10 +103,17 @@
     color: var(--cream-dim);
     font-size: 13px;
     padding: 4px 8px;
+    cursor: pointer;
   }
   .btn-text:hover { color: var(--gold); background: none; }
   .btn-danger { border-color: var(--danger); color: var(--danger); }
   .btn-danger:hover { background: var(--danger); color: var(--cream); }
+
+  .utility-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
 
   .group {
     background: var(--bg-elevated);
@@ -126,9 +134,9 @@
 
   .entry-row {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--line);
     cursor: pointer;
@@ -137,26 +145,66 @@
   .entry-row:last-child { border-bottom: none; }
   .entry-row:hover { background: rgba(201,162,75,0.06); }
 
+  .entry-photo {
+    width: 54px;
+    height: 54px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--line);
+  }
+  .entry-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
   .entry-info { flex: 1; min-width: 0; }
-  .entry-spec {
+
+  .stone-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--gold-soft);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+
+  .entry-desc {
     font-size: 13px;
     color: var(--cream);
-    margin: 0 0 3px;
-  }
-  .entry-spec .stone { color: var(--gold); font-style: italic; }
-  .entry-notes {
-    font-size: 12px;
-    color: var(--cream-dim);
-    margin: 0;
+    line-height: 1.5;
+    margin: 0 0 4px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
   }
+
+  .link-3d {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--gold);
+    text-decoration: none;
+    margin-top: 2px;
+  }
+  .link-3d:hover { text-decoration: underline; }
+
+  .margin-note {
+    font-size: 11px;
+    color: var(--gold-soft);
+    font-style: italic;
+    margin: 6px 0 0;
+  }
+
   .entry-price {
     font-family: var(--font-display);
     font-size: 19px;
     color: var(--gold);
     white-space: nowrap;
+    padding-top: 2px;
   }
 
   .empty-state {
@@ -218,9 +266,55 @@
   }
   .field input:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
   .field textarea { resize: vertical; min-height: 50px; }
+  .field textarea#fieldDescription { min-height: 90px; }
+  .field textarea#fieldMargin { min-height: 44px; }
 
   .field-row { display: flex; gap: 10px; }
   .field-row .field { flex: 1; }
+
+  .photo-preview {
+    display: flex;
+    margin-bottom: 8px;
+  }
+  .photo-thumb {
+    position: relative;
+    width: 78px;
+    height: 78px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb .remove-photo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    color: var(--cream);
+    border: none;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb .remove-photo:hover { background: var(--danger); }
+
+  .upload-status {
+    font-size: 12px;
+    color: var(--gold-soft);
+    margin-top: 6px;
+    min-height: 16px;
+  }
 
   .modal-actions {
     display: flex;
@@ -258,8 +352,11 @@
 
 <main>
   <div class="toolbar">
-    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por modelo, pedra, material...">
+    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por modelo, pedra, descrição...">
     <button class="btn btn-solid" id="addBtn">+ Novo Item</button>
+  </div>
+  <div class="utility-row">
+    <button class="btn-text" id="importBtn">Padronizar dados (importar novo formato) ↺</button>
   </div>
   <div id="list"></div>
 </main>
@@ -274,20 +371,14 @@
       <input type="text" id="fieldModel" placeholder="Ex: Anel Ziel">
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label>Material</label>
-        <input type="text" id="fieldMaterial" placeholder="Ex: Ouro 18k">
-      </div>
-      <div class="field">
-        <label>Pedra principal</label>
-        <input type="text" id="fieldStone" placeholder="Ex: Diamante">
-      </div>
+    <div class="field">
+      <label>Pedra principal</label>
+      <input type="text" id="fieldStone" placeholder="Ex: Diamante">
     </div>
 
     <div class="field">
-      <label>Detalhe da pedra (tamanho/quilate/pontos)</label>
-      <input type="text" id="fieldStoneDetail" placeholder="Ex: 20 pontos">
+      <label>Descrição</label>
+      <textarea id="fieldDescription" placeholder="Ex: Anel Ziel em ouro 18k amarelo, com diamante de 30 pontos, lapidação marquise de 3x1,5mm cada."></textarea>
     </div>
 
     <div class="field">
@@ -296,8 +387,20 @@
     </div>
 
     <div class="field">
-      <label>Observações</label>
-      <textarea id="fieldNotes" placeholder="Contexto, cliente de referência, detalhes extras..."></textarea>
+      <label>Margem (ajustes possíveis)</label>
+      <textarea id="fieldMargin" placeholder="Ex: pode fechar com pedra menor por R$ 2.990,00, dependendo do cliente"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Foto de referência</label>
+      <div class="photo-preview" id="photoPreview"></div>
+      <input type="file" id="fieldPhoto" accept="image/*">
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <div class="field">
+      <label>Link (visualização 3D)</label>
+      <input type="text" id="fieldLink3d" placeholder="https://...">
     </div>
 
     <div class="modal-actions">
@@ -331,21 +434,49 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const COLLECTION = "tabela_precos";
 
+/* Compressão de foto: mesma lógica usada no painel de encomendas,
+   guarda como base64 direto no documento (sem depender de Storage/Blaze). */
+function compressImage(file, maxWidth = 700, quality = 0.6) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const listEl = document.getElementById("list");
 const searchInput = document.getElementById("searchInput");
 const modalOverlay = document.getElementById("modalOverlay");
 const modalTitle = document.getElementById("modalTitle");
 const entryIdInput = document.getElementById("entryId");
 const fieldModel = document.getElementById("fieldModel");
-const fieldMaterial = document.getElementById("fieldMaterial");
 const fieldStone = document.getElementById("fieldStone");
-const fieldStoneDetail = document.getElementById("fieldStoneDetail");
+const fieldDescription = document.getElementById("fieldDescription");
 const fieldPrice = document.getElementById("fieldPrice");
-const fieldNotes = document.getElementById("fieldNotes");
+const fieldMargin = document.getElementById("fieldMargin");
+const fieldPhoto = document.getElementById("fieldPhoto");
+const fieldLink3d = document.getElementById("fieldLink3d");
+const photoPreviewEl = document.getElementById("photoPreview");
+const uploadStatus = document.getElementById("uploadStatus");
 const deleteBtn = document.getElementById("deleteBtn");
 const toastEl = document.getElementById("toast");
 
 let currentEntries = [];
+let photoDraft = null; // string base64 da foto sendo criada/editada agora, ou null
 
 function showToast(msg) {
   toastEl.textContent = msg;
@@ -366,8 +497,26 @@ function matchesSearch(entry, term) {
   const t = term.toLowerCase();
   return (entry.ringModel || "").toLowerCase().includes(t)
     || (entry.stone || "").toLowerCase().includes(t)
-    || (entry.material || "").toLowerCase().includes(t)
-    || (entry.notes || "").toLowerCase().includes(t);
+    || (entry.description || "").toLowerCase().includes(t)
+    || (entry.margin || "").toLowerCase().includes(t);
+}
+
+function renderPhotoPreview() {
+  photoPreviewEl.innerHTML = "";
+  if (!photoDraft) return;
+  const wrap = document.createElement("div");
+  wrap.className = "photo-thumb";
+  wrap.innerHTML = `
+    <img src="${photoDraft}">
+    <button type="button" class="remove-photo" title="Remover">×</button>
+  `;
+  wrap.querySelector(".remove-photo").addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    photoDraft = null;
+    renderPhotoPreview();
+  });
+  photoPreviewEl.appendChild(wrap);
 }
 
 function renderList() {
@@ -406,14 +555,17 @@ function renderList() {
       const row = document.createElement("div");
       row.className = "entry-row";
       row.innerHTML = `
+        ${entry.photoUrl ? `<div class="entry-photo"><img src="${entry.photoUrl}"></div>` : ""}
         <div class="entry-info">
-          <p class="entry-spec">
-            ${entry.material || ""}${entry.material && entry.stone ? " · " : ""}<span class="stone">${entry.stone || ""}</span>${entry.stoneDetail ? ` (${entry.stoneDetail})` : ""}
-          </p>
-          ${entry.notes ? `<p class="entry-notes">${entry.notes}</p>` : ""}
+          ${entry.stone ? `<span class="stone-tag">${entry.stone}</span>` : ""}
+          <p class="entry-desc">${entry.description || ""}</p>
+          ${entry.link3d ? `<a class="link-3d" href="${entry.link3d}" target="_blank" rel="noopener">Ver em 3D ↗</a>` : ""}
+          ${entry.margin ? `<p class="margin-note">Margem: ${entry.margin}</p>` : ""}
         </div>
         <div class="entry-price">${entry.price || ""}</div>
       `;
+      const link3dEl = row.querySelector(".link-3d");
+      if (link3dEl) link3dEl.addEventListener("click", (e) => e.stopPropagation());
       row.addEventListener("click", () => openEditModal(entry));
       groupEl.appendChild(row);
     });
@@ -426,11 +578,15 @@ function openAddModal() {
   modalTitle.textContent = "Novo Item";
   entryIdInput.value = "";
   fieldModel.value = "";
-  fieldMaterial.value = "";
   fieldStone.value = "";
-  fieldStoneDetail.value = "";
+  fieldDescription.value = "";
   fieldPrice.value = "";
-  fieldNotes.value = "";
+  fieldMargin.value = "";
+  fieldLink3d.value = "";
+  fieldPhoto.value = "";
+  photoDraft = null;
+  renderPhotoPreview();
+  uploadStatus.textContent = "";
   deleteBtn.style.display = "none";
   modalOverlay.classList.remove("hidden");
 }
@@ -439,11 +595,15 @@ function openEditModal(entry) {
   modalTitle.textContent = "Editar Item";
   entryIdInput.value = entry.id;
   fieldModel.value = entry.ringModel || "";
-  fieldMaterial.value = entry.material || "";
   fieldStone.value = entry.stone || "";
-  fieldStoneDetail.value = entry.stoneDetail || "";
+  fieldDescription.value = entry.description || "";
   fieldPrice.value = entry.price || "";
-  fieldNotes.value = entry.notes || "";
+  fieldMargin.value = entry.margin || "";
+  fieldLink3d.value = entry.link3d || "";
+  fieldPhoto.value = "";
+  photoDraft = entry.photoUrl || null;
+  renderPhotoPreview();
+  uploadStatus.textContent = "";
   deleteBtn.style.display = "inline-block";
   modalOverlay.classList.remove("hidden");
 }
@@ -451,6 +611,21 @@ function openEditModal(entry) {
 function closeModal() {
   modalOverlay.classList.add("hidden");
 }
+
+fieldPhoto.addEventListener("change", async () => {
+  const file = fieldPhoto.files && fieldPhoto.files[0];
+  if (!file) return;
+  uploadStatus.textContent = "Processando foto...";
+  try {
+    photoDraft = await compressImage(file);
+    renderPhotoPreview();
+    uploadStatus.textContent = "Foto pronta, clique em Salvar pra confirmar.";
+  } catch (err) {
+    console.error(err);
+    showToast("Não consegui processar a foto");
+  }
+  fieldPhoto.value = "";
+});
 
 document.getElementById("addBtn").addEventListener("click", openAddModal);
 document.getElementById("cancelBtn").addEventListener("click", closeModal);
@@ -475,11 +650,12 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   try {
     const data = {
       ringModel,
-      material: fieldMaterial.value.trim(),
       stone: fieldStone.value.trim(),
-      stoneDetail: fieldStoneDetail.value.trim(),
+      description: fieldDescription.value.trim(),
       price: fieldPrice.value.trim(),
-      notes: fieldNotes.value.trim(),
+      margin: fieldMargin.value.trim(),
+      link3d: fieldLink3d.value.trim(),
+      photoUrl: photoDraft ? photoDraft : firebase.firestore.FieldValue.delete(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -487,6 +663,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
       await db.collection(COLLECTION).doc(id).update(data);
       showToast("Item atualizado");
     } else {
+      if (!photoDraft) delete data.photoUrl; // não existe ainda em documento novo
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection(COLLECTION).add(data);
       showToast("Item adicionado");
@@ -509,6 +686,104 @@ deleteBtn.addEventListener("click", async () => {
   await db.collection(COLLECTION).doc(id).delete();
   showToast("Item excluído");
   closeModal();
+});
+
+/* ============================================================
+   DADOS PADRONIZADOS — os 21 itens que já existiam na tabela,
+   reescritos no novo formato (descrição em parágrafo corrido,
+   nome "solitáio" corrigido pra "solitário"). O botão abaixo
+   apaga os itens atuais e escreve esta lista no lugar. Fotos e
+   links adicionados manualmente depois disso ficam preservados
+   até a próxima vez que rodar a padronização.
+   ============================================================ */
+const SEED_DATA = [
+  { ringModel: "Anel Drei Steine", stone: "Moissanite", price: "R$ 3.290,00", margin: "", link3d: "",
+    description: "Anel Drei Steine em ouro 18k amarelo, com moissanite central de 5x2,5mm e duas pedras acessórias de 2mm." },
+
+  { ringModel: "Anel Glanz", stone: "Safira rosa", price: "R$ 2.790,00", margin: "", link3d: "",
+    description: "Anel Glanz em ouro 18k amarelo, com safira rosa central de 3x5mm e seis pedras laterais de 1,5x3mm." },
+  { ringModel: "Anel Glanz", stone: "Moissanite", price: "R$ 3.590,00", margin: "", link3d: "",
+    description: "Anel Glanz em ouro 18k, com moissanite central de 4x6mm, duas marquises de 2x4mm e quatro pedras de 1,5mm lapidação brilhante." },
+  { ringModel: "Anel Glanz", stone: "Diamante", price: "R$ 7.990,00", margin: "", link3d: "",
+    description: "Anel Glanz em ouro 18k, com diamante central de 30 pontos, lapidação oval." },
+
+  { ringModel: "Anel Glanz 2", stone: "Moissanite", price: "R$ 3.390,00", margin: "", link3d: "",
+    description: "Anel Glanz 2 em ouro 18k amarelo, com moissanite central de 4mm no topo e seis pedras acessórias, sendo duas marquises de 1,5x3mm e quatro lapidação brilhante de 1,5mm." },
+  { ringModel: "Anel Glanz 2", stone: "Diamante", price: "R$ 5.990,00",
+    margin: "Já fechado com 25 pontos por R$ 5.890,00, dependendo do cliente.", link3d: "",
+    description: "Anel Glanz 2 em ouro 18k amarelo, com diamante central de 20 pontos no topo e seis diamantes acessórios, sendo duas marquises de 1,5x3mm e quatro lapidação brilhante de 1,5mm." },
+
+  { ringModel: "Anel Laub Oval", stone: "Moissanite", price: "R$ 3.690,00", margin: "", link3d: "",
+    description: "Anel Laub Oval em ouro 18k amarelo, com moissanite central oval de 4x6mm e aproximadamente 18 pedras acessórias de 1,5mm." },
+  { ringModel: "Anel Laub Oval", stone: "Diamante", price: "R$ 10.990,00", margin: "", link3d: "",
+    description: "Anel Laub Oval em ouro 18k amarelo, com diamante central de 50 pontos e 18 diamantes acessórios lapidação brilhante de 1 ponto cada." },
+
+  { ringModel: "Anel Lidi", stone: "Diamante", price: "R$ 3.890,00", margin: "", link3d: "",
+    description: "Anel Lidi em ouro 18k amarelo, com diamante central de 15 pontos." },
+
+  { ringModel: "Anel Oval", stone: "Moissanite", price: "R$ 3.790,00", margin: "", link3d: "",
+    description: "Anel Oval em ouro 18k amarelo, com moissanite de 5x7mm, lapidação oval." },
+
+  { ringModel: "Anel Sechs 1 e 3", stone: "Moissanite", price: "R$ 3.890,00", margin: "", link3d: "",
+    description: "Anel Sechs 1 e 3 em ouro 18k, com moissanite central de 4,5mm e seis moissanites acessórias de 1,5mm." },
+  { ringModel: "Anel Sechs 1 e 3", stone: "Diamante", price: "R$ 10.490,00", margin: "", link3d: "",
+    description: "Anel Sechs 1 e 3 em ouro 18k amarelo, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm. O diamante central de 40 pontos acompanha certificado GIA." },
+
+  { ringModel: "Anel Sechs 2", stone: "Moissanite", price: "R$ 1.890,00", margin: "", link3d: "",
+    description: "Anel Sechs 2 em ouro 10k, com moissanite." },
+
+  { ringModel: "Anel Sechs 3", stone: "Diamante", price: "R$ 9.890,00", margin: "", link3d: "",
+    description: "Anel Sechs 3 em ouro 18k amarelo, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm, sendo dois marquise e quatro lapidação brilhante." },
+  { ringModel: "Anel Sechs 3", stone: "Diamante", price: "R$ 10.290,00", margin: "", link3d: "",
+    description: "Anel Sechs 3 em ouro 18k branco, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm, sendo dois marquise e quatro lapidação brilhante." },
+
+  { ringModel: "Anel Solitário Clássico", stone: "Moissanite", price: "R$ 3.190,00", margin: "", link3d: "",
+    description: "Anel Solitário Clássico em ouro 18k amarelo, com moissanite de 4mm." },
+  { ringModel: "Anel Solitário Clássico", stone: "Diamante", price: "R$ 4.890,00", margin: "", link3d: "",
+    description: "Anel Solitário Clássico em ouro 18k amarelo, com diamante de 20 pontos." },
+
+  { ringModel: "Anel Solitário Marquise", stone: "Moissanite", price: "R$ 3.190,00", margin: "", link3d: "",
+    description: "Anel Solitário Marquise em ouro 18k amarelo, com moissanite de 6,3mm, lapidação marquise." },
+
+  { ringModel: "Anel Vier", stone: "Moissanite", price: "R$ 3.890,00", margin: "", link3d: "",
+    description: "Anel Vier em ouro 18k amarelo, com moissanite central brilhante de 4,5mm e quatro pedras acessórias de 1,5mm, duas de cada lado." },
+
+  { ringModel: "Anel Wellen", stone: "Moissanite", price: "R$ 2.390,00", margin: "", link3d: "",
+    description: "Anel Wellen em ouro 18k, com moissanite." },
+  { ringModel: "Anel Wellen", stone: "Diamante", price: "R$ 2.890,00", margin: "", link3d: "",
+    description: "Anel Wellen em ouro 18k, com diamante de 10 pontos." },
+
+  { ringModel: "Anel Ziel", stone: "Moissanite", price: "R$ 3.190,00", margin: "", link3d: "",
+    description: "Anel Ziel em ouro 18k amarelo, com moissanite central oval de 3x5mm e quatro pedras marquise de 3x1,5mm." },
+  { ringModel: "Anel Ziel", stone: "Diamante", price: "R$ 6.890,00", margin: "", link3d: "",
+    description: "Anel Ziel em ouro 18k amarelo, com diamante de 30 pontos, lapidação marquise de 3x1,5mm cada." }
+];
+
+document.getElementById("importBtn").addEventListener("click", async () => {
+  const confirmed = confirm(
+    "Isso vai apagar todos os itens atuais da tabela e substituir pela versão padronizada (descrição em parágrafo corrido, nomes corrigidos). " +
+    "Fotos e links que você já tiver adicionado manualmente serão perdidos nessa troca. Quer continuar?"
+  );
+  if (!confirmed) return;
+
+  try {
+    const snapshot = await db.collection(COLLECTION).get();
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    SEED_DATA.forEach(item => {
+      const ref = db.collection(COLLECTION).doc();
+      batch.set(ref, {
+        ...item,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    showToast("Tabela padronizada com sucesso");
+  } catch (err) {
+    console.error(err);
+    showToast("Erro ao padronizar, tenta de novo");
+  }
 });
 
 db.collection(COLLECTION).orderBy("ringModel", "asc").onSnapshot(snapshot => {
