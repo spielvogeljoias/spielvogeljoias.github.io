@@ -22,6 +22,7 @@
     --cream-dim: #b8b0a0;       /* texto secundário */
     --line: #2c2822;            /* linhas/bordas sutis */
     --danger: #b5544a;
+    --amber: #c9963f;           /* cor do badge de urgência "até 3 dias" */
 
     --font-display: 'Cormorant Garamond', serif;
     --font-body: 'Inter', sans-serif;
@@ -230,6 +231,21 @@
     opacity: 0.6;
   }
 
+  /* Badge de urgência da "Data de envio combinada" */
+  .due-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    border: 1px solid;
+  }
+  .badge-danger { color: var(--danger); border-color: var(--danger); background: rgba(181,84,74,0.12); }
+  .badge-amber { color: var(--amber); border-color: var(--amber); background: rgba(201,150,63,0.12); }
+  .badge-neutral { color: var(--cream-dim); border-color: var(--line); background: rgba(255,255,255,0.03); }
+
   /* Modal */
   .modal-overlay {
     position: fixed;
@@ -285,6 +301,9 @@
     border-color: var(--gold);
   }
   .field textarea { resize: vertical; min-height: 60px; }
+  .field input[type="date"] {
+    color-scheme: dark;
+  }
 
   .photos-grid {
     display: flex;
@@ -446,6 +465,11 @@
     </div>
 
     <div class="field">
+      <label>Data de envio combinada</label>
+      <input type="date" id="fieldDueDate">
+    </div>
+
+    <div class="field">
       <label>Observações</label>
       <textarea id="fieldNotes" placeholder="Detalhes, prazos, combinações..."></textarea>
     </div>
@@ -475,6 +499,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+<!-- ============================================================
+     pdf.js + jsPDF — usados só no navegador de quem está anexando,
+     pra comprimir PDFs pesados (escaneados/fotografados) antes de
+     salvar. Não depende de Firebase Storage nem de plano pago.
+     ============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 /* ============================================================
    CONFIGURAÇÃO DO FIREBASE
@@ -495,6 +527,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const COLLECTION = "encomendas";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
 /* Sem Firebase Storage: as fotos são comprimidas no navegador e guardadas
    como texto (base64) direto dentro do próprio documento no Firestore.
    Isso evita precisar do plano pago do Firebase. Cada documento tem um
@@ -521,10 +556,6 @@ function compressImage(file, maxWidth = 700, quality = 0.6) {
   });
 }
 
-/* PDFs e outros arquivos não são comprimidos, só convertidos pra base64
-   direto. Por isso PDFs escaneados/pesados podem estourar o limite de 1MB
-   do documento, mas um PDF gerado digitalmente (como os contratos da
-   Authentic) costuma ser bem leve e cabe tranquilo. */
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -532,6 +563,63 @@ function readFileAsDataURL(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+/* Compressão de PDF: renderiza cada página num canvas (mesma lógica das
+   fotos) e remonta um PDF novo só com essas imagens. Funciona muito bem
+   pra contrato escaneado ou fotografado, que é o tipo de PDF pesado.
+   Um PDF que já nasce só como texto tende a ser leve e nem precisa disso. */
+async function compressPDF(file, maxWidthPx = 1100, quality = 0.6) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const { jsPDF } = window.jspdf;
+  let outputPdf = null;
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(1, maxWidthPx / baseViewport.width);
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const ctx = canvas.getContext("2d");
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    const imgData = canvas.toDataURL("image/jpeg", quality);
+
+    if (!outputPdf) {
+      outputPdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+    } else {
+      outputPdf.addPage([canvas.width, canvas.height]);
+    }
+    outputPdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
+  }
+
+  let uri = outputPdf.output("datauristring");
+  uri = uri.replace(/;filename=[^;]*/, ""); // normaliza, algumas versões inserem isso
+  return uri;
+}
+
+/* Tenta comprimir o PDF; se o resultado não ficar menor que o original
+   (comum em PDF que já nasceu como texto puro), mantém o original. */
+async function compressPdfFile(file) {
+  const original = await readFileAsDataURL(file);
+  try {
+    const compressed = await compressPDF(file);
+    if (compressed.length < original.length) {
+      const savedPct = Math.round((1 - compressed.length / original.length) * 100);
+      uploadStatus.textContent = `${file.name}: comprimido (~${savedPct}% menor)`;
+      return compressed;
+    }
+    uploadStatus.textContent = `${file.name}: já estava leve, mantido original`;
+    return original;
+  } catch (err) {
+    console.error("Erro ao comprimir PDF:", err);
+    uploadStatus.textContent = `${file.name}: não consegui comprimir, anexado original`;
+    return original;
+  }
 }
 
 const COLUMNS = ["Em Aprovação", "A Fazer", "Pré-Produção", "Em Execução", "Finalizados"];
@@ -543,6 +631,7 @@ const cardIdInput = document.getElementById("cardId");
 const fieldClient = document.getElementById("fieldClient");
 const fieldModel = document.getElementById("fieldModel");
 const fieldInvestment = document.getElementById("fieldInvestment");
+const fieldDueDate = document.getElementById("fieldDueDate");
 const fieldNotes = document.getElementById("fieldNotes");
 const fieldPhoto = document.getElementById("fieldPhoto");
 const filesGrid = document.getElementById("filesGrid");
@@ -563,6 +652,22 @@ function formatDate(ts) {
   if (!ts) return "";
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString("pt-BR");
+}
+
+/* Badge de urgência da "Data de envio combinada":
+   vermelho = atrasado ou hoje, âmbar = até 3 dias, neutro = o resto. */
+function urgencyBadgeHtml(card) {
+  if (!card.dueDate) return "";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(card.dueDate + "T00:00:00");
+  const diffDays = Math.round((due - today) / 86400000);
+
+  let cls = "badge-neutral";
+  if (diffDays <= 0) cls = "badge-danger";
+  else if (diffDays <= 3) cls = "badge-amber";
+
+  return `<span class="due-badge ${cls}">📅 ${due.toLocaleDateString("pt-BR")}</span>`;
 }
 
 function renderFilesGrid() {
@@ -602,6 +707,17 @@ function renderBoard() {
 
     const cardsInCol = currentCards.filter(c => c.status === colName);
 
+    // Ordenação automática por urgência: quem tem data mais próxima vai
+    // primeiro. Cards sem data ficam por último, na ordem de criação.
+    cardsInCol.sort((a, b) => {
+      const dateA = a.dueDate ? new Date(a.dueDate + "T00:00:00") : null;
+      const dateB = b.dueDate ? new Date(b.dueDate + "T00:00:00") : null;
+      if (dateA && dateB) return dateA - dateB;
+      if (dateA && !dateB) return -1;
+      if (!dateA && dateB) return 1;
+      return 0;
+    });
+
     colEl.innerHTML = `
       <div class="column-title">${colName}</div>
       <div class="column-count">${cardsInCol.length} ${cardsInCol.length === 1 ? "item" : "itens"}</div>
@@ -629,6 +745,7 @@ function renderBoard() {
             ${files.length > 1 ? `<span class="photo-count-badge">+${files.length - 1}</span>` : ""}
           </div>
         ` : (files.length > 0 ? `<div class="attachment-badge">📎 ${files.length} anexo${files.length > 1 ? "s" : ""}</div>` : "")}
+        ${urgencyBadgeHtml(card)}
         <p class="card-client">${card.client || "Sem nome"}</p>
         ${card.model ? `<p class="card-model">${card.model}</p>` : ""}
         ${card.investment ? `<p class="card-investment">${card.investment}</p>` : ""}
@@ -671,6 +788,7 @@ function openAddModal() {
   fieldClient.value = "";
   fieldModel.value = "";
   fieldInvestment.value = "";
+  fieldDueDate.value = "";
   fieldNotes.value = "";
   fieldPhoto.value = "";
   filesDraft = [];
@@ -686,6 +804,7 @@ function openEditModal(card) {
   fieldClient.value = card.client || "";
   fieldModel.value = card.model || "";
   fieldInvestment.value = card.investment || "";
+  fieldDueDate.value = card.dueDate || "";
   fieldNotes.value = card.notes || "";
   fieldPhoto.value = "";
   // Compatibilidade com encomendas antigas (photos ou photoUrl)
@@ -706,11 +825,24 @@ function closeModal() {
 fieldPhoto.addEventListener("change", async () => {
   const files = Array.from(fieldPhoto.files || []);
   if (files.length === 0) return;
-  uploadStatus.textContent = "Processando arquivo(s)...";
+
   for (const file of files) {
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+
     try {
-      const isImage = file.type.startsWith("image/");
-      const data = isImage ? await compressImage(file) : await readFileAsDataURL(file);
+      let data;
+      if (isImage) {
+        uploadStatus.textContent = `Processando ${file.name}...`;
+        data = await compressImage(file);
+      } else if (isPdf) {
+        uploadStatus.textContent = `Comprimindo ${file.name}...`;
+        data = await compressPdfFile(file);
+      } else {
+        uploadStatus.textContent = `Processando ${file.name}...`;
+        data = await readFileAsDataURL(file);
+      }
+
       filesDraft.push({ name: file.name, type: isImage ? "image" : "pdf", data });
       renderFilesGrid();
     } catch (err) {
@@ -718,6 +850,7 @@ fieldPhoto.addEventListener("change", async () => {
       showToast(`Não consegui processar ${file.name}`);
     }
   }
+
   uploadStatus.textContent = "Anexo(s) prontos, clique em Salvar pra confirmar.";
   fieldPhoto.value = "";
 });
@@ -750,12 +883,15 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
       return;
     }
 
+    const dueDateValue = fieldDueDate.value.trim();
+
     const data = {
       client,
       model: fieldModel.value.trim(),
       investment: fieldInvestment.value.trim(),
       notes: fieldNotes.value.trim(),
       files: filesDraft,
+      dueDate: dueDateValue ? dueDateValue : firebase.firestore.FieldValue.delete(),
       photos: firebase.firestore.FieldValue.delete(),   // remove formato antigo, se existir
       photoUrl: firebase.firestore.FieldValue.delete(), // remove formato antigo, se existir
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -767,6 +903,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     } else {
       delete data.photos;
       delete data.photoUrl; // não existem ainda em documento novo, não precisa tentar apagar
+      if (!dueDateValue) delete data.dueDate; // idem: não existe ainda em documento novo
       data.status = COLUMNS[0];
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection(COLLECTION).add(data);
