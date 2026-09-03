@@ -276,6 +276,15 @@
     display: flex;
     margin-bottom: 8px;
   }
+  .photo-placeholder {
+    width: 100%;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--cream-dim);
+  }
   .photo-thumb {
     position: relative;
     width: 78px;
@@ -392,7 +401,7 @@
     </div>
 
     <div class="field">
-      <label>Foto de referência</label>
+      <label>Foto de referência (cole com Ctrl+V ou escolha um arquivo)</label>
       <div class="photo-preview" id="photoPreview"></div>
       <input type="file" id="fieldPhoto" accept="image/*">
       <div class="upload-status" id="uploadStatus"></div>
@@ -503,7 +512,13 @@ function matchesSearch(entry, term) {
 
 function renderPhotoPreview() {
   photoPreviewEl.innerHTML = "";
-  if (!photoDraft) return;
+  if (!photoDraft) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "photo-placeholder";
+    placeholder.textContent = "Cole uma foto aqui (Ctrl+V) ou escolha um arquivo abaixo";
+    photoPreviewEl.appendChild(placeholder);
+    return;
+  }
   const wrap = document.createElement("div");
   wrap.className = "photo-thumb";
   wrap.innerHTML = `
@@ -625,6 +640,30 @@ fieldPhoto.addEventListener("change", async () => {
     showToast("Não consegui processar a foto");
   }
   fieldPhoto.value = "";
+});
+
+// Colar foto direto (Ctrl+V), tipo Canva, funciona com o modal aberto
+document.addEventListener("paste", async (e) => {
+  if (modalOverlay.classList.contains("hidden")) return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) continue;
+      e.preventDefault();
+      uploadStatus.textContent = "Processando foto colada...";
+      try {
+        photoDraft = await compressImage(file);
+        renderPhotoPreview();
+        uploadStatus.textContent = "Foto colada, clique em Salvar pra confirmar.";
+      } catch (err) {
+        console.error(err);
+        showToast("Não consegui processar a foto colada");
+      }
+      break;
+    }
+  }
 });
 
 document.getElementById("addBtn").addEventListener("click", openAddModal);
