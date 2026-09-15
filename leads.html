@@ -3,482 +3,535 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spielvogel Joias — CRM de Leads</title>
+<title>Leads — Spielvogel Joias</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (mesmo projeto "spielvogel-painel" usado no index.html e no tabela-precos.html) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
-  :root {
-    --bg: #141210;
-    --bg-elevated: #1c1a17;
-    --gold: #C9A24B;
-    --gold-soft: #8f7a4d;
-    --cream: #F3EDE1;
-    --cream-dim: #b8b0a0;
-    --line: #2c2822;
-    --danger: #b5544a;
-    --amber: #c9963f;
-    --font-display: 'Cormorant Garamond', serif;
-    --font-body: 'Inter', sans-serif;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--cream); font-family: var(--font-body); min-height: 100vh; }
+  :root{
+    --bg: #FAF8F4;
+    --surface: #FFFFFF;
+    --border: #E7E1D6;
+    --text: #2B2620;
+    --text-secondary: #6B6459;
+    --text-muted: #9A9284;
+    --gold: #B8860B;
+    --gold-dark: #8A6508;
+    --danger: #B0503F;
 
-  header { padding: 28px 20px 22px; text-align: center; border-bottom: 1px solid var(--line); }
-  .logo-placeholder { font-family: var(--font-display); font-size: 30px; letter-spacing: 3px; color: var(--gold); font-weight: 500; }
-  .logo-sub { font-size: 11px; letter-spacing: 4px; color: var(--cream-dim); text-transform: uppercase; margin-top: 4px; }
+    --fase-descoberta-bg: #F1EEE8;   --fase-descoberta-border: #8D8579;  --fase-descoberta-text: #5B5346;
+    --fase-criacao-bg: #F1EBF4;      --fase-criacao-border: #8E6FA6;     --fase-criacao-text: #5B4470;
+    --fase-decisao-bg: #F7EAE3;      --fase-decisao-border: #C97B5F;     --fase-decisao-text: #8A4A31;
+    --fase-aprovacao-bg: #FBF3DD;    --fase-aprovacao-border: #B8860B;   --fase-aprovacao-text: #7A5B08;
+    --fase-formalizacao-bg: #E9F2EE; --fase-formalizacao-border: #4F7C6B;--fase-formalizacao-text: #345448;
+    --fase-cancelado-bg: #F8E9E6;    --fase-cancelado-border: #B0503F;   --fase-cancelado-text: #7A362A;
+  }
 
-  main { max-width: 1600px; margin: 0 auto; padding: 20px 16px 60px; }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family:'Manrope', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
 
-  .toolbar { display: flex; justify-content: center; margin-bottom: 20px; }
-  .btn {
-    font-family: var(--font-body); font-size: 14px; font-weight: 500; border: 1px solid var(--gold);
-    background: transparent; color: var(--gold); padding: 10px 22px; border-radius: 3px; cursor: pointer;
-    letter-spacing: 0.5px; transition: background 0.15s, color 0.15s;
+  /* Topbar */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; background:var(--surface); border-bottom:1px solid var(--border);
   }
-  .btn:hover { background: var(--gold); color: var(--bg); }
-  .btn-solid { background: var(--gold); color: var(--bg); }
-  .btn-solid:hover { background: var(--gold-soft); }
-  .btn-text { border: none; background: none; color: var(--cream-dim); font-size: 13px; padding: 4px 8px; cursor: pointer; }
-  .btn-text:hover { color: var(--gold); background: none; }
-  .btn-danger { border-color: var(--danger); color: var(--danger); }
-  .btn-danger:hover { background: var(--danger); color: var(--cream); }
+  .topbar h1{
+    font-family:'Playfair Display', serif; font-size:22px; font-weight:600; margin:0;
+    color:var(--text);
+  }
+  .topbar nav a{
+    color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500;
+    margin-left:20px; padding-bottom:2px; border-bottom:1px solid transparent;
+  }
+  .topbar nav a:hover{ color:var(--gold-dark); border-bottom-color:var(--gold); }
+  .topbar nav a.ativo{ color:var(--gold-dark); border-bottom-color:var(--gold); }
 
-  .board {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    scroll-snap-type: x proximity;
+  /* Barra de resumo */
+  .resumo{
+    display:flex; gap:28px; padding:14px 28px; background:var(--surface);
+    border-bottom:1px solid var(--border); flex-wrap:wrap;
   }
-  .column {
-    background: var(--bg-elevated);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 14px 12px;
-    min-height: 120px;
-    min-width: 260px;
-    max-width: 260px;
-    flex-shrink: 0;
-    scroll-snap-align: start;
-  }
-  .column-header { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 2px; }
-  .column-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .column-title { font-family: var(--font-display); font-size: 17px; color: var(--gold); text-align: center; margin: 0; letter-spacing: 0.3px; }
-  .column-count { text-align: center; font-size: 11px; color: var(--cream-dim); margin-bottom: 12px; letter-spacing: 1px; }
+  .resumo .item{ display:flex; flex-direction:column; gap:2px; }
+  .resumo .item .valor{ font-size:20px; font-weight:700; }
+  .resumo .item .rotulo{ font-size:12px; color:var(--text-secondary); }
 
-  .card {
-    background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 12px;
-    margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s;
+  /* Barra de ferramentas */
+  .toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px;
   }
-  .card:hover { border-color: var(--gold-soft); }
-  .card-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
-  .card-client { font-family: var(--font-display); font-size: 17px; color: var(--cream); margin: 0 0 4px; }
-  .recurring-badge { font-size: 13px; }
-  .contact-badge {
-    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px;
-    border-radius: 3px; margin-bottom: 6px; border: 1px solid;
+  #banner-firebase{
+    display:none; margin:0 28px 10px; padding:10px 14px; background:#FBF3DD;
+    border:1px solid var(--gold); border-radius:8px; font-size:13px; color:var(--fase-aprovacao-text);
   }
-  .badge-danger { color: var(--danger); border-color: var(--danger); background: rgba(181,84,74,0.12); }
-  .badge-amber { color: var(--amber); border-color: var(--amber); background: rgba(201,150,63,0.12); }
-  .badge-neutral { color: var(--cream-dim); border-color: var(--line); background: rgba(255,255,255,0.03); }
-  .card-request {
-    font-size: 12px; color: var(--cream-dim); margin: 0 0 8px;
-    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  .btn{
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    border-radius:8px; border:1px solid var(--border); background:var(--surface);
+    color:var(--text); padding:9px 16px;
   }
-  .card-budget { font-size: 12px; color: var(--gold-soft); margin: 0 0 8px; }
-  .card-next-step {
-    font-size: 11px; color: var(--gold); font-style: italic; margin: 0 0 8px;
-    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  .btn:hover{ background:#F4F1EA; }
+  .btn-principal{
+    background:var(--gold); border-color:var(--gold); color:#FFFFFF;
   }
-  .card-actions { border-top: 1px solid var(--line); padding-top: 8px; }
-  .wa-link {
-    display: inline-block; font-size: 12px; color: var(--gold); text-decoration: none;
-    border: 1px solid var(--line); padding: 4px 10px; border-radius: 3px;
-  }
-  .wa-link:hover { border-color: var(--gold); }
+  .btn-principal:hover{ background:var(--gold-dark); }
+  .btn-perigo{ color:var(--danger); border-color:var(--danger); background:var(--surface); }
+  .btn-perigo:hover{ background:var(--fase-cancelado-bg); }
 
-  .empty-column { text-align: center; color: var(--cream-dim); font-size: 12px; padding: 20px 6px; opacity: 0.6; }
+  /* Board */
+  .board{
+    display:flex; gap:14px; padding:4px 28px 32px; overflow-x:auto;
+  }
+  .coluna{
+    flex:0 0 250px; display:flex; flex-direction:column;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    max-height:calc(100vh - 230px);
+  }
+  .coluna.coluna-cancelado{ margin-left:20px; border-color:var(--fase-cancelado-border); }
+
+  .coluna-header{
+    padding:12px 14px; border-bottom:2px solid; border-radius:12px 12px 0 0;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .coluna-header .nome-etapa{ font-size:13px; font-weight:700; line-height:1.3; }
+  .coluna-header .contagem{
+    font-size:12px; font-weight:700; background:rgba(255,255,255,.6);
+    padding:2px 8px; border-radius:999px; flex-shrink:0;
+  }
+
+  .coluna-corpo{
+    flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px;
+    min-height:60px;
+  }
+  .coluna-corpo.arrastando-sobre{ background:#F4F1EA; }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  .card:hover{ border-color:var(--gold); }
+  .card .linha-topo{ display:flex; align-items:center; gap:6px; }
+  .card .ponto{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .card .nome{ font-size:13px; font-weight:600; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .card .data{ font-size:11px; color:var(--text-muted); }
+  .card .linha-baixo{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+  .card .telefone-link{ font-size:11px; color:var(--gold-dark); text-decoration:none; }
+  .card .telefone-link:hover{ text-decoration:underline; }
+  .card .marcador{
+    font-size:10px; font-weight:700; color:var(--gold-dark); background:var(--fase-aprovacao-bg);
+    padding:1px 6px; border-radius:999px; border:1px solid var(--gold);
+  }
+  .card .obs-preview{
+    font-size:11px; color:var(--text-secondary); margin-top:4px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+
+  .vazio{ font-size:12px; color:var(--text-muted); text-align:center; padding:16px 4px; }
 
   /* Modal */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center;
-    justify-content: center; padding: 16px; z-index: 100;
+  .modal-fundo{
+    display:none; position:fixed; inset:0; background:rgba(43,38,32,.45);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
   }
-  .modal-overlay.hidden { display: none; }
-  .modal {
-    background: var(--bg-elevated); border: 1px solid var(--line); border-radius: 8px; width: 100%;
-    max-width: 460px; max-height: 90vh; overflow-y: auto; padding: 24px;
+  .modal-fundo.aberto{ display:flex; }
+  .modal{
+    background:var(--surface); border-radius:14px; width:100%; max-width:420px;
+    max-height:90vh; overflow-y:auto; padding:24px;
   }
-  .modal h2 { font-family: var(--font-display); color: var(--gold); margin: 0 0 18px; font-size: 22px; text-align: center; }
+  .modal h2{ font-family:'Playfair Display', serif; font-size:19px; margin:0 0 18px; font-weight:600; }
+  .campo{ margin-bottom:14px; }
+  .campo label{ display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
+  .campo input[type=text], .campo input[type=date], .campo select, .campo textarea{
+    width:100%; font-family:inherit; font-size:14px; padding:9px 10px;
+    border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text);
+  }
+  .campo textarea{ min-height:64px; resize:vertical; }
+  .campo-checkbox{ display:flex; align-items:center; gap:8px; }
+  .campo-checkbox label{ margin:0; font-size:13px; font-weight:600; color:var(--text); }
+  .erro-campo{ font-size:12px; color:var(--danger); margin-top:4px; display:none; }
+  .modal-acoes{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:8px; }
+  .modal-acoes .lado-direito{ display:flex; gap:8px; }
+  .fechar-modal{ position:absolute; top:18px; right:20px; background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-muted); }
 
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 12px; color: var(--cream-dim); margin-bottom: 5px; letter-spacing: 0.3px; }
-  .field input, .field textarea, .field select {
-    width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--cream);
-    padding: 9px 10px; border-radius: 4px; font-family: var(--font-body); font-size: 14px;
+  @media (max-width:600px){
+    .topbar, .resumo, .toolbar, .board{ padding-left:14px; padding-right:14px; }
+    .coluna{ flex-basis:220px; }
   }
-  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--gold); }
-  .field textarea { resize: vertical; min-height: 50px; }
-  .field input[type="date"] { color-scheme: dark; }
-  .field-checkbox { display: flex; align-items: center; gap: 8px; }
-  .field-checkbox input { width: auto; }
-  .field-checkbox label { margin-bottom: 0; }
-
-  .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 10px; }
-
-  .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--gold);
-    color: var(--bg); padding: 10px 20px; border-radius: 4px; font-size: 13px; font-weight: 500;
-    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s;
-  }
-  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo-placeholder">SPIELVOGEL JOIAS</div>
-  <div class="logo-sub">CRM de Leads</div>
-</header>
+<div class="topbar">
+  <h1>Leads — Spielvogel Joias</h1>
+  <nav>
+    <a href="index.html">Painel de pedidos</a>
+    <a href="tabela-precos.html">Tabela de preços</a>
+    <a href="leads.html" class="ativo">Leads</a>
+  </nav>
+</div>
 
-<main>
-  <div class="toolbar">
-    <button class="btn btn-solid" id="addBtn">+ Novo Lead</button>
-  </div>
-  <div class="board" id="board"></div>
-</main>
+<div class="resumo" id="resumo"></div>
 
-<div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal">
-    <h2 id="modalTitle">Novo Lead</h2>
-    <input type="hidden" id="leadId">
+<div class="toolbar">
+  <span style="font-size:13px;color:var(--text-secondary);">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
+  <button class="btn btn-principal" onclick="abrirModalNovo()">+ Adicionar lead</button>
+</div>
 
-    <div class="field">
-      <label>Nome do cliente</label>
-      <input type="text" id="fieldName" placeholder="Ex: Camila Ferreira">
+<div id="banner-firebase"></div>
+
+<div class="board" id="board"></div>
+
+<!-- Modal de lead -->
+<div class="modal-fundo" id="modal-fundo">
+  <div class="modal" style="position:relative;">
+    <button class="fechar-modal" onclick="fecharModal()">✕</button>
+    <h2 id="modal-titulo">Adicionar lead</h2>
+
+    <div class="campo">
+      <label for="campo-nome">Nome do contato</label>
+      <input type="text" id="campo-nome" placeholder="Nome do contato">
+      <div class="erro-campo" id="erro-nome">Informe o nome do contato.</div>
     </div>
 
-    <div class="field">
-      <label>Contato (WhatsApp, com DDD)</label>
-      <input type="text" id="fieldPhone" placeholder="Ex: 47 99999-9999">
+    <div class="campo">
+      <label for="campo-telefone">Telefone (com DDD, opcional)</label>
+      <input type="text" id="campo-telefone" placeholder="+55 47 99999-9999">
     </div>
 
-    <div class="field">
-      <label>Estágio</label>
-      <select id="fieldStage"></select>
+    <div class="campo">
+      <label for="campo-data">Data de entrada</label>
+      <input type="date" id="campo-data">
     </div>
 
-    <div class="field">
-      <label>O que a pessoa quer</label>
-      <textarea id="fieldRequest" placeholder="Modelo, pedra, referência, ocasião..."></textarea>
+    <div class="campo">
+      <label for="campo-etapa">Etapa</label>
+      <select id="campo-etapa"></select>
     </div>
 
-    <div class="field">
-      <label>Orçamento mencionado</label>
-      <input type="text" id="fieldBudget" placeholder="Ex: até R$ 4.000,00">
+    <div class="campo campo-checkbox">
+      <input type="checkbox" id="campo-potencial">
+      <label for="campo-potencial">Marcar como "em potencial"</label>
     </div>
 
-    <div class="field">
-      <label>Data do último contato</label>
-      <input type="date" id="fieldLastContact">
+    <div class="campo">
+      <label for="campo-obs">Observações</label>
+      <textarea id="campo-obs" placeholder="O que já foi conversado, em que ponto ficou..."></textarea>
     </div>
 
-    <div class="field">
-      <label>Próximo passo</label>
-      <input type="text" id="fieldNextStep" placeholder="Ex: mandar 3 referências de anel oval">
-    </div>
-
-    <div class="field">
-      <label>Anotações</label>
-      <textarea id="fieldNotes" placeholder="Resumo da conversa, combinados..."></textarea>
-    </div>
-
-    <div class="field field-checkbox">
-      <input type="checkbox" id="fieldRecurring">
-      <label for="fieldRecurring">⭐ Cliente recorrente</label>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-text btn-danger" id="deleteBtn" style="display:none;">Excluir</button>
-      <div style="flex:1;"></div>
-      <button class="btn-text" id="cancelBtn">Cancelar</button>
-      <button class="btn btn-solid" id="saveBtn">Salvar</button>
+    <div class="modal-acoes">
+      <button class="btn btn-perigo" id="btn-excluir" style="display:none;" onclick="excluirLeadAtual()">Excluir</button>
+      <div class="lado-direito" style="margin-left:auto;">
+        <button class="btn" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-principal" onclick="salvarLeadAtual()">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
-/* Mesmo projeto Firebase dos outros dois paineis, só que numa coleção
-   nova ("leads"), então não precisa criar nada no Firebase. */
-const firebaseConfig = {
-  apiKey: "AIzaSyBY2aOX2FSTdjdOH9Nqyi4lAVkfsLws9ek",
-  authDomain: "spielvogel-painel.firebaseapp.com",
-  projectId: "spielvogel-painel",
-  storageBucket: "spielvogel-painel.firebasestorage.app",
-  messagingSenderId: "368754911719",
-  appId: "1:368754911719:web:c452ad8cca48410de33542"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COLLECTION = "leads";
-
-/* As 10 etapas do funil, na ordem. Cor e emoji batem com a legenda
-   visual (legenda-crm-leads.png) pra servir de referência única. */
+// ---------- Funil (ordem oficial, fechada em 15/09) ----------
 const STAGES = [
-  { key: "novo_lead",             emoji: "🆕", label: "Novo lead",               color: "#9AA15C" },
-  { key: "entendendo_pedido",      emoji: "🔍", label: "Entendendo o pedido",     color: "#6FB8DE" },
-  { key: "inspiracoes_enviadas",   emoji: "📸", label: "Inspirações enviadas",    color: "#9B7FD4" },
-  { key: "esfriou_pos_inspiracao", emoji: "❄️", label: "Esfriou pós-inspiração",  color: "#E0954D" },
-  { key: "desenho_desenvolvimento",emoji: "🖊️", label: "Desenho em desenvolvimento", color: "#3B5FA0" },
-  { key: "desenho_aprovacao",      emoji: "🖼️", label: "Desenho em aprovação",    color: "#4FBEBE" },
-  { key: "cotacao_enviada",        emoji: "💰", label: "Cotação enviada",         color: "#4A79C9" },
-  { key: "esfriou_pos_cotacao",    emoji: "❄️", label: "Esfriou pós-cotação",     color: "#C1554A" },
-  { key: "negociando_ajustes",     emoji: "🤝", label: "Negociando ajustes",      color: "#C9A24B" },
-  { key: "sinal_pago",             emoji: "✅", label: "Sinal pago",              color: "#6E9B4F" },
+  { id:'qualificacao',      nome:'Qualificação',                          fase:'descoberta' },
+  { id:'entendimento',      nome:'Entendimento do projeto',               fase:'descoberta' },
+  { id:'inspiracoes',       nome:'Inspirações enviadas',                  fase:'criacao' },
+  { id:'cotacao_dev',       nome:'Cotação em desenvolvimento',            fase:'criacao' },
+  { id:'cotacao_enviada',   nome:'Cotação enviada',                       fase:'decisao' },
+  { id:'pedido_aberto',     nome:'Pedido em aberto (aprovado)',           fase:'aprovacao' },
+  { id:'venda_aprovada',    nome:'Venda aprovada',                        fase:'aprovacao' },
+  { id:'termo_enviado',     nome:'Termo enviado',                         fase:'formalizacao' },
+  { id:'link_pagamento',    nome:'Link de pagamento enviado',             fase:'formalizacao' },
+  { id:'em_producao',       nome:'Em produção',                           fase:'formalizacao' },
+];
+const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
+const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
+
+function etapaPorId(id){ return TODAS_ETAPAS.find(e => e.id === id); }
+
+// ---------- Dados iniciais (os 18 leads ditados em 15/09) ----------
+// Observação: alguns desses leads tinham originalmente duas etapas marcadas ao mesmo
+// tempo (ex.: "cotação enviada + negociação"). Como "negociação" e "aguardando
+// aprovação" saíram do funil final, eles ficaram só na etapa que continua existindo.
+// Isso está sinalizado na observação de cada um pra você revisar.
+const SEED_LEADS = [
+  { id:'seed-01', nome:'', telefone:'5551989059467', dataEntrada:'2026-09-12', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu. Sem nome anotado ainda, ver pelo número.' },
+  { id:'seed-02', nome:'Alexia', telefone:'5547991292918', dataEntrada:'2026-09-14', etapa:'entendimento', emPotencial:false, observacoes:'Respondeu sobre o que queria, expliquei, e não respondeu mais.' },
+  { id:'seed-03', nome:'Gui', telefone:'5551998386810', dataEntrada:'2026-09-14', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas e apresentação, não respondeu. Nome completo ainda não informado.' },
+  { id:'seed-04', nome:'Gabriele', telefone:'5549991723999', dataEntrada:'2026-09-14', etapa:'cotacao_enviada', emPotencial:false, observacoes:'PDF de proposta enviado, perguntei qual opção fazia mais sentido, sem resposta.' },
+  { id:'seed-05', nome:'Priscila Bernardo', telefone:'5548996887920', dataEntrada:'2026-09-14', etapa:'inspiracoes', emPotencial:false, observacoes:'Inspirações enviadas, aguardando retorno dela.' },
+  { id:'seed-06', nome:'Christian CS', telefone:'5547991560202', dataEntrada:'2026-09-14', etapa:'cotacao_enviada', emPotencial:false, observacoes:'REVISAR: estava marcado como "negociação", etapa que saiu do funil final. Coloquei em cotação enviada por ora.' },
+  { id:'seed-07', nome:'Jonathas', telefone:'5542999212798', dataEntrada:'2026-09-14', etapa:'cotacao_enviada', emPotencial:false, observacoes:'REVISAR: tinha dupla marcação "cotação enviada + negociação"; negociação saiu do funil final.' },
+  { id:'seed-08', nome:'Julius', telefone:'5547984611074', dataEntrada:'2026-09-14', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu.' },
+  { id:'seed-09', nome:'Vicenzo', telefone:'5554996022690', dataEntrada:'2026-09-14', etapa:'qualificacao', emPotencial:false, observacoes:'Chegou à noite. Mandei boas-vindas, não respondeu.' },
+  { id:'seed-10', nome:'Felipe', telefone:'', dataEntrada:'2026-09-15', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu. Falta telefone, adicionar manualmente.' },
+  { id:'seed-11', nome:'Matheus', telefone:'5546984159639', dataEntrada:'2026-09-15', etapa:'inspiracoes', emPotencial:false, observacoes:'Inspirações enviadas, aguardando retorno.' },
+  { id:'seed-12', nome:'Léo', telefone:'5541997742272', dataEntrada:'2026-09-14', etapa:'pedido_aberto', emPotencial:false, observacoes:'Pedido aprovado, ainda em análise pelo cliente.' },
+  { id:'seed-13', nome:'Júlia', telefone:'5519971102288', dataEntrada:'2026-09-14', etapa:'cotacao_enviada', emPotencial:false, observacoes:'Chegou à noite.' },
+  { id:'seed-14', nome:'Tainá Prudente', telefone:'5551996456561', dataEntrada:'2026-09-14', etapa:'entendimento', emPotencial:false, observacoes:'Chegou à noite.' },
+  { id:'seed-15', nome:'Murilo', telefone:'5543991356837', dataEntrada:'2026-09-15', etapa:'cotacao_enviada', emPotencial:false, observacoes:'REVISAR: tinha dupla marcação "aguardando aprovação + cotação enviada"; aguardando aprovação saiu do funil final.' },
+  { id:'seed-16', nome:'Jonathan', telefone:'5527997641068', dataEntrada:'2026-09-14', etapa:'inspiracoes', emPotencial:false, observacoes:'Chegou à noite. Inspirações enviadas, aguardando retorno.' },
+  { id:'seed-17', nome:'João', telefone:'5541995021741', dataEntrada:'2026-09-15', etapa:'cotacao_enviada', emPotencial:false, observacoes:'Chegou de manhã.' },
+  { id:'seed-18', nome:'Luiz', telefone:'5548991271868', dataEntrada:'2026-09-15', etapa:'qualificacao', emPotencial:false, observacoes:'' },
 ];
 
-const boardEl = document.getElementById("board");
-const modalOverlay = document.getElementById("modalOverlay");
-const modalTitle = document.getElementById("modalTitle");
-const leadIdInput = document.getElementById("leadId");
-const fieldName = document.getElementById("fieldName");
-const fieldPhone = document.getElementById("fieldPhone");
-const fieldStage = document.getElementById("fieldStage");
-const fieldRequest = document.getElementById("fieldRequest");
-const fieldBudget = document.getElementById("fieldBudget");
-const fieldLastContact = document.getElementById("fieldLastContact");
-const fieldNextStep = document.getElementById("fieldNextStep");
-const fieldNotes = document.getElementById("fieldNotes");
-const fieldRecurring = document.getElementById("fieldRecurring");
-const deleteBtn = document.getElementById("deleteBtn");
-const toastEl = document.getElementById("toast");
+// ---------- Firebase (mesmo projeto "spielvogel-painel") ----------
+// Cole aqui a config real do projeto (a mesma do index.html / tabela-precos.html).
+// Enquanto ela não for colada, o CRM funciona 100% salvando no navegador (localStorage),
+// só não fica sincronizado entre celular/computador/o Tiago até isso ser preenchido.
+const firebaseConfig = {
+  apiKey: "COLE_AQUI_SUA_API_KEY",
+  authDomain: "spielvogel-painel.firebaseapp.com",
+  projectId: "spielvogel-painel",
+  storageBucket: "spielvogel-painel.appspot.com",
+  messagingSenderId: "COLE_AQUI",
+  appId: "COLE_AQUI"
+};
+const FIREBASE_CONFIGURADO = firebaseConfig.apiKey !== "COLE_AQUI_SUA_API_KEY";
 
-let currentLeads = [];
+let db = null;
+let leads = [];
+let idLeadAberto = null;
 
-// Popula o <select> de estágio uma vez, na carga da página
-STAGES.forEach(s => {
-  const opt = document.createElement("option");
-  opt.value = s.key;
-  opt.textContent = `${s.emoji} ${s.label}`;
-  fieldStage.appendChild(opt);
-});
-
-function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add("show");
-  setTimeout(() => toastEl.classList.remove("show"), 2200);
+if (FIREBASE_CONFIGURADO) {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} else {
+  const banner = document.getElementById('banner-firebase');
+  banner.style.display = 'block';
+  banner.textContent = 'Firebase ainda não configurado neste arquivo: os dados estão salvando só neste navegador por enquanto. Cole a firebaseConfig no topo do script pra sincronizar com o painel de pedidos.';
 }
 
-function stageInfo(key) {
-  return STAGES.find(s => s.key === key) || STAGES[0];
-}
-
-// Link direto pro WhatsApp (wa.me), sem precisar de API paga.
-// Assume DDD+numero brasileiro se vier sem o 55 na frente.
-function buildWaLink(phone) {
-  if (!phone) return "";
-  let digits = String(phone).replace(/\D/g, "");
-  if (!digits) return "";
-  if (!digits.startsWith("55") && (digits.length === 10 || digits.length === 11)) {
-    digits = "55" + digits;
+function iniciarLeads(){
+  if (FIREBASE_CONFIGURADO) {
+    db.collection('leads').get().then(snap => {
+      if (snap.empty) {
+        const lote = db.batch();
+        SEED_LEADS.forEach(l => lote.set(db.collection('leads').doc(l.id), l));
+        lote.commit();
+      }
+    });
+    db.collection('leads').onSnapshot(snap => {
+      leads = snap.docs.map(d => d.data());
+      renderizarTudo();
+    });
+  } else {
+    const salvo = localStorage.getItem('spielvogel_leads');
+    leads = salvo ? JSON.parse(salvo) : SEED_LEADS.slice();
+    if (!salvo) localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
+    renderizarTudo();
   }
-  return "https://wa.me/" + digits;
 }
 
-function daysSinceContact(dateStr) {
-  if (!dateStr) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(dateStr + "T00:00:00");
-  return Math.round((today - d) / 86400000);
+function persistirLead(lead){
+  if (FIREBASE_CONFIGURADO) {
+    db.collection('leads').doc(lead.id).set(lead);
+  } else {
+    const i = leads.findIndex(l => l.id === lead.id);
+    if (i >= 0) leads[i] = lead; else leads.push(lead);
+    localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
+    renderizarTudo();
+  }
 }
 
-// Badge de "há quantos dias sem contato": quanto mais tempo parado,
-// mais chamativo, pra puxar sua atenção pros leads esquecidos primeiro.
-function contactBadgeHtml(lead) {
-  const days = daysSinceContact(lead.lastContact);
-  if (days === null) return "";
-  let cls = "badge-neutral";
-  if (days >= 5) cls = "badge-danger";
-  else if (days >= 2) cls = "badge-amber";
-  let label;
-  if (days <= 0) label = "hoje";
-  else if (days === 1) label = "há 1 dia";
-  else label = `há ${days} dias`;
-  return `<span class="contact-badge ${cls}">🕓 ${label}</span>`;
+function persistirExclusao(id){
+  if (FIREBASE_CONFIGURADO) {
+    db.collection('leads').doc(id).delete();
+  } else {
+    leads = leads.filter(l => l.id !== id);
+    localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
+    renderizarTudo();
+  }
 }
 
-function renderBoard() {
-  boardEl.innerHTML = "";
-  STAGES.forEach(stage => {
-    const colEl = document.createElement("div");
-    colEl.className = "column";
+// ---------- Utilidades ----------
+function formatarTelefone(digits){
+  if (!digits) return '';
+  const semPais = digits.startsWith('55') ? digits.slice(2) : digits;
+  const ddd = semPais.slice(0,2);
+  const resto = semPais.slice(2);
+  if (resto.length === 9) return `+55 ${ddd} ${resto.slice(0,5)}-${resto.slice(5)}`;
+  return `+55 ${ddd} ${resto}`;
+}
+function linkWhatsapp(digits){
+  if (!digits) return null;
+  return `https://wa.me/${digits.replace(/\D/g,'')}`;
+}
+function formatarData(iso){
+  if (!iso) return '';
+  const [ano, mes, dia] = iso.split('-');
+  return `${dia}/${mes}`;
+}
+function idNovo(){
+  return 'lead-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+}
 
-    const leadsInStage = currentLeads
-      .filter(l => l.stage === stage.key)
-      .sort((a, b) => {
-        const da = daysSinceContact(a.lastContact);
-        const db_ = daysSinceContact(b.lastContact);
-        if (da === null && db_ === null) return 0;
-        if (da === null) return 1;
-        if (db_ === null) return -1;
-        return db_ - da; // mais dias parado primeiro
-      });
+// ---------- Renderização ----------
+function renderizarTudo(){
+  renderizarResumo();
+  renderizarBoard();
+}
 
-    colEl.innerHTML = `
-      <div class="column-header">
-        <span class="column-dot" style="background:${stage.color};"></span>
-        <p class="column-title">${stage.emoji} ${stage.label}</p>
-      </div>
-      <div class="column-count">${leadsInStage.length} ${leadsInStage.length === 1 ? "lead" : "leads"}</div>
-    `;
+function renderizarResumo(){
+  const ativos = leads.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
+  const emProducao = leads.filter(l => l.etapa === 'em_producao').length;
+  const cancelados = leads.filter(l => l.etapa === 'cancelado').length;
+  document.getElementById('resumo').innerHTML = `
+    <div class="item"><span class="valor">${leads.length}</span><span class="rotulo">Total de leads</span></div>
+    <div class="item"><span class="valor">${ativos}</span><span class="rotulo">Em andamento</span></div>
+    <div class="item"><span class="valor">${emProducao}</span><span class="rotulo">Em produção</span></div>
+    <div class="item"><span class="valor">${cancelados}</span><span class="rotulo">Cancelados</span></div>
+  `;
+}
 
-    if (leadsInStage.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "empty-column";
-      empty.textContent = "Nenhum lead aqui";
-      colEl.appendChild(empty);
-    }
+function renderizarBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  TODAS_ETAPAS.forEach(etapa => {
+    const leadsDaEtapa = leads.filter(l => l.etapa === etapa.id);
+    const coluna = document.createElement('div');
+    coluna.className = 'coluna' + (etapa.id === 'cancelado' ? ' coluna-cancelado' : '');
 
-    leadsInStage.forEach(lead => {
-      const cardEl = document.createElement("div");
-      cardEl.className = "card";
-      const waLink = buildWaLink(lead.phone);
-      cardEl.innerHTML = `
-        <div class="card-header-row">
-          <p class="card-client">${lead.name || "Sem nome"}</p>
-          ${lead.recurring ? '<span class="recurring-badge">⭐</span>' : ""}
-        </div>
-        ${contactBadgeHtml(lead)}
-        ${lead.request ? `<p class="card-request">${lead.request}</p>` : ""}
-        ${lead.budget ? `<p class="card-budget">${lead.budget}</p>` : ""}
-        ${lead.nextStep ? `<p class="card-next-step">→ ${lead.nextStep}</p>` : ""}
-        <div class="card-actions">
-          ${waLink ? `<a class="wa-link" href="${waLink}" target="_blank" rel="noopener">💬 Abrir WhatsApp</a>` : ""}
-        </div>
-      `;
-      const waEl = cardEl.querySelector(".wa-link");
-      if (waEl) waEl.addEventListener("click", (e) => e.stopPropagation());
-      cardEl.addEventListener("click", () => openEditModal(lead));
-      colEl.appendChild(cardEl);
+    const header = document.createElement('div');
+    header.className = 'coluna-header';
+    header.style.background = `var(--fase-${etapa.fase}-bg)`;
+    header.style.borderColor = `var(--fase-${etapa.fase}-border)`;
+    header.style.color = `var(--fase-${etapa.fase}-text)`;
+    header.innerHTML = `<span class="nome-etapa">${etapa.nome}</span><span class="contagem">${leadsDaEtapa.length}</span>`;
+    coluna.appendChild(header);
+
+    const corpo = document.createElement('div');
+    corpo.className = 'coluna-corpo';
+    corpo.dataset.etapa = etapa.id;
+    corpo.addEventListener('dragover', e => { e.preventDefault(); corpo.classList.add('arrastando-sobre'); });
+    corpo.addEventListener('dragleave', () => corpo.classList.remove('arrastando-sobre'));
+    corpo.addEventListener('drop', e => {
+      e.preventDefault();
+      corpo.classList.remove('arrastando-sobre');
+      const id = e.dataTransfer.getData('text/plain');
+      const lead = leads.find(l => l.id === id);
+      if (lead && lead.etapa !== etapa.id) {
+        lead.etapa = etapa.id;
+        persistirLead(lead);
+      }
     });
 
-    boardEl.appendChild(colEl);
+    if (leadsDaEtapa.length === 0) {
+      corpo.innerHTML = '<div class="vazio">Sem leads aqui</div>';
+    } else {
+      leadsDaEtapa.forEach(lead => corpo.appendChild(criarCard(lead, etapa)));
+    }
+
+    coluna.appendChild(corpo);
+    board.appendChild(coluna);
   });
 }
 
-function openAddModal() {
-  modalTitle.textContent = "Novo Lead";
-  leadIdInput.value = "";
-  fieldName.value = "";
-  fieldPhone.value = "";
-  fieldStage.value = STAGES[0].key;
-  fieldRequest.value = "";
-  fieldBudget.value = "";
-  fieldLastContact.value = new Date().toISOString().slice(0, 10);
-  fieldNextStep.value = "";
-  fieldNotes.value = "";
-  fieldRecurring.checked = false;
-  deleteBtn.style.display = "none";
-  modalOverlay.classList.remove("hidden");
+function criarCard(lead, etapa){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
+  card.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', lead.id));
+  card.addEventListener('click', () => abrirModalEdicao(lead.id));
+
+  const nomeExibido = lead.nome && lead.nome.trim() ? lead.nome : formatarTelefone(lead.telefone) || 'Sem nome';
+  const link = linkWhatsapp(lead.telefone);
+
+  card.innerHTML = `
+    <div class="linha-topo">
+      <span class="ponto" style="background:var(--fase-${etapa.fase}-border);"></span>
+      <span class="nome">${nomeExibido}</span>
+      <span class="data">${formatarData(lead.dataEntrada)}</span>
+    </div>
+    ${lead.observacoes ? `<div class="obs-preview">${lead.observacoes}</div>` : ''}
+    <div class="linha-baixo">
+      ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
+      ${lead.emPotencial ? '<span class="marcador">Em potencial</span>' : ''}
+    </div>
+  `;
+  return card;
 }
 
-function openEditModal(lead) {
-  modalTitle.textContent = "Editar Lead";
-  leadIdInput.value = lead.id;
-  fieldName.value = lead.name || "";
-  fieldPhone.value = lead.phone || "";
-  fieldStage.value = lead.stage || STAGES[0].key;
-  fieldRequest.value = lead.request || "";
-  fieldBudget.value = lead.budget || "";
-  fieldLastContact.value = lead.lastContact || "";
-  fieldNextStep.value = lead.nextStep || "";
-  fieldNotes.value = lead.notes || "";
-  fieldRecurring.checked = !!lead.recurring;
-  deleteBtn.style.display = "inline-block";
-  modalOverlay.classList.remove("hidden");
+// ---------- Modal ----------
+function preencherSelectEtapas(){
+  const select = document.getElementById('campo-etapa');
+  select.innerHTML = TODAS_ETAPAS.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
 }
 
-function closeModal() {
-  modalOverlay.classList.add("hidden");
+function abrirModalNovo(){
+  idLeadAberto = null;
+  document.getElementById('modal-titulo').textContent = 'Adicionar lead';
+  document.getElementById('campo-nome').value = '';
+  document.getElementById('campo-telefone').value = '';
+  document.getElementById('campo-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('campo-etapa').value = 'qualificacao';
+  document.getElementById('campo-potencial').checked = false;
+  document.getElementById('campo-obs').value = '';
+  document.getElementById('erro-nome').style.display = 'none';
+  document.getElementById('btn-excluir').style.display = 'none';
+  document.getElementById('modal-fundo').classList.add('aberto');
 }
 
-document.getElementById("addBtn").addEventListener("click", openAddModal);
-document.getElementById("cancelBtn").addEventListener("click", closeModal);
-modalOverlay.addEventListener("click", (e) => {
-  if (e.target === modalOverlay) closeModal();
-});
+function abrirModalEdicao(id){
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  idLeadAberto = id;
+  document.getElementById('modal-titulo').textContent = lead.nome || 'Editar lead';
+  document.getElementById('campo-nome').value = lead.nome || '';
+  document.getElementById('campo-telefone').value = lead.telefone ? formatarTelefone(lead.telefone) : '';
+  document.getElementById('campo-data').value = lead.dataEntrada || '';
+  document.getElementById('campo-etapa').value = lead.etapa;
+  document.getElementById('campo-potencial').checked = !!lead.emPotencial;
+  document.getElementById('campo-obs').value = lead.observacoes || '';
+  document.getElementById('erro-nome').style.display = 'none';
+  document.getElementById('btn-excluir').style.display = 'inline-block';
+  document.getElementById('modal-fundo').classList.add('aberto');
+}
 
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const id = leadIdInput.value;
-  const name = fieldName.value.trim();
+function fecharModal(){
+  document.getElementById('modal-fundo').classList.remove('aberto');
+}
 
-  if (!name) {
-    showToast("Preencha ao menos o nome do lead");
+function salvarLeadAtual(){
+  const nome = document.getElementById('campo-nome').value.trim();
+  if (!nome) {
+    document.getElementById('erro-nome').style.display = 'block';
     return;
   }
+  const telefoneDigitado = document.getElementById('campo-telefone').value.trim();
+  const telefoneDigits = telefoneDigitado.replace(/\D/g,'');
 
-  const saveBtnEl = document.getElementById("saveBtn");
-  saveBtnEl.disabled = true;
-  saveBtnEl.textContent = "Salvando...";
+  const lead = {
+    id: idLeadAberto || idNovo(),
+    nome,
+    telefone: telefoneDigits,
+    dataEntrada: document.getElementById('campo-data').value,
+    etapa: document.getElementById('campo-etapa').value,
+    emPotencial: document.getElementById('campo-potencial').checked,
+    observacoes: document.getElementById('campo-obs').value.trim(),
+  };
+  persistirLead(lead);
+  fecharModal();
+}
 
-  try {
-    const data = {
-      name,
-      phone: fieldPhone.value.trim(),
-      stage: fieldStage.value,
-      request: fieldRequest.value.trim(),
-      budget: fieldBudget.value.trim(),
-      lastContact: fieldLastContact.value || "",
-      nextStep: fieldNextStep.value.trim(),
-      notes: fieldNotes.value.trim(),
-      recurring: fieldRecurring.checked,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+function excluirLeadAtual(){
+  if (!idLeadAberto) return;
+  if (!confirm('Excluir este lead? Essa ação não pode ser desfeita.')) return;
+  persistirExclusao(idLeadAberto);
+  fecharModal();
+}
 
-    if (id) {
-      await db.collection(COLLECTION).doc(id).update(data);
-      showToast("Lead atualizado");
-    } else {
-      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection(COLLECTION).add(data);
-      showToast("Lead criado");
-    }
-
-    closeModal();
-  } catch (err) {
-    console.error(err);
-    showToast("Erro ao salvar, tenta de novo");
-  } finally {
-    saveBtnEl.disabled = false;
-    saveBtnEl.textContent = "Salvar";
-  }
-});
-
-deleteBtn.addEventListener("click", async () => {
-  const id = leadIdInput.value;
-  if (!id) return;
-  if (!confirm("Excluir este lead? Essa ação não pode ser desfeita.")) return;
-  await db.collection(COLLECTION).doc(id).delete();
-  showToast("Lead excluído");
-  closeModal();
-});
-
-db.collection(COLLECTION).orderBy("createdAt", "asc").onSnapshot(snapshot => {
-  currentLeads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderBoard();
-}, err => {
-  console.error("Erro ao carregar dados:", err);
-  boardEl.innerHTML = '<p style="text-align:center;color:#b5544a;">Erro ao conectar com o banco de dados.</p>';
-});
+// ---------- Início ----------
+preencherSelectEtapas();
+iniciarLeads();
 </script>
-
 </body>
 </html>
