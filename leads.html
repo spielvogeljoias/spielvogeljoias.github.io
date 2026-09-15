@@ -312,14 +312,14 @@ if (FIREBASE_CONFIGURADO) {
 
 function iniciarLeads(){
   if (FIREBASE_CONFIGURADO) {
-    db.collection('leads').get().then(snap => {
+    db.collection('leads_crm').get().then(snap => {
       if (snap.empty) {
         const lote = db.batch();
-        SEED_LEADS.forEach(l => lote.set(db.collection('leads').doc(l.id), l));
+        SEED_LEADS.forEach(l => lote.set(db.collection('leads_crm').doc(l.id), l));
         lote.commit();
       }
     });
-    db.collection('leads').onSnapshot(snap => {
+    db.collection('leads_crm').onSnapshot(snap => {
       leads = snap.docs.map(d => d.data());
       renderizarTudo();
     });
@@ -333,7 +333,7 @@ function iniciarLeads(){
 
 function persistirLead(lead){
   if (FIREBASE_CONFIGURADO) {
-    db.collection('leads').doc(lead.id).set(lead);
+    db.collection('leads_crm').doc(lead.id).set(lead);
   } else {
     const i = leads.findIndex(l => l.id === lead.id);
     if (i >= 0) leads[i] = lead; else leads.push(lead);
@@ -344,7 +344,7 @@ function persistirLead(lead){
 
 function persistirExclusao(id){
   if (FIREBASE_CONFIGURADO) {
-    db.collection('leads').doc(id).delete();
+    db.collection('leads_crm').doc(id).delete();
   } else {
     leads = leads.filter(l => l.id !== id);
     localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
