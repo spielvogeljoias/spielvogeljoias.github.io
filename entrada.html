@@ -40,10 +40,11 @@
   }
   .entrada-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 16px 20px;
+    text-align: center;
+    gap: 3px;
+    padding: 18px 20px 16px;
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -54,15 +55,22 @@
   .entrada-item:hover { border-color: var(--gold); background: var(--bg-elevated-2); }
   .entrada-item-nome {
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 19px;
     color: var(--text);
   }
   .entrada-item-desc {
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
   }
-  .entrada-item-seta { color: var(--gold); font-size: 18px; flex-shrink: 0; }
+  .entrada-item-seta {
+    color: var(--gold);
+    font-size: 14px;
+    margin-top: 6px;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    transform: translateY(-2px);
+  }
+  .entrada-item:hover .entrada-item-seta { opacity: 1; transform: translateY(0); }
   .entrada-rodape {
     margin-top: 36px;
     font-size: 12px;
@@ -79,24 +87,18 @@
 
   <div class="entrada-menu">
     <a class="entrada-item" href="leads.html">
-      <div>
-        <div class="entrada-item-nome">Leads</div>
-        <div class="entrada-item-desc">Acompanhamento de contatos e vendas em andamento</div>
-      </div>
+      <div class="entrada-item-nome">Leads</div>
+      <div class="entrada-item-desc">Acompanhamento de contatos e vendas em andamento</div>
       <span class="entrada-item-seta">→</span>
     </a>
     <a class="entrada-item" href="index.html">
-      <div>
-        <div class="entrada-item-nome">Painel de Encomendas</div>
-        <div class="entrada-item-desc">Pedidos em produção, do aprovado à entrega</div>
-      </div>
+      <div class="entrada-item-nome">Painel de Encomendas</div>
+      <div class="entrada-item-desc">Pedidos em produção, do aprovado à entrega</div>
       <span class="entrada-item-seta">→</span>
     </a>
     <a class="entrada-item" href="tabela-precos.html">
-      <div>
-        <div class="entrada-item-nome">Tabela de Preços</div>
-        <div class="entrada-item-desc">Modelos, pedras e valores de referência</div>
-      </div>
+      <div class="entrada-item-nome">Tabela de Preços</div>
+      <div class="entrada-item-desc">Modelos, pedras e valores de referência</div>
       <span class="entrada-item-seta">→</span>
     </a>
   </div>
