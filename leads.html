@@ -7,239 +7,150 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
 
-<!-- Firebase (mesmo projeto "spielvogel-painel" usado no index.html e no tabela-precos.html) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-  :root{
-    --bg: #FAF8F4;
-    --surface: #FFFFFF;
-    --border: #E7E1D6;
-    --text: #2B2620;
-    --text-secondary: #6B6459;
-    --text-muted: #9A9284;
-    --gold: #B8860B;
-    --gold-dark: #8A6508;
-    --danger: #B0503F;
-
-    --fase-descoberta-bg: #EDE4D3;   --fase-descoberta-border: #A0803F;  --fase-descoberta-text: #5C4620;
-    --fase-criacao-bg: #EEDCF7;      --fase-criacao-border: #9B4FC7;     --fase-criacao-text: #5A2680;
-    --fase-decisao-bg: #FBDECB;      --fase-decisao-border: #E0652C;     --fase-decisao-text: #8A3410;
-    --fase-aprovacao-bg: #FCEBA8;    --fase-aprovacao-border: #C99A0A;   --fase-aprovacao-text: #684D04;
-    --fase-formalizacao-bg: #CDF0E0; --fase-formalizacao-border: #1F9C6C;--fase-formalizacao-text: #0F5138;
-    --fase-cancelado-bg: #FAD6CC;    --fase-cancelado-border: #D6462A;   --fase-cancelado-text: #7A2210;
+  :root {
+    --fase-descoberta: #c4a77d;
+    --fase-criacao: #b08fcb;
+    --fase-decisao: #e0916b;
+    --fase-aprovacao: #d4af5a;
+    --fase-formalizacao: #7fb39a;
+    --fase-cancelado: #c46a5e;
   }
 
-  *{ box-sizing: border-box; }
-  body{
-    margin:0;
-    font-family:'Manrope', sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    -webkit-font-smoothing:antialiased;
+  main { padding: 18px 24px 40px; }
+
+  .resumo { display: flex; gap: 28px; padding: 4px 0 18px; flex-wrap: wrap; }
+  .resumo .item { display: flex; flex-direction: column; gap: 2px; }
+  .resumo .item .valor { font-size: 20px; font-weight: 700; color: var(--text); }
+  .resumo .item .rotulo { font-size: 12px; color: var(--text-secondary); }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+  .toolbar-dica { font-size: 13px; color: var(--text-secondary); }
+
+  #banner-firebase {
+    display: none; margin-bottom: 14px; padding: 10px 14px;
+    background: rgba(212,175,90,0.12); border: 1px solid var(--gold);
+    border-radius: 8px; font-size: 13px; color: var(--gold-hover);
   }
 
-  /* Topbar */
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:18px 28px; background:var(--surface); border-bottom:1px solid var(--border);
-  }
-  .topbar h1{
-    font-family:'Playfair Display', serif; font-size:22px; font-weight:600; margin:0;
-    color:var(--text);
-  }
-  .topbar nav a{
-    color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500;
-    margin-left:20px; padding-bottom:2px; border-bottom:1px solid transparent;
-  }
-  .topbar nav a:hover{ color:var(--gold-dark); border-bottom-color:var(--gold); }
-  .topbar nav a.ativo{ color:var(--gold-dark); border-bottom-color:var(--gold); }
+  .board { display: flex; gap: 10px; overflow-x: auto; }
 
-  /* Barra de resumo */
-  .resumo{
-    display:flex; gap:28px; padding:14px 28px; background:var(--surface);
-    border-bottom:1px solid var(--border); flex-wrap:wrap;
+  .coluna {
+    flex: 0 0 190px; display: flex; flex-direction: column;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden;
   }
-  .resumo .item{ display:flex; flex-direction:column; gap:2px; }
-  .resumo .item .valor{ font-size:20px; font-weight:700; }
-  .resumo .item .rotulo{ font-size:12px; color:var(--text-secondary); }
+  .coluna.coluna-cancelado { margin-left: 16px; }
 
-  /* Barra de ferramentas */
-  .toolbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:14px 28px;
-  }
-  #banner-firebase{
-    display:none; margin:0 28px 10px; padding:10px 14px; background:#FBF3DD;
-    border:1px solid var(--gold); border-radius:8px; font-size:13px; color:var(--fase-aprovacao-text);
-  }
-  .btn{
-    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
-    border-radius:8px; border:1px solid var(--border); background:var(--surface);
-    color:var(--text); padding:9px 16px;
-  }
-  .btn:hover{ background:#F4F1EA; }
-  .btn-principal{
-    background:var(--gold); border-color:var(--gold); color:#FFFFFF;
-  }
-  .btn-principal:hover{ background:var(--gold-dark); }
-  .btn-perigo{ color:var(--danger); border-color:var(--danger); background:var(--surface); }
-  .btn-perigo:hover{ background:var(--fase-cancelado-bg); }
-
-  /* Board */
-  .board{
-    display:flex; gap:9px; padding:4px 28px 32px; overflow-x:auto;
-  }
-  .coluna{
-    flex:0 0 178px; display:flex; flex-direction:column;
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    max-height:calc(100vh - 230px);
-  }
-  .coluna.coluna-cancelado{ margin-left:14px; border-color:var(--fase-cancelado-border); }
-
-  .coluna-header{
-    padding:8px 10px; border-bottom:2px solid; border-radius:10px 10px 0 0;
-    display:flex; align-items:center; justify-content:space-between; gap:6px;
-  }
-  .coluna-header .nome-etapa{ font-size:11.5px; font-weight:700; line-height:1.25; }
-  .coluna-header .contagem{
-    font-size:10.5px; font-weight:700; background:rgba(255,255,255,.65);
-    padding:1px 6px; border-radius:999px; flex-shrink:0;
+  .coluna-header { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .coluna-header .nome-etapa { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--bg); }
+  .coluna-header .contagem {
+    font-size: 10.5px; font-weight: 700; color: var(--text);
+    background: rgba(0,0,0,0.28); padding: 1px 7px; border-radius: 999px; flex-shrink: 0;
   }
 
-  .coluna-corpo{
-    flex:1; overflow-y:auto; padding:7px; display:flex; flex-direction:column; gap:6px;
-    min-height:50px;
-  }
-  .coluna-corpo.arrastando-sobre{ background:#F4F1EA; }
+  .coluna-corpo { padding: 8px; display: flex; flex-direction: column; gap: 7px; min-height: 50px; }
 
-  .card{
-    background:var(--surface); border:1px solid var(--border); border-radius:7px;
-    padding:7px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.04);
-  }
-  .card:hover{ border-color:var(--gold); }
-  .card .linha-topo{ display:flex; align-items:center; gap:5px; }
-  .card .ponto{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-  .card .nome{ font-size:11.5px; font-weight:600; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .card .data{ font-size:9.5px; color:var(--text-muted); }
-  .card .linha-baixo{ display:flex; align-items:center; justify-content:space-between; margin-top:4px; }
-  .card .telefone-link{ font-size:9.5px; color:var(--gold-dark); text-decoration:none; }
-  .card .telefone-link:hover{ text-decoration:underline; }
-  .card .marcador{
-    font-size:9px; font-weight:700; color:var(--gold-dark); background:var(--fase-aprovacao-bg);
-    padding:1px 5px; border-radius:999px; border:1px solid var(--gold);
-  }
-  .card .obs-preview{
-    font-size:9.5px; color:var(--text-secondary); margin-top:3px;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  .card { background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 9px; cursor: pointer; }
+  .card:hover { border-color: var(--gold); }
+  .card .linha-topo { display: flex; align-items: center; gap: 5px; }
+  .card .ponto { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .card .nome { font-size: 12px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .card .data { font-size: 10px; color: var(--text-muted); }
+  .card .linha-baixo { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .card .telefone-link { font-size: 10px; color: var(--gold); text-decoration: none; }
+  .card .telefone-link:hover { text-decoration: underline; }
+  .card .marcador { font-size: 9px; font-weight: 700; color: var(--bg); background: var(--gold); padding: 1px 6px; border-radius: 999px; }
+  .card .obs-preview {
+    font-size: 10px; color: var(--text-secondary); margin-top: 3px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
 
-  .vazio{ font-size:10.5px; color:var(--text-muted); text-align:center; padding:14px 4px; }
+  .vazio { font-size: 10.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
 
-  /* Modal */
-  .modal-fundo{
-    display:none; position:fixed; inset:0; background:rgba(43,38,32,.45);
-    align-items:center; justify-content:center; z-index:50; padding:20px;
-  }
-  .modal-fundo.aberto{ display:flex; }
-  .modal{
-    background:var(--surface); border-radius:14px; width:100%; max-width:420px;
-    max-height:90vh; overflow-y:auto; padding:24px;
-  }
-  .modal h2{ font-family:'Playfair Display', serif; font-size:19px; margin:0 0 18px; font-weight:600; }
-  .campo{ margin-bottom:14px; }
-  .campo label{ display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
-  .campo input[type=text], .campo input[type=date], .campo select, .campo textarea{
-    width:100%; font-family:inherit; font-size:14px; padding:9px 10px;
-    border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text);
-  }
-  .campo textarea{ min-height:64px; resize:vertical; }
-  .campo-checkbox{ display:flex; align-items:center; gap:8px; }
-  .campo-checkbox label{ margin:0; font-size:13px; font-weight:600; color:var(--text); }
-  .erro-campo{ font-size:12px; color:var(--danger); margin-top:4px; display:none; }
-  .modal-acoes{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:8px; }
-  .modal-acoes .lado-direito{ display:flex; gap:8px; }
-  .fechar-modal{ position:absolute; top:18px; right:20px; background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-muted); }
-
-  @media (max-width:600px){
-    .topbar, .resumo, .toolbar, .board{ padding-left:14px; padding-right:14px; }
-    .coluna{ flex-basis:160px; }
+  @media (max-width: 600px) {
+    main { padding: 14px; }
+    .coluna { flex-basis: 168px; }
   }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <h1>Leads — Spielvogel Joias</h1>
-  <nav>
-    <a href="index.html">Painel de pedidos</a>
-    <a href="tabela-precos.html">Tabela de preços</a>
+<nav class="sv-nav">
+  <a class="sv-nav-brand" href="entrada.html"><img src="logo.png" alt="Spielvogel Joias"></a>
+  <div class="sv-nav-links">
+    <a href="index.html">Painel de Encomendas</a>
+    <a href="tabela-precos.html">Tabela de Preços</a>
     <a href="leads.html" class="ativo">Leads</a>
-  </nav>
-</div>
+  </div>
+</nav>
 
-<div class="resumo" id="resumo"></div>
+<main>
+  <div class="resumo" id="resumo"></div>
 
-<div class="toolbar">
-  <span style="font-size:13px;color:var(--text-secondary);">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
-  <button class="btn btn-principal" onclick="abrirModalNovo()">+ Adicionar lead</button>
-</div>
+  <div class="toolbar">
+    <span class="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
+    <button class="btn btn-solid" onclick="abrirModalNovo()">+ Adicionar lead</button>
+  </div>
 
-<div id="banner-firebase"></div>
+  <div id="banner-firebase"></div>
 
-<div class="board" id="board"></div>
+  <div class="board" id="board"></div>
+</main>
 
-<!-- Modal de lead -->
-<div class="modal-fundo" id="modal-fundo">
-  <div class="modal" style="position:relative;">
-    <button class="fechar-modal" onclick="fecharModal()">✕</button>
+<div class="modal-overlay hidden" id="modal-fundo">
+  <div class="modal">
+    <button class="modal-fechar" onclick="fecharModal()">✕</button>
     <h2 id="modal-titulo">Adicionar lead</h2>
 
-    <div class="campo">
+    <div class="field">
       <label for="campo-nome">Nome do contato</label>
       <input type="text" id="campo-nome" placeholder="Nome do contato">
       <div class="erro-campo" id="erro-nome">Informe o nome do contato.</div>
     </div>
 
-    <div class="campo">
+    <div class="field">
       <label for="campo-telefone">Telefone (com DDD, opcional)</label>
       <input type="text" id="campo-telefone" placeholder="+55 47 99999-9999">
     </div>
 
-    <div class="campo">
+    <div class="field">
       <label for="campo-data">Data de entrada</label>
       <input type="date" id="campo-data">
     </div>
 
-    <div class="campo">
+    <div class="field">
       <label for="campo-etapa">Etapa</label>
       <select id="campo-etapa"></select>
     </div>
 
-    <div class="campo campo-checkbox">
-      <input type="checkbox" id="campo-potencial">
-      <label for="campo-potencial">Marcar como "em potencial"</label>
+    <div class="field" style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="campo-potencial" style="width:auto;">
+      <label for="campo-potencial" style="margin:0;">Marcar como "em potencial"</label>
     </div>
 
-    <div class="campo">
+    <div class="field">
       <label for="campo-obs">Observações</label>
       <textarea id="campo-obs" placeholder="O que já foi conversado, em que ponto ficou..."></textarea>
     </div>
 
-    <div class="modal-acoes">
-      <button class="btn btn-perigo" id="btn-excluir" style="display:none;" onclick="excluirLeadAtual()">Excluir</button>
-      <div class="lado-direito" style="margin-left:auto;">
-        <button class="btn" onclick="fecharModal()">Cancelar</button>
-        <button class="btn btn-principal" onclick="salvarLeadAtual()">Salvar</button>
-      </div>
+    <div class="modal-actions">
+      <button class="btn-text btn-danger" id="btn-excluir" style="display:none;" onclick="excluirLeadAtual()">Excluir</button>
+      <div style="flex:1;"></div>
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-solid" onclick="salvarLeadAtual()">Salvar</button>
     </div>
   </div>
 </div>
 
+<div class="toast" id="toast-el"></div>
+
 <script>
-// ---------- Funil (ordem oficial, fechada em 15/09) ----------
 const STAGES = [
   { id:'qualificacao',      nome:'Qualificação',                          fase:'descoberta' },
   { id:'entendimento',      nome:'Entendimento do projeto',               fase:'descoberta' },
@@ -255,13 +166,6 @@ const STAGES = [
 const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
 const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
 
-function etapaPorId(id){ return TODAS_ETAPAS.find(e => e.id === id); }
-
-// ---------- Dados iniciais (os 18 leads ditados em 15/09) ----------
-// Observação: alguns desses leads tinham originalmente duas etapas marcadas ao mesmo
-// tempo (ex.: "cotação enviada + negociação"). Como "negociação" e "aguardando
-// aprovação" saíram do funil final, eles ficaram só na etapa que continua existindo.
-// Isso está sinalizado na observação de cada um pra você revisar.
 const SEED_LEADS = [
   { id:'seed-01', nome:'', telefone:'5551989059467', dataEntrada:'2026-09-12', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu. Sem nome anotado ainda, ver pelo número.' },
   { id:'seed-02', nome:'Alexia', telefone:'5547991292918', dataEntrada:'2026-09-14', etapa:'entendimento', emPotencial:false, observacoes:'Respondeu sobre o que queria, expliquei, e não respondeu mais.' },
@@ -283,10 +187,6 @@ const SEED_LEADS = [
   { id:'seed-18', nome:'Luiz', telefone:'5548991271868', dataEntrada:'2026-09-15', etapa:'qualificacao', emPotencial:false, observacoes:'' },
 ];
 
-// ---------- Firebase (mesmo projeto "spielvogel-painel") ----------
-// Cole aqui a config real do projeto (a mesma do index.html / tabela-precos.html).
-// Enquanto ela não for colada, o CRM funciona 100% salvando no navegador (localStorage),
-// só não fica sincronizado entre celular/computador/o Tiago até isso ser preenchido.
 const firebaseConfig = {
   apiKey: "AIzaSyBY2aOX2FSTdjdOH9Nqyi4lAVkfsLws9ek",
   authDomain: "spielvogel-painel.firebaseapp.com",
@@ -295,64 +195,36 @@ const firebaseConfig = {
   messagingSenderId: "368754911719",
   appId: "1:368754911719:web:c452ad8cca48410de33542"
 };
-const FIREBASE_CONFIGURADO = firebaseConfig.apiKey !== "COLE_AQUI_SUA_API_KEY";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = "leads_crm";
 
-let db = null;
 let leads = [];
 let idLeadAberto = null;
 
-if (FIREBASE_CONFIGURADO) {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-} else {
-  const banner = document.getElementById('banner-firebase');
-  banner.style.display = 'block';
-  banner.textContent = 'Firebase ainda não configurado neste arquivo: os dados estão salvando só neste navegador por enquanto. Cole a firebaseConfig no topo do script pra sincronizar com o painel de pedidos.';
-}
-
 function iniciarLeads(){
-  if (FIREBASE_CONFIGURADO) {
-    db.collection('leads_crm').get().then(snap => {
-      if (snap.empty) {
-        const lote = db.batch();
-        SEED_LEADS.forEach(l => lote.set(db.collection('leads_crm').doc(l.id), l));
-        lote.commit();
-      }
-    });
-    db.collection('leads_crm').onSnapshot(snap => {
-      leads = snap.docs.map(d => d.data());
-      renderizarTudo();
-    });
-  } else {
-    const salvo = localStorage.getItem('spielvogel_leads');
-    leads = salvo ? JSON.parse(salvo) : SEED_LEADS.slice();
-    if (!salvo) localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
+  db.collection(COLLECTION).get().then(snap => {
+    if (snap.empty) {
+      const lote = db.batch();
+      SEED_LEADS.forEach(l => lote.set(db.collection(COLLECTION).doc(l.id), l));
+      lote.commit().catch(err => alert('Não consegui criar os leads iniciais no banco: ' + err.message));
+    }
+  }).catch(err => alert('Não consegui ler os leads do banco: ' + err.message));
+  db.collection(COLLECTION).onSnapshot(snap => {
+    leads = snap.docs.map(d => d.data());
     renderizarTudo();
-  }
+  }, err => alert('Perdi a conexão com o banco de dados: ' + err.message));
 }
 
 function persistirLead(lead){
-  if (FIREBASE_CONFIGURADO) {
-    db.collection('leads_crm').doc(lead.id).set(lead);
-  } else {
-    const i = leads.findIndex(l => l.id === lead.id);
-    if (i >= 0) leads[i] = lead; else leads.push(lead);
-    localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
-    renderizarTudo();
-  }
+  db.collection(COLLECTION).doc(lead.id).set(lead)
+    .catch(err => alert('Não consegui salvar esse lead: ' + err.message));
 }
-
 function persistirExclusao(id){
-  if (FIREBASE_CONFIGURADO) {
-    db.collection('leads_crm').doc(id).delete();
-  } else {
-    leads = leads.filter(l => l.id !== id);
-    localStorage.setItem('spielvogel_leads', JSON.stringify(leads));
-    renderizarTudo();
-  }
+  db.collection(COLLECTION).doc(id).delete()
+    .catch(err => alert('Não consegui excluir esse lead: ' + err.message));
 }
 
-// ---------- Utilidades ----------
 function formatarTelefone(digits){
   if (!digits) return '';
   const semPais = digits.startsWith('55') ? digits.slice(2) : digits;
@@ -370,15 +242,9 @@ function formatarData(iso){
   const [ano, mes, dia] = iso.split('-');
   return `${dia}/${mes}`;
 }
-function idNovo(){
-  return 'lead-' + Date.now() + '-' + Math.floor(Math.random()*1000);
-}
+function idNovo(){ return 'lead-' + Date.now() + '-' + Math.floor(Math.random()*1000); }
 
-// ---------- Renderização ----------
-function renderizarTudo(){
-  renderizarResumo();
-  renderizarBoard();
-}
+function renderizarTudo(){ renderizarResumo(); renderizarBoard(); }
 
 function renderizarResumo(){
   const ativos = leads.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
@@ -402,26 +268,19 @@ function renderizarBoard(){
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
-    header.style.background = `var(--fase-${etapa.fase}-bg)`;
-    header.style.borderColor = `var(--fase-${etapa.fase}-border)`;
-    header.style.color = `var(--fase-${etapa.fase}-text)`;
+    header.style.background = `var(--fase-${etapa.fase})`;
     header.innerHTML = `<span class="nome-etapa">${etapa.nome}</span><span class="contagem">${leadsDaEtapa.length}</span>`;
     coluna.appendChild(header);
 
     const corpo = document.createElement('div');
     corpo.className = 'coluna-corpo';
     corpo.dataset.etapa = etapa.id;
-    corpo.addEventListener('dragover', e => { e.preventDefault(); corpo.classList.add('arrastando-sobre'); });
-    corpo.addEventListener('dragleave', () => corpo.classList.remove('arrastando-sobre'));
+    corpo.addEventListener('dragover', e => e.preventDefault());
     corpo.addEventListener('drop', e => {
       e.preventDefault();
-      corpo.classList.remove('arrastando-sobre');
       const id = e.dataTransfer.getData('text/plain');
       const lead = leads.find(l => l.id === id);
-      if (lead && lead.etapa !== etapa.id) {
-        lead.etapa = etapa.id;
-        persistirLead(lead);
-      }
+      if (lead && lead.etapa !== etapa.id) { lead.etapa = etapa.id; persistirLead(lead); }
     });
 
     if (leadsDaEtapa.length === 0) {
@@ -429,7 +288,6 @@ function renderizarBoard(){
     } else {
       leadsDaEtapa.forEach(lead => corpo.appendChild(criarCard(lead, etapa)));
     }
-
     coluna.appendChild(corpo);
     board.appendChild(coluna);
   });
@@ -447,7 +305,7 @@ function criarCard(lead, etapa){
 
   card.innerHTML = `
     <div class="linha-topo">
-      <span class="ponto" style="background:var(--fase-${etapa.fase}-border);"></span>
+      <span class="ponto" style="background:var(--fase-${etapa.fase});"></span>
       <span class="nome">${nomeExibido}</span>
       <span class="data">${formatarData(lead.dataEntrada)}</span>
     </div>
@@ -460,10 +318,8 @@ function criarCard(lead, etapa){
   return card;
 }
 
-// ---------- Modal ----------
 function preencherSelectEtapas(){
-  const select = document.getElementById('campo-etapa');
-  select.innerHTML = TODAS_ETAPAS.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+  document.getElementById('campo-etapa').innerHTML = TODAS_ETAPAS.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
 }
 
 function abrirModalNovo(){
@@ -477,7 +333,7 @@ function abrirModalNovo(){
   document.getElementById('campo-obs').value = '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'none';
-  document.getElementById('modal-fundo').classList.add('aberto');
+  document.getElementById('modal-fundo').classList.remove('hidden');
 }
 
 function abrirModalEdicao(id){
@@ -493,21 +349,22 @@ function abrirModalEdicao(id){
   document.getElementById('campo-obs').value = lead.observacoes || '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'inline-block';
-  document.getElementById('modal-fundo').classList.add('aberto');
+  document.getElementById('modal-fundo').classList.remove('hidden');
 }
 
-function fecharModal(){
-  document.getElementById('modal-fundo').classList.remove('aberto');
+function fecharModal(){ document.getElementById('modal-fundo').classList.add('hidden'); }
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast-el');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 function salvarLeadAtual(){
   const nome = document.getElementById('campo-nome').value.trim();
-  if (!nome) {
-    document.getElementById('erro-nome').style.display = 'block';
-    return;
-  }
-  const telefoneDigitado = document.getElementById('campo-telefone').value.trim();
-  const telefoneDigits = telefoneDigitado.replace(/\D/g,'');
+  if (!nome) { document.getElementById('erro-nome').style.display = 'block'; return; }
+  const telefoneDigits = document.getElementById('campo-telefone').value.trim().replace(/\D/g,'');
 
   const lead = {
     id: idLeadAberto || idNovo(),
@@ -519,6 +376,7 @@ function salvarLeadAtual(){
     observacoes: document.getElementById('campo-obs').value.trim(),
   };
   persistirLead(lead);
+  mostrarToast(idLeadAberto ? 'Lead atualizado' : 'Lead adicionado');
   fecharModal();
 }
 
@@ -526,10 +384,10 @@ function excluirLeadAtual(){
   if (!idLeadAberto) return;
   if (!confirm('Excluir este lead? Essa ação não pode ser desfeita.')) return;
   persistirExclusao(idLeadAberto);
+  mostrarToast('Lead excluído');
   fecharModal();
 }
 
-// ---------- Início ----------
 preencherSelectEtapas();
 iniciarLeads();
 </script>

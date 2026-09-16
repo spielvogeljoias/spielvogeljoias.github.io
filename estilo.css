@@ -1,0 +1,230 @@
+/* ============================================================
+   ESTILO COMPARTILHADO — Spielvogel Joias (painel interno)
+   Usado por entrada.html, index.html, tabela-precos.html e leads.html.
+   Mudou uma cor ou fonte? Muda aqui, uma vez só, e reflete nas 4 páginas.
+   ============================================================ */
+
+:root {
+  --bg: #211f1c;              /* fundo principal, chumbo escuro (não preto puro) */
+  --bg-elevated: #2a2825;     /* fundo de cards, colunas, cabeçalhos */
+  --bg-elevated-2: #332f2a;   /* fundo de inputs e elementos aninhados */
+  --border: #3d3833;          /* linhas e bordas sutis */
+  --gold: #d4af5a;            /* dourado, cor de destaque (vívido) */
+  --gold-hover: #e8c979;
+  --gold-soft: #a88a45;       /* dourado apagado, uso secundário */
+  --text: #f3ede1;            /* texto principal sobre fundo escuro */
+  --text-secondary: #b8b0a0;  /* texto secundário */
+  --text-muted: #8a8275;      /* texto terciário, datas, legendas */
+  --danger: #c4675a;
+  --amber: #d4a24a;
+
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Manrope', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   NAVEGAÇÃO — mesma barra no topo das 4 páginas
+   ============================================================ */
+.sv-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.sv-nav .sv-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+.sv-nav .sv-nav-brand img { height: 26px; display: block; }
+.sv-nav-links { display: flex; gap: 22px; flex-wrap: wrap; }
+.sv-nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  white-space: nowrap;
+}
+.sv-nav-links a:hover { color: var(--gold); }
+.sv-nav-links a.ativo { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ============================================================
+   BOTÕES
+   ============================================================ */
+.btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  padding: 9px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--gold); color: var(--bg); }
+.btn-solid { background: var(--gold); color: var(--bg); }
+.btn-solid:hover { background: var(--gold-hover); }
+.btn-text {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.btn-text:hover { color: var(--gold); background: none; }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: var(--text); }
+
+/* ============================================================
+   MODAL (formulário de edição/criação, igual nas 3 ferramentas)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  position: relative;
+}
+.modal h2 {
+  font-family: var(--font-display);
+  color: var(--gold);
+  margin: 0 0 18px;
+  font-size: 22px;
+  text-align: center;
+}
+.modal-fechar {
+  position: absolute; top: 16px; right: 18px;
+  background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);
+}
+.modal-fechar:hover { color: var(--gold); }
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 5px;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--gold);
+}
+.field textarea { resize: vertical; min-height: 60px; }
+.field input[type="date"] { color-scheme: dark; }
+.erro-campo { font-size: 12px; color: var(--danger); margin-top: 4px; display: none; }
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+/* ============================================================
+   ANEXOS DE FOTO (usado no painel de encomendas e na tabela)
+   ============================================================ */
+.photo-thumb {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb .remove-photo {
+  position: absolute; top: 2px; right: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(0,0,0,0.75); color: var(--text); border: none;
+  font-size: 12px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-thumb .remove-photo:hover { background: var(--danger); }
+
+/* Visualizador de foto em tela cheia (lightbox), reutilizado em qualquer página */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+  display: none; align-items: center; justify-content: center;
+  z-index: 300; padding: 24px; cursor: zoom-out;
+}
+.lightbox.aberto { display: flex; }
+.lightbox img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border-radius: 6px;
+}
+.lightbox .lightbox-fechar {
+  position: absolute; top: 18px; right: 22px;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+  color: var(--text); font-size: 20px; width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+.upload-status { font-size: 12px; color: var(--gold-soft); margin-top: 6px; min-height: 16px; }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: var(--bg);
+  padding: 10px 20px; border-radius: 5px;
+  font-size: 13px; font-weight: 600;
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.toast.show { opacity: 1; }
+
+/* Scrollbar discreta (Webkit) */
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-soft); }
