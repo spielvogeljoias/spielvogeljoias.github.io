@@ -13,10 +13,10 @@
 
   .toolbar { display: flex; justify-content: center; margin-bottom: 18px; }
 
-  .board { display: flex; gap: 10px; overflow-x: auto; }
+  .board { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 10px; }
 
   .column {
-    flex: 0 0 200px; display: flex; flex-direction: column;
+    display: flex; flex-direction: column;
     background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
     padding: 10px 9px;
   }
@@ -77,9 +77,9 @@
 
   .upload-status { font-size: 12px; color: var(--gold-soft); margin-top: 6px; min-height: 16px; }
 
-  @media (max-width: 900px) {
-    .board { grid-auto-flow: unset; }
-    .column { flex-basis: 178px; }
+  @media (max-width: 1000px) {
+    .board { display: flex; overflow-x: auto; }
+    .column { flex: 0 0 178px; }
   }
 </style>
 </head>
