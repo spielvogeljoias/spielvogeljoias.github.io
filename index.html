@@ -13,7 +13,8 @@
 
   .toolbar { display: flex; justify-content: center; margin-bottom: 18px; }
 
-  .board { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 10px; }
+  .board { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 10px; cursor: grab; }
+  .board.arrastando-board { cursor: grabbing; user-select: none; }
 
   .column {
     display: flex; flex-direction: column;
@@ -295,7 +296,7 @@ function renderFilesGrid() {
       thumb.innerHTML = `<img src="${item.data}"><button type="button" class="remove-photo" title="Remover">×</button>`;
     } else {
       thumb.innerHTML = `
-        <a href="${item.data}" target="_blank" download="${item.name}" class="pdf-thumb">
+        <a href="${item.data}" target="_blank" class="pdf-thumb">
           <span class="pdf-label">PDF</span><span class="pdf-name">${item.name}</span>
         </a>
         <button type="button" class="remove-photo" title="Remover">×</button>
@@ -516,6 +517,26 @@ deleteBtn.addEventListener("click", async () => {
   closeModal();
 });
 
+function ativarArrastarScroll(board){
+  let arrastando = false, inicioX = 0, scrollInicial = 0;
+  board.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.card, button, a, input, select, textarea')) return;
+    arrastando = true;
+    board.classList.add('arrastando-board');
+    inicioX = e.pageX;
+    scrollInicial = board.scrollLeft;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!arrastando) return;
+    e.preventDefault();
+    board.scrollLeft = scrollInicial - (e.pageX - inicioX);
+  });
+  window.addEventListener('mouseup', () => {
+    arrastando = false;
+    board.classList.remove('arrastando-board');
+  });
+}
+
 db.collection(COLLECTION).orderBy("createdAt", "asc").onSnapshot(snapshot => {
   currentCards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   renderBoard();
@@ -523,6 +544,8 @@ db.collection(COLLECTION).orderBy("createdAt", "asc").onSnapshot(snapshot => {
   console.error("Erro ao carregar dados:", err);
   boardEl.innerHTML = '<p style="text-align:center;color:var(--danger);grid-column:1/-1;">Erro ao conectar com o banco de dados. Confira a configuração do Firebase no topo do código.</p>';
 });
+
+ativarArrastarScroll(boardEl);
 </script>
 
 </body>
