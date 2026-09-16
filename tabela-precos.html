@@ -69,9 +69,6 @@
     <input type="text" class="search-input" id="searchInput" placeholder="Buscar por modelo, pedra, descrição...">
     <button class="btn btn-solid" id="addBtn">+ Novo Item</button>
   </div>
-  <div class="utility-row">
-    <button class="btn-text" id="importBtn">Padronizar dados (importar novo formato) ↺</button>
-  </div>
   <div id="list"></div>
 </main>
 
@@ -405,67 +402,6 @@ deleteBtn.addEventListener("click", async () => {
   await db.collection(COLLECTION).doc(id).delete();
   showToast("Item excluído");
   closeModal();
-});
-
-/* Dados padronizados (mesma lista de antes) — o botão "Padronizar dados" apaga os
-   itens atuais e escreve esta lista no lugar. */
-const SEED_DATA = [
-  { "ringModel": "Anel Drei Steine", "stone": "Moissanite", "price": "R$ 3.290,00", "margin": "", "link3d": "", "description": "Anel Drei Steine em ouro 18k amarelo, com moissanite central de 5x2,5mm e duas pedras acessórias de 2mm." },
-  { "ringModel": "Anel Glanz", "stone": "Safira rosa", "price": "R$ 2.790,00", "margin": "", "link3d": "", "description": "Anel Glanz em ouro 18k amarelo, com safira rosa central de 3x5mm e seis pedras laterais de 1,5x3mm." },
-  { "ringModel": "Anel Glanz", "stone": "Moissanite", "price": "R$ 3.590,00", "margin": "", "link3d": "", "description": "Anel Glanz em ouro 18k, com moissanite central de 4x6mm, duas marquises de 2x4mm e quatro pedras de 1,5mm lapidação brilhante." },
-  { "ringModel": "Anel Glanz", "stone": "Diamante", "price": "R$ 7.990,00", "margin": "", "link3d": "", "description": "Anel Glanz em ouro 18k, com diamante central de 30 pontos, lapidação oval, e seis pedras acessórias, sendo duas marquises de 1,5x3mm e quatro lapidação brilhante de 1,5mm." },
-  { "ringModel": "Anel Glanz Brilhante (redondo)", "stone": "Moissanite", "price": "R$ 3.390,00", "margin": "", "link3d": "", "description": "Anel Glanz Brilhante (redondo) em ouro 18k amarelo, com moissanite central de 4mm no topo, lapidação brilhante, e seis pedras acessórias, sendo duas marquises de 1,5x3mm e quatro lapidação brilhante de 1,5mm." },
-  { "ringModel": "Anel Glanz Brilhante (redondo)", "stone": "Diamante", "price": "R$ 5.990,00", "margin": "Já fechado com 25 pontos por R$ 5.890,00, dependendo do cliente.", "link3d": "", "description": "Anel Glanz Brilhante (redondo) em ouro 18k amarelo, com diamante central de 20 pontos no topo, lapidação brilhante, e seis diamantes acessórios, sendo duas marquises de 1,5x3mm e quatro lapidação brilhante de 1,5mm." },
-  { "ringModel": "Anel Glanz Brilhante (redondo)", "stone": "Diamante", "price": "R$ 7.890,00", "margin": "", "link3d": "", "description": "Anel Glanz Brilhante (redondo) em ouro 18k amarelo, com diamante central de 30 pontos no topo, lapidação brilhante, e seis diamantes acessórios, sendo duas marquises de 6 pontos (1,5x3mm) cada e quatro de 1 ponto (1,5mm) cada, lapidação brilhante." },
-  { "ringModel": "Anel Laub Oval", "stone": "Moissanite", "price": "R$ 3.690,00", "margin": "Já fechado por R$ 3.790,00, dependendo do cliente.", "link3d": "", "description": "Anel Laub Oval em ouro 18k amarelo, com moissanite central oval de 4x6mm e aproximadamente 18 pedras acessórias de 1,5mm. Acompanha certificado GRA." },
-  { "ringModel": "Anel Laub Oval", "stone": "Diamante", "price": "R$ 10.990,00", "margin": "", "link3d": "", "description": "Anel Laub Oval em ouro 18k amarelo, com diamante central de 50 pontos e 18 diamantes acessórios lapidação brilhante de 1 ponto cada." },
-  { "ringModel": "Anel Laub Oval", "stone": "Diamante", "price": "R$ 10.890,00", "margin": "", "link3d": "", "description": "Anel Laub Oval em ouro 18k amarelo, com diamante central de 40 pontos, lapidação oval, e aproximadamente 18 diamantes acessórios de 1,5mm cada." },
-  { "ringModel": "Anel Laub Oval", "stone": "Moissanite", "price": "R$ 2.590,00", "margin": "", "link3d": "", "description": "Anel Laub Oval em ouro 10k amarelo, com moissanite central oval de 4x6mm e aproximadamente 18 moissanites acessórias de 1,5mm." },
-  { "ringModel": "Anel Lidi", "stone": "Diamante", "price": "R$ 3.890,00", "margin": "", "link3d": "", "description": "Anel Lidi em ouro 18k amarelo, com diamante central de 15 pontos." },
-  { "ringModel": "Anel Lidi", "stone": "Moissanite", "price": "R$ 1.690,00", "margin": "", "link3d": "", "description": "Anel Lidi em ouro 10k amarelo, com moissanite central de 3mm, lapidação brilhante." },
-  { "ringModel": "Anel Oval", "stone": "Moissanite", "price": "R$ 3.790,00", "margin": "", "link3d": "", "description": "Anel Oval em ouro 18k amarelo, com moissanite de 5x7mm, lapidação oval." },
-  { "ringModel": "Anel Sechs 2", "stone": "Moissanite", "price": "R$ 1.890,00", "margin": "", "link3d": "", "description": "Anel Sechs 2 em ouro 10k, com moissanite." },
-  { "ringModel": "Anel Sechs 3", "stone": "Diamante", "price": "R$ 9.890,00", "margin": "", "link3d": "", "description": "Anel Sechs 3 em ouro 18k amarelo, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm, sendo dois marquise e quatro lapidação brilhante." },
-  { "ringModel": "Anel Sechs 3", "stone": "Diamante", "price": "R$ 10.290,00", "margin": "", "link3d": "", "description": "Anel Sechs 3 em ouro 18k branco, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm, sendo dois marquise e quatro lapidação brilhante." },
-  { "ringModel": "Anel Sechs 3", "stone": "Moissanite", "price": "R$ 3.990,00", "margin": "", "link3d": "", "description": "Anel Sechs 3 em ouro 18k branco, com moissanite central de 4,6mm, lapidação brilhante, e seis moissanites acessórias de 1,5mm cada, sendo duas marquises e quatro lapidação brilhante." },
-  { "ringModel": "Anel Solitário Clássico", "stone": "Moissanite", "price": "R$ 3.190,00", "margin": "", "link3d": "", "description": "Anel Solitário Clássico em ouro 18k amarelo, com moissanite de 4mm." },
-  { "ringModel": "Anel Solitário Clássico", "stone": "Diamante", "price": "R$ 4.890,00", "margin": "", "link3d": "", "description": "Anel Solitário Clássico em ouro 18k amarelo, com diamante de 20 pontos." },
-  { "ringModel": "Anel Solitário Clássico", "stone": "Moissanite", "price": "R$ 1.790,00", "margin": "", "link3d": "", "description": "Anel Solitário Clássico em ouro 10k amarelo, com moissanite central de 4mm, lapidação brilhante." },
-  { "ringModel": "Anel Solitário Marquise", "stone": "Moissanite", "price": "R$ 3.190,00", "margin": "", "link3d": "", "description": "Anel Solitário Marquise em ouro 18k amarelo, com moissanite de 6,3mm, lapidação marquise." },
-  { "ringModel": "Anel Vier", "stone": "Moissanite", "price": "R$ 3.890,00", "margin": "", "link3d": "", "description": "Anel Vier em ouro 18k amarelo, com moissanite central brilhante de 4,5mm e quatro pedras acessórias de 1,5mm, duas de cada lado." },
-  { "ringModel": "Anel Wellen", "stone": "Moissanite", "price": "R$ 2.390,00", "margin": "", "link3d": "", "description": "Anel Wellen em ouro 18k, com moissanite." },
-  { "ringModel": "Anel Wellen", "stone": "Diamante", "price": "R$ 2.890,00", "margin": "", "link3d": "", "description": "Anel Wellen em ouro 18k, com diamante de 10 pontos." },
-  { "ringModel": "Anel Ziel", "stone": "Moissanite", "price": "R$ 3.190,00", "margin": "", "link3d": "", "description": "Anel Ziel em ouro 18k amarelo, com moissanite central oval de 3x5mm e quatro pedras marquise de 3x1,5mm." },
-  { "ringModel": "Anel Ziel", "stone": "Diamante", "price": "R$ 6.890,00", "margin": "", "link3d": "", "description": "Anel Ziel em ouro 18k amarelo, com diamante de 30 pontos, lapidação marquise de 3x1,5mm cada." },
-  { "ringModel": "Par de Alianças 7mm", "stone": "", "price": "R$ 17.820,00", "margin": "", "link3d": "", "description": "Par de Alianças em ouro amarelo 18k, com 7mm de largura, 1,35mm de altura e perfil anatômico. Esse formato possui a parte interna arredondada, o que proporciona um ajuste mais confortável ao dedo e reduz o atrito com a pele durante o uso diário. Por conter uma quantidade maior de ouro em sua estrutura interna, o modelo anatômico também oferece mais resistência e durabilidade ao longo dos anos." },
-  { "ringModel": "Par de Alianças 5,5mm (Personalizado)", "stone": "", "price": "R$ 16.690,00", "margin": "", "link3d": "", "description": "Par de Alianças personalizado em ouro amarelo 18k, com 5,5mm de largura, 1,35mm de altura e perfil anatômico. Esse formato possui a parte interna arredondada, o que proporciona um ajuste mais confortável ao dedo e reduz o atrito com a pele durante o uso diário. Por conter uma quantidade maior de ouro em sua estrutura interna, o modelo anatômico também oferece mais resistência e durabilidade ao longo dos anos." },
-  { "ringModel": "Anel Sechs", "stone": "Moissanite", "price": "R$ 3.890,00", "margin": "Disponível em ouro branco e amarelo, ambos ao redor de R$ 3.890,00; já fechado em branco por até R$ 4.190,00, dependendo do cliente.", "link3d": "", "description": "Anel Sechs em ouro 18k, com moissanite central de 4,5mm e seis moissanites acessórias de 1,5mm." },
-  { "ringModel": "Anel Sechs", "stone": "Diamante", "price": "R$ 10.490,00", "margin": "Também fechado em ouro branco pelo mesmo valor. Variações observadas entre R$ 10.390,00 (amarelo) e R$ 10.590,00 (branco), dependendo do cliente.", "link3d": "", "description": "Anel Sechs em ouro 18k amarelo, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm. O diamante central de 40 pontos acompanha certificado GIA." },
-  { "ringModel": "Anel Sechs 3", "stone": "Moissanite", "price": "R$ 3.890,00", "margin": "", "link3d": "", "description": "Anel Sechs 3 em ouro 18k, com moissanite central de 4,5mm e seis moissanites acessórias de 1,5mm." },
-  { "ringModel": "Anel Sechs 3", "stone": "Diamante", "price": "R$ 10.490,00", "margin": "", "link3d": "", "description": "Anel Sechs 3 em ouro 18k amarelo, com diamante central de 40 pontos e seis diamantes acessórios de 1,5mm. O diamante central de 40 pontos acompanha certificado GIA." }
-];
-
-document.getElementById("importBtn").addEventListener("click", async () => {
-  const confirmed = confirm(
-    "Isso vai apagar todos os itens atuais da tabela e substituir pela versão padronizada (descrição em parágrafo corrido, nomes corrigidos). " +
-    "Fotos e links que você já tiver adicionado manualmente serão perdidos nessa troca. Quer continuar?"
-  );
-  if (!confirmed) return;
-
-  try {
-    const snapshot = await db.collection(COLLECTION).get();
-    const batch = db.batch();
-    snapshot.docs.forEach(doc => batch.delete(doc.ref));
-    SEED_DATA.forEach(item => {
-      const ref = db.collection(COLLECTION).doc();
-      batch.set(ref, { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    });
-    await batch.commit();
-    showToast("Tabela padronizada com sucesso");
-  } catch (err) {
-    console.error(err);
-    showToast("Erro ao padronizar, tenta de novo");
-  }
 });
 
 db.collection(COLLECTION).orderBy("ringModel", "asc").onSnapshot(snapshot => {
