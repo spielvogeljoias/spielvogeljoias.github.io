@@ -273,6 +273,22 @@ function fecharLightbox() {
   document.getElementById("lightbox").classList.remove("aberto");
 }
 
+function abrirPdfBase64(dataUri) {
+  try {
+    const base64 = dataUri.split(",")[1];
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    console.error(err);
+    alert("Não consegui abrir esse PDF pra visualizar.");
+  }
+}
+
 function urgencyBadgeHtml(card) {
   if (!card.dueDate) return "";
   const today = new Date();
@@ -296,11 +312,15 @@ function renderFilesGrid() {
       thumb.innerHTML = `<img src="${item.data}"><button type="button" class="remove-photo" title="Remover">×</button>`;
     } else {
       thumb.innerHTML = `
-        <a href="${item.data}" target="_blank" class="pdf-thumb">
+        <div class="pdf-thumb" role="button" tabindex="0">
           <span class="pdf-label">PDF</span><span class="pdf-name">${item.name}</span>
-        </a>
+        </div>
         <button type="button" class="remove-photo" title="Remover">×</button>
       `;
+      thumb.querySelector(".pdf-thumb").addEventListener("click", (e) => {
+        e.stopPropagation();
+        abrirPdfBase64(item.data);
+      });
     }
     thumb.querySelector(".remove-photo").addEventListener("click", (e) => {
       e.stopPropagation(); e.preventDefault();
