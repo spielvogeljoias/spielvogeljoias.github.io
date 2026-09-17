@@ -32,6 +32,14 @@
   .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
   .toolbar-dica { font-size: 13px; color: var(--text-secondary); }
 
+  .busca-linha { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; max-width: 360px; }
+  .busca-icone { font-size: 14px; opacity: 0.7; }
+  .busca-linha .search-input {
+    width: 100%; background: var(--bg-elevated-2); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 12px; border-radius: 6px; font-family: var(--font-body); font-size: 14px;
+  }
+  .busca-linha .search-input:focus { outline: none; border-color: var(--gold); }
+
   #banner-firebase {
     display: none; margin-bottom: 14px; padding: 10px 14px;
     background: rgba(212,175,90,0.12); border: 1px solid var(--gold);
@@ -92,9 +100,13 @@
     <a href="leads.html" class="ativo">Leads</a>
   </div>
 </nav>
-
 <main>
   <div class="resumo" id="resumo"></div>
+
+  <div class="busca-linha">
+    <span class="busca-icone">🔍</span>
+    <input type="text" id="campo-busca" class="search-input" placeholder="Buscar por nome ou telefone...">
+  </div>
 
   <div class="toolbar">
     <span class="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
@@ -209,6 +221,18 @@ const COLLECTION = "leads_crm";
 
 let leads = [];
 let idLeadAberto = null;
+let termoBusca = '';
+
+function leadsFiltrados(){
+  if (!termoBusca) return leads;
+  const termo = termoBusca.trim().toLowerCase();
+  const termoDigits = termo.replace(/\D/g, '');
+  return leads.filter(l => {
+    const nomeMatch = (l.nome || '').toLowerCase().includes(termo);
+    const telMatch = termoDigits && (l.telefone || '').includes(termoDigits);
+    return nomeMatch || telMatch;
+  });
+}
 
 function iniciarLeads(){
   db.collection(COLLECTION).get().then(snap => {
@@ -279,8 +303,9 @@ function renderizarResumo(){
 function renderizarBoard(){
   const board = document.getElementById('board');
   board.innerHTML = '';
+  const listaAtual = leadsFiltrados();
   TODAS_ETAPAS.forEach(etapa => {
-    const leadsDaEtapa = leads.filter(l => l.etapa === etapa.id);
+    const leadsDaEtapa = listaAtual.filter(l => l.etapa === etapa.id);
     const coluna = document.createElement('div');
     coluna.className = 'coluna' + (etapa.id === 'cancelado' ? ' coluna-cancelado' : '');
 
@@ -302,7 +327,7 @@ function renderizarBoard(){
     });
 
     if (leadsDaEtapa.length === 0) {
-      corpo.innerHTML = '<div class="vazio">Sem leads aqui</div>';
+      corpo.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Sem leads aqui'}</div>`;
     } else {
       leadsDaEtapa.forEach(lead => corpo.appendChild(criarCard(lead, etapa)));
     }
@@ -350,20 +375,30 @@ function preencherSelectFollowup(){
 }
 
 function ativarArrastarScroll(board){
-  let arrastando = false, inicioX = 0, scrollInicial = 0;
+  let pressionado = false, arrastando = false, arrastandoCard = false;
+  let inicioX = 0, scrollInicial = 0;
+
+  document.addEventListener('dragstart', () => { arrastandoCard = true; });
+  document.addEventListener('dragend', () => { arrastandoCard = false; });
+
   board.addEventListener('mousedown', (e) => {
     if (e.target.closest('.card, button, a, input, select, textarea')) return;
-    arrastando = true;
-    board.classList.add('arrastando-board');
+    pressionado = true;
     inicioX = e.pageX;
     scrollInicial = board.scrollLeft;
   });
   window.addEventListener('mousemove', (e) => {
-    if (!arrastando) return;
+    if (!pressionado || arrastandoCard) return;
+    if (!arrastando) {
+      if (Math.abs(e.pageX - inicioX) < 5) return; // só ativa depois de um movimento de verdade
+      arrastando = true;
+      board.classList.add('arrastando-board');
+    }
     e.preventDefault();
     board.scrollLeft = scrollInicial - (e.pageX - inicioX);
   });
   window.addEventListener('mouseup', () => {
+    pressionado = false;
     arrastando = false;
     board.classList.remove('arrastando-board');
   });
@@ -441,6 +476,10 @@ function excluirLeadAtual(){
 preencherSelectEtapas();
 preencherSelectFollowup();
 ativarArrastarScroll(document.getElementById('board'));
+document.getElementById('campo-busca').addEventListener('input', (e) => {
+  termoBusca = e.target.value;
+  renderizarBoard();
+});
 iniciarLeads();
 </script>
 </body>
