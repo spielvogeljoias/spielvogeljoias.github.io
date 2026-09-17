@@ -538,20 +538,30 @@ deleteBtn.addEventListener("click", async () => {
 });
 
 function ativarArrastarScroll(board){
-  let arrastando = false, inicioX = 0, scrollInicial = 0;
+  let pressionado = false, arrastando = false, arrastandoCard = false;
+  let inicioX = 0, scrollInicial = 0;
+
+  document.addEventListener('dragstart', () => { arrastandoCard = true; });
+  document.addEventListener('dragend', () => { arrastandoCard = false; });
+
   board.addEventListener('mousedown', (e) => {
     if (e.target.closest('.card, button, a, input, select, textarea')) return;
-    arrastando = true;
-    board.classList.add('arrastando-board');
+    pressionado = true;
     inicioX = e.pageX;
     scrollInicial = board.scrollLeft;
   });
   window.addEventListener('mousemove', (e) => {
-    if (!arrastando) return;
+    if (!pressionado || arrastandoCard) return;
+    if (!arrastando) {
+      if (Math.abs(e.pageX - inicioX) < 5) return;
+      arrastando = true;
+      board.classList.add('arrastando-board');
+    }
     e.preventDefault();
     board.scrollLeft = scrollInicial - (e.pageX - inicioX);
   });
   window.addEventListener('mouseup', () => {
+    pressionado = false;
     arrastando = false;
     board.classList.remove('arrastando-board');
   });
