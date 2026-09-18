@@ -75,7 +75,7 @@
   .card .telefone-link { font-size: 10px; color: var(--gold); text-decoration: none; }
   .card .telefone-link:hover { text-decoration: underline; }
   .card .marcador { font-size: 9px; font-weight: 700; color: var(--bg); background: var(--gold); padding: 1px 6px; border-radius: 999px; }
-  .card .marcador-followup { font-size: 9px; font-weight: 700; color: var(--text); background: var(--fase-decisao); padding: 1px 6px; border-radius: 999px; }
+  .card .marcador-followup { font-size: 9px; font-weight: 700; color: var(--bg); padding: 1px 6px; border-radius: 999px; }
   .card .marcadores { display: flex; gap: 4px; flex-wrap: wrap; }
   .card .obs-preview {
     font-size: 10px; color: var(--text-secondary); margin-top: 3px;
@@ -185,6 +185,9 @@ const STAGES = [
 ];
 const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
 const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
+
+const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8','#d17fa8','#8fae52','#a37fd1'];
+function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length]; }
 
 const SEED_LEADS = [
   { id:'seed-01', nome:'', telefone:'5551989059467', dataEntrada:'2026-09-12', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu. Sem nome anotado ainda, ver pelo número.' },
@@ -357,7 +360,7 @@ function criarCard(lead, etapa){
       ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
       <span class="marcadores">
         ${lead.emPotencial ? '<span class="marcador">Em potencial</span>' : ''}
-        ${lead.followUp ? `<span class="marcador-followup">Follow-up ${lead.followUp}</span>` : ''}
+        ${lead.followUp ? `<span class="marcador-followup" style="background:${corFollowup(lead.followUp)};">Follow-up ${lead.followUp}</span>` : ''}
       </span>
     </div>
   `;
