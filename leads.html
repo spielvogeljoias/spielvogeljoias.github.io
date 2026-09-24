@@ -11,6 +11,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   :root {
@@ -84,6 +85,61 @@
 
   .vazio { font-size: 10.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
 
+  .hidden { display: none !important; }
+
+  /* ---------- Filtro por período ---------- */
+  .filtro-periodo { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filtro-campo { display: flex; flex-direction: column; gap: 3px; }
+  .filtro-campo label { font-size: 11px; color: var(--text-secondary); }
+  .filtro-campo input[type="date"] {
+    background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 9px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; color-scheme: dark;
+  }
+  .filtro-campo input[type="date"]:focus { outline: none; border-color: var(--gold); }
+  .rotulo-periodo { font-size: 12px; color: var(--text-muted); padding-bottom: 8px; }
+
+  /* ---------- Abas ---------- */
+  .abas { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .aba {
+    background: none; border: none; color: var(--text-secondary); font-family: var(--font-body);
+    font-size: 13px; font-weight: 600; padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .aba:hover { color: var(--gold-soft); }
+  .aba.ativa { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ---------- Board de follow-up ---------- */
+  .coluna-followup { flex: 0 0 205px; }
+  .followup-mensagem {
+    margin: 0 8px 8px; width: calc(100% - 16px); min-height: 48px; resize: vertical;
+    background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 8px; border-radius: 5px; font-family: var(--font-body); font-size: 11px; line-height: 1.4;
+  }
+  .followup-mensagem:focus { outline: none; border-color: var(--gold); }
+  .followup-mensagem::placeholder { color: var(--text-muted); }
+
+  .card .valor-estimado { font-size: 10.5px; font-weight: 700; color: var(--gold); margin-top: 3px; }
+
+  /* ---------- Aba "Em potencial" ---------- */
+  .secoes-potencial { display: flex; flex-direction: column; gap: 20px; }
+  .secao-titulo {
+    display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text);
+    margin-bottom: 9px;
+  }
+  .secao-titulo .contagem { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
+  .secao-cards { display: flex; gap: 8px; flex-wrap: wrap; }
+  .secao-cards .card { width: 195px; }
+
+  /* ---------- Modal de relatório ---------- */
+  .modal-relatorio { max-width: 580px; }
+  .relatorio-periodo { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+  .relatorio-grid { display: flex; gap: 20px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .relatorio-legenda { display: flex; flex-direction: column; gap: 5px; font-size: 12px; flex: 1; min-width: 170px; }
+  .legenda-item { display: flex; align-items: center; gap: 6px; }
+  .legenda-cor { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .relatorio-bloco { margin-bottom: 16px; }
+  .relatorio-bloco h3 { font-size: 13px; color: var(--gold); margin: 0 0 8px; font-family: var(--font-body); }
+  .relatorio-linha { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
+
   @media (max-width: 600px) {
     main { padding: 14px; }
     .coluna { flex-basis: 168px; }
@@ -103,19 +159,43 @@
 <main>
   <div class="resumo" id="resumo"></div>
 
+  <div class="filtro-periodo">
+    <div class="filtro-campo">
+      <label for="filtro-de">De</label>
+      <input type="date" id="filtro-de">
+    </div>
+    <div class="filtro-campo">
+      <label for="filtro-ate">Até</label>
+      <input type="date" id="filtro-ate">
+    </div>
+    <button class="btn-text" id="btn-limpar-filtro">Limpar filtro</button>
+    <span class="rotulo-periodo" id="rotulo-periodo">Mostrando: todos os períodos</span>
+  </div>
+
+  <div class="abas">
+    <button class="aba ativa" data-aba="funil" onclick="mudarAba('funil')">Funil de vendas</button>
+    <button class="aba" data-aba="followup" onclick="mudarAba('followup')">Follow-up</button>
+    <button class="aba" data-aba="potencial" onclick="mudarAba('potencial')">Em potencial</button>
+  </div>
+
   <div class="busca-linha">
     <span class="busca-icone">🔍</span>
     <input type="text" id="campo-busca" class="search-input" placeholder="Buscar por nome ou telefone...">
   </div>
 
   <div class="toolbar">
-    <span class="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
-    <button class="btn btn-solid" onclick="abrirModalNovo()">+ Adicionar lead</button>
+    <span class="toolbar-dica" id="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
+    <div style="display:flex; gap:8px;">
+      <button class="btn" id="btn-gerar-relatorio">📄 Gerar relatório</button>
+      <button class="btn btn-solid" onclick="abrirModalNovo()">+ Adicionar lead</button>
+    </div>
   </div>
 
   <div id="banner-firebase"></div>
 
   <div class="board" id="board"></div>
+  <div class="board hidden" id="board-followup"></div>
+  <div class="secoes-potencial hidden" id="board-potencial"></div>
 </main>
 
 <div class="modal-overlay hidden" id="modal-fundo">
@@ -144,6 +224,11 @@
       <select id="campo-etapa"></select>
     </div>
 
+    <div class="field" id="linha-valor-estimado" style="display:none;">
+      <label for="campo-valor-estimado">Valor estimado (R$)</label>
+      <input type="text" id="campo-valor-estimado" placeholder="Ex: R$ 3.200,00">
+    </div>
+
     <div class="field" style="display:flex; align-items:center; gap:8px;">
       <input type="checkbox" id="campo-potencial" style="width:auto;">
       <label for="campo-potencial" style="margin:0;">Marcar como "em potencial"</label>
@@ -168,6 +253,40 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="modal-relatorio-fundo">
+  <div class="modal modal-relatorio">
+    <button class="modal-fechar" onclick="fecharRelatorio()">✕</button>
+    <h2>Relatório de leads</h2>
+    <div class="relatorio-periodo" id="relatorio-periodo"></div>
+
+    <div class="relatorio-grid">
+      <canvas id="relatorio-pizza" width="200" height="200"></canvas>
+      <div class="relatorio-legenda" id="relatorio-legenda"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Onde os leads estão travando</h3>
+      <div id="relatorio-travados"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Valor parado (R$)</h3>
+      <div id="relatorio-valores"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Sugestões</h3>
+      <div id="relatorio-sugestoes"></div>
+    </div>
+
+    <div class="modal-actions">
+      <div style="flex:1;"></div>
+      <button class="btn" onclick="fecharRelatorio()">Fechar</button>
+      <button class="btn btn-solid" onclick="baixarRelatorioPDF()">Baixar PDF</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast-el"></div>
 
 <script>
@@ -182,12 +301,24 @@ const STAGES = [
   { id:'venda_aprovada',    nome:'Venda aprovada',                        fase:'aprovacao' },
   { id:'em_producao',       nome:'Em produção',                           fase:'formalizacao' },
   { id:'saiu_entrega',      nome:'Saiu para entrega',                     fase:'formalizacao' },
+  { id:'fechado_contato',   nome:'Fechado, manter contato',               fase:'formalizacao' },
 ];
 const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
 const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
 
 const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8','#d17fa8','#8fae52','#a37fd1'];
 function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length]; }
+
+function parseReais(str){
+  if (!str) return 0;
+  const limpo = String(str).replace(/[^\d,.-]/g, '');
+  const normalizado = limpo.replace(/\.(?=\d{3}(,|$))/g, '').replace(',', '.');
+  const val = parseFloat(normalizado);
+  return isNaN(val) ? 0 : val;
+}
+function formatarReais(num){
+  return (num || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 const SEED_LEADS = [
   { id:'seed-01', nome:'', telefone:'5551989059467', dataEntrada:'2026-09-12', etapa:'qualificacao', emPotencial:false, observacoes:'Mandei boas-vindas, não respondeu. Sem nome anotado ainda, ver pelo número.' },
@@ -221,10 +352,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const COLLECTION = "leads_crm";
+const COLLECTION_CONFIG = "leads_config";
 
 let leads = [];
 let idLeadAberto = null;
 let termoBusca = '';
+let abaAtiva = 'funil';
+let filtroDe = '';
+let filtroAte = '';
+let configFollowup = { mensagens: {} };
+let ultimoRelatorio = null;
 
 function leadsFiltrados(){
   if (!termoBusca) return leads;
@@ -270,6 +407,20 @@ function persistirExclusao(id){
     .catch(err => alert('Não consegui excluir esse lead: ' + err.message));
 }
 
+function iniciarConfigFollowup(){
+  db.collection(COLLECTION_CONFIG).doc('followup_mensagens').onSnapshot(doc => {
+    configFollowup.mensagens = doc.exists ? doc.data() : {};
+    if (abaAtiva === 'followup') renderizarBoardFollowup();
+  }, err => alert('Não consegui carregar as mensagens de follow-up: ' + err.message));
+}
+
+function salvarMensagemFollowup(n, texto){
+  db.collection(COLLECTION_CONFIG).doc('followup_mensagens')
+    .set({ ['msg' + n]: texto }, { merge: true })
+    .then(() => mostrarToast('Mensagem salva'))
+    .catch(err => alert('Não consegui salvar essa mensagem: ' + err.message));
+}
+
 function formatarTelefone(digits){
   if (!digits) return '';
   const semPais = digits.startsWith('55') ? digits.slice(2) : digits;
@@ -289,18 +440,46 @@ function formatarData(iso){
 }
 function idNovo(){ return 'lead-' + Date.now() + '-' + Math.floor(Math.random()*1000); }
 
-function renderizarTudo(){ renderizarResumo(); renderizarBoard(); }
+function leadsNoPeriodo(lista){
+  if (!filtroDe && !filtroAte) return lista;
+  return lista.filter(l => {
+    if (!l.dataEntrada) return false;
+    if (filtroDe && l.dataEntrada < filtroDe) return false;
+    if (filtroAte && l.dataEntrada > filtroAte) return false;
+    return true;
+  });
+}
+
+function renderizarTudo(){
+  renderizarResumo();
+  renderizarBoard();
+  renderizarBoardFollowup();
+  renderizarBoardPotencial();
+}
 
 function renderizarResumo(){
-  const ativos = leads.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
-  const emProducao = leads.filter(l => l.etapa === 'em_producao').length;
-  const cancelados = leads.filter(l => l.etapa === 'cancelado').length;
+  const base = leadsNoPeriodo(leads);
+  const ativos = base.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
+  const emProducao = base.filter(l => l.etapa === 'em_producao').length;
+  const cancelados = base.filter(l => l.etapa === 'cancelado').length;
+  const valorProspectado = base
+    .filter(l => l.etapa === 'cotacao_enviada' || l.etapa === 'pedido_aberto')
+    .reduce((soma, l) => soma + parseReais(l.valorEstimado), 0);
   document.getElementById('resumo').innerHTML = `
-    <div class="item"><span class="valor">${leads.length}</span><span class="rotulo">Total de leads</span></div>
+    <div class="item"><span class="valor">${base.length}</span><span class="rotulo">Total de leads</span></div>
     <div class="item"><span class="valor">${ativos}</span><span class="rotulo">Em andamento</span></div>
     <div class="item"><span class="valor">${emProducao}</span><span class="rotulo">Em produção</span></div>
     <div class="item"><span class="valor">${cancelados}</span><span class="rotulo">Cancelados</span></div>
+    <div class="item"><span class="valor">${formatarReais(valorProspectado)}</span><span class="rotulo">Valor prospectado</span></div>
   `;
+}
+
+function atualizarRotuloFiltro(){
+  const el = document.getElementById('rotulo-periodo');
+  if (!filtroDe && !filtroAte) { el.textContent = 'Mostrando: todos os períodos'; return; }
+  const de = filtroDe ? formatarData(filtroDe) : '...';
+  const ate = filtroAte ? formatarData(filtroAte) : '...';
+  el.textContent = `Mostrando: ${de} até ${ate}`;
 }
 
 function renderizarBoard(){
@@ -339,6 +518,93 @@ function renderizarBoard(){
   });
 }
 
+function mudarAba(nome){
+  abaAtiva = nome;
+  document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === nome));
+  document.getElementById('board').classList.toggle('hidden', nome !== 'funil');
+  document.getElementById('board-followup').classList.toggle('hidden', nome !== 'followup');
+  document.getElementById('board-potencial').classList.toggle('hidden', nome !== 'potencial');
+
+  const dica = document.getElementById('toolbar-dica');
+  if (nome === 'funil') dica.textContent = 'Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.';
+  else if (nome === 'followup') dica.textContent = 'Arraste um card pra mudar a tentativa de follow-up, ou clique pra editar o lead. Edite a mensagem de cada coluna no campo acima dela.';
+  else dica.textContent = 'Leads marcados como "em potencial", agrupados pela etapa em que estão hoje no funil.';
+
+  if (nome === 'followup') renderizarBoardFollowup();
+  if (nome === 'potencial') renderizarBoardPotencial();
+}
+
+function renderizarBoardFollowup(){
+  const board = document.getElementById('board-followup');
+  board.innerHTML = '';
+  const listaAtual = leadsFiltrados();
+
+  for (let n = 1; n <= 10; n++) {
+    const leadsDoNivel = listaAtual.filter(l => Number(l.followUp) === n);
+    const coluna = document.createElement('div');
+    coluna.className = 'coluna coluna-followup';
+
+    const header = document.createElement('div');
+    header.className = 'coluna-header';
+    header.style.background = corFollowup(n);
+    header.innerHTML = `<span class="nome-etapa">Follow up ${n}</span><span class="contagem">${leadsDoNivel.length}</span>`;
+    coluna.appendChild(header);
+
+    const mensagemBox = document.createElement('textarea');
+    mensagemBox.className = 'followup-mensagem';
+    mensagemBox.placeholder = `Mensagem da tentativa ${n}...`;
+    mensagemBox.value = (configFollowup.mensagens && configFollowup.mensagens['msg' + n]) || '';
+    mensagemBox.addEventListener('change', () => salvarMensagemFollowup(n, mensagemBox.value));
+    coluna.appendChild(mensagemBox);
+
+    const corpo = document.createElement('div');
+    corpo.className = 'coluna-corpo';
+    corpo.dataset.followup = n;
+    corpo.addEventListener('dragover', e => e.preventDefault());
+    corpo.addEventListener('drop', e => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const lead = leads.find(l => l.id === id);
+      if (lead && Number(lead.followUp) !== n) { lead.followUp = n; persistirLead(lead); }
+    });
+
+    if (leadsDoNivel.length === 0) {
+      corpo.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Sem leads aqui'}</div>`;
+    } else {
+      leadsDoNivel.forEach(lead => {
+        const etapa = TODAS_ETAPAS.find(e => e.id === lead.etapa) || STAGES[0];
+        corpo.appendChild(criarCard(lead, etapa));
+      });
+    }
+    coluna.appendChild(corpo);
+    board.appendChild(coluna);
+  }
+}
+
+function renderizarBoardPotencial(){
+  const container = document.getElementById('board-potencial');
+  container.innerHTML = '';
+  const listaAtual = leadsFiltrados().filter(l => l.emPotencial);
+
+  if (listaAtual.length === 0) {
+    container.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Nenhum lead marcado como "em potencial" no momento.'}</div>`;
+    return;
+  }
+
+  TODAS_ETAPAS.forEach(etapa => {
+    const leadsDaEtapa = listaAtual.filter(l => l.etapa === etapa.id);
+    if (leadsDaEtapa.length === 0) return;
+    const secao = document.createElement('div');
+    secao.className = 'secao-potencial';
+    secao.innerHTML = `<div class="secao-titulo"><span class="ponto" style="background:var(--fase-${etapa.fase});"></span>${etapa.nome} <span class="contagem">${leadsDaEtapa.length}</span></div>`;
+    const linha = document.createElement('div');
+    linha.className = 'secao-cards';
+    leadsDaEtapa.forEach(lead => linha.appendChild(criarCard(lead, etapa)));
+    secao.appendChild(linha);
+    container.appendChild(secao);
+  });
+}
+
 function criarCard(lead, etapa){
   const card = document.createElement('div');
   card.className = 'card';
@@ -356,6 +622,7 @@ function criarCard(lead, etapa){
       <span class="data">${formatarData(lead.dataEntrada)}</span>
     </div>
     ${lead.observacoes ? `<div class="obs-preview">${lead.observacoes}</div>` : ''}
+    ${lead.valorEstimado ? `<div class="valor-estimado">${lead.valorEstimado}</div>` : ''}
     <div class="linha-baixo">
       ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
       <span class="marcadores">
@@ -407,6 +674,12 @@ function ativarArrastarScroll(board){
   });
 }
 
+function atualizarVisibilidadeValorEstimado(){
+  const etapa = document.getElementById('campo-etapa').value;
+  const mostrar = etapa === 'cotacao_enviada' || etapa === 'pedido_aberto';
+  document.getElementById('linha-valor-estimado').style.display = mostrar ? 'block' : 'none';
+}
+
 function abrirModalNovo(){
   idLeadAberto = null;
   document.getElementById('modal-titulo').textContent = 'Adicionar lead';
@@ -414,11 +687,13 @@ function abrirModalNovo(){
   document.getElementById('campo-telefone').value = '';
   document.getElementById('campo-data').value = new Date().toISOString().slice(0,10);
   document.getElementById('campo-etapa').value = 'qualificacao';
+  document.getElementById('campo-valor-estimado').value = '';
   document.getElementById('campo-potencial').checked = false;
   document.getElementById('campo-followup').value = '0';
   document.getElementById('campo-obs').value = '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'none';
+  atualizarVisibilidadeValorEstimado();
   document.getElementById('modal-fundo').classList.remove('hidden');
 }
 
@@ -431,11 +706,13 @@ function abrirModalEdicao(id){
   document.getElementById('campo-telefone').value = lead.telefone ? formatarTelefone(lead.telefone) : '';
   document.getElementById('campo-data').value = lead.dataEntrada || '';
   document.getElementById('campo-etapa').value = lead.etapa;
+  document.getElementById('campo-valor-estimado').value = lead.valorEstimado || '';
   document.getElementById('campo-potencial').checked = !!lead.emPotencial;
   document.getElementById('campo-followup').value = String(lead.followUp || 0);
   document.getElementById('campo-obs').value = lead.observacoes || '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'inline-block';
+  atualizarVisibilidadeValorEstimado();
   document.getElementById('modal-fundo').classList.remove('hidden');
 }
 
@@ -459,6 +736,7 @@ function salvarLeadAtual(){
     telefone: telefoneDigits,
     dataEntrada: document.getElementById('campo-data').value,
     etapa: document.getElementById('campo-etapa').value,
+    valorEstimado: document.getElementById('campo-valor-estimado').value.trim(),
     emPotencial: document.getElementById('campo-potencial').checked,
     followUp: Number(document.getElementById('campo-followup').value) || 0,
     observacoes: document.getElementById('campo-obs').value.trim(),
@@ -476,14 +754,193 @@ function excluirLeadAtual(){
   fecharModal();
 }
 
+function abrirRelatorio(){
+  const base = leadsNoPeriodo(leads);
+  const total = base.length || 1;
+
+  const porEtapa = TODAS_ETAPAS.map(etapa => ({
+    etapa,
+    qtd: base.filter(l => l.etapa === etapa.id).length
+  }));
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  const travados = porEtapa
+    .filter(p => p.qtd > 0 && p.etapa.id !== 'cancelado')
+    .map(p => {
+      const leadsDaEtapa = base.filter(l => l.etapa === p.etapa.id);
+      const maisAntigo = leadsDaEtapa.reduce((antigo, l) => {
+        if (!l.dataEntrada) return antigo;
+        return (!antigo || l.dataEntrada < antigo) ? l.dataEntrada : antigo;
+      }, null);
+      const diasParado = maisAntigo ? Math.floor((hoje - new Date(maisAntigo + 'T00:00:00')) / 86400000) : null;
+      return { ...p, diasParado };
+    })
+    .sort((a, b) => b.qtd - a.qtd)
+    .slice(0, 5);
+
+  const valorCotacao = base.filter(l => l.etapa === 'cotacao_enviada').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorPedido = base.filter(l => l.etapa === 'pedido_aberto').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorEsfriado = base.filter(l => l.etapa === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+
+  ultimoRelatorio = { porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado };
+
+  const textoPeriodo = (filtroDe || filtroAte)
+    ? `Período: ${filtroDe ? formatarData(filtroDe) : '...'} até ${filtroAte ? formatarData(filtroAte) : '...'}`
+    : 'Período: todos os leads cadastrados';
+  document.getElementById('relatorio-periodo').textContent = textoPeriodo;
+
+  desenharPizza(porEtapa, total);
+
+  document.getElementById('relatorio-legenda').innerHTML = porEtapa
+    .filter(p => p.qtd > 0)
+    .map(p => `<div class="legenda-item"><span class="legenda-cor" style="background:var(--fase-${p.etapa.fase});"></span>${p.etapa.nome}: ${p.qtd} (${Math.round(p.qtd / total * 100)}%)</div>`)
+    .join('');
+
+  document.getElementById('relatorio-travados').innerHTML = travados.length
+    ? travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
+    : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
+
+  document.getElementById('relatorio-valores').innerHTML = `
+    <div class="relatorio-linha">Em cotação enviada: ${formatarReais(valorCotacao)}</div>
+    <div class="relatorio-linha">Em pedido aberto (aprovado, não fechado): ${formatarReais(valorPedido)}</div>
+    <div class="relatorio-linha">Cotações já em follow-up, esfriando: ${formatarReais(valorEsfriado)}</div>
+  `;
+
+  const sugestoes = [];
+  const maiorTravado = travados[0];
+  if (maiorTravado && maiorTravado.qtd >= 3) sugestoes.push(`"${maiorTravado.etapa.nome}" concentra o maior número de leads parados, vale priorizar esse grupo.`);
+  if (valorEsfriado > 0) sugestoes.push(`${formatarReais(valorEsfriado)} em cotações já entraram em follow-up sem fechar, esse é o valor mais urgente de retomar.`);
+  if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em pedidos aprovados ainda não fechados, considere confirmar esses com prioridade.`);
+  if (sugestoes.length === 0) sugestoes.push('Sem pontos de atenção fora do comum nesse período.');
+  document.getElementById('relatorio-sugestoes').innerHTML = sugestoes.map(s => `<div class="relatorio-linha">${s}</div>`).join('');
+
+  document.getElementById('modal-relatorio-fundo').classList.remove('hidden');
+}
+
+function fecharRelatorio(){ document.getElementById('modal-relatorio-fundo').classList.add('hidden'); }
+
+function desenharPizza(porEtapa, total){
+  const canvas = document.getElementById('relatorio-pizza');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cx = canvas.width / 2, cy = canvas.height / 2, raio = Math.min(cx, cy) - 6;
+  let anguloInicial = -Math.PI / 2;
+  const estilos = getComputedStyle(document.documentElement);
+
+  const comLeads = porEtapa.filter(p => p.qtd > 0);
+  if (comLeads.length === 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, raio, 0, Math.PI * 2);
+    ctx.fillStyle = estilos.getPropertyValue('--border').trim() || '#3d3833';
+    ctx.fill();
+    return;
+  }
+
+  comLeads.forEach(p => {
+    const fatia = (p.qtd / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, raio, anguloInicial, anguloInicial + fatia);
+    ctx.closePath();
+    ctx.fillStyle = estilos.getPropertyValue(`--fase-${p.etapa.fase}`).trim() || '#999';
+    ctx.fill();
+    anguloInicial += fatia;
+  });
+}
+
+function baixarRelatorioPDF(){
+  if (!ultimoRelatorio || !window.jspdf) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const margem = 40;
+  let y = margem;
+
+  doc.setFontSize(16);
+  doc.text('Relatorio de Leads - Spielvogel Joias', margem, y); y += 20;
+  doc.setFontSize(10);
+  doc.text(document.getElementById('relatorio-periodo').textContent, margem, y); y += 24;
+
+  const canvas = document.getElementById('relatorio-pizza');
+  const imgData = canvas.toDataURL('image/png');
+  doc.addImage(imgData, 'PNG', margem, y, 130, 130);
+
+  let yLegenda = y;
+  doc.setFontSize(9);
+  ultimoRelatorio.porEtapa.filter(p => p.qtd > 0).forEach(p => {
+    doc.text(`${p.etapa.nome}: ${p.qtd} (${Math.round(p.qtd / ultimoRelatorio.total * 100)}%)`, margem + 150, yLegenda + 10);
+    yLegenda += 14;
+  });
+  y += 150;
+
+  doc.setFontSize(12);
+  doc.text('Onde os leads estao travando', margem, y); y += 16;
+  doc.setFontSize(9);
+  if (ultimoRelatorio.travados.length === 0) {
+    doc.text('Nada acumulado fora do comum nesse periodo.', margem, y); y += 14;
+  } else {
+    ultimoRelatorio.travados.forEach(t => {
+      doc.text(`${t.etapa.nome}: ${t.qtd} lead(s)${t.diasParado !== null ? `, o mais antigo ha ${t.diasParado} dia(s)` : ''}`, margem, y);
+      y += 14;
+    });
+  }
+  y += 8;
+
+  doc.setFontSize(12);
+  doc.text('Valor parado (R$)', margem, y); y += 16;
+  doc.setFontSize(9);
+  doc.text(`Em cotacao enviada: ${formatarReais(ultimoRelatorio.valorCotacao)}`, margem, y); y += 14;
+  doc.text(`Em pedido aberto: ${formatarReais(ultimoRelatorio.valorPedido)}`, margem, y); y += 14;
+  doc.text(`Cotacoes esfriando em follow-up: ${formatarReais(ultimoRelatorio.valorEsfriado)}`, margem, y); y += 20;
+
+  doc.setFontSize(12);
+  doc.text('Sugestoes', margem, y); y += 16;
+  doc.setFontSize(9);
+  document.querySelectorAll('#relatorio-sugestoes .relatorio-linha').forEach(el => {
+    const linhas = doc.splitTextToSize(el.textContent, 500);
+    doc.text(linhas, margem, y);
+    y += 14 * linhas.length;
+  });
+
+  doc.save(`relatorio-leads-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
 preencherSelectEtapas();
 preencherSelectFollowup();
 ativarArrastarScroll(document.getElementById('board'));
+ativarArrastarScroll(document.getElementById('board-followup'));
+
 document.getElementById('campo-busca').addEventListener('input', (e) => {
   termoBusca = e.target.value;
   renderizarBoard();
+  renderizarBoardFollowup();
+  renderizarBoardPotencial();
 });
+
+document.getElementById('campo-etapa').addEventListener('change', atualizarVisibilidadeValorEstimado);
+
+document.getElementById('filtro-de').addEventListener('change', (e) => {
+  filtroDe = e.target.value;
+  renderizarResumo();
+  atualizarRotuloFiltro();
+});
+document.getElementById('filtro-ate').addEventListener('change', (e) => {
+  filtroAte = e.target.value;
+  renderizarResumo();
+  atualizarRotuloFiltro();
+});
+document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
+  filtroDe = '';
+  filtroAte = '';
+  document.getElementById('filtro-de').value = '';
+  document.getElementById('filtro-ate').value = '';
+  renderizarResumo();
+  atualizarRotuloFiltro();
+});
+document.getElementById('btn-gerar-relatorio').addEventListener('click', abrirRelatorio);
+
 iniciarLeads();
+iniciarConfigFollowup();
 </script>
 </body>
 </html>
