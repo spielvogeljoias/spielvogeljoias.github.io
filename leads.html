@@ -364,14 +364,19 @@ let configFollowup = { mensagens: {} };
 let ultimoRelatorio = null;
 
 function leadsFiltrados(){
-  if (!termoBusca) return leads;
+  const base = leadsNoPeriodo(leads);
+  if (!termoBusca) return base;
   const termo = termoBusca.trim().toLowerCase();
   const termoDigits = termo.replace(/\D/g, '');
-  return leads.filter(l => {
+  return base.filter(l => {
     const nomeMatch = (l.nome || '').toLowerCase().includes(termo);
     const telMatch = termoDigits && (l.telefone || '').includes(termoDigits);
     return nomeMatch || telMatch;
   });
+}
+
+function haFiltroAtivo(){
+  return !!(termoBusca || filtroDe || filtroAte);
 }
 
 function iniciarLeads(){
@@ -509,7 +514,7 @@ function renderizarBoard(){
     });
 
     if (leadsDaEtapa.length === 0) {
-      corpo.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Sem leads aqui'}</div>`;
+      corpo.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
     } else {
       leadsDaEtapa.forEach(lead => corpo.appendChild(criarCard(lead, etapa)));
     }
@@ -569,7 +574,7 @@ function renderizarBoardFollowup(){
     });
 
     if (leadsDoNivel.length === 0) {
-      corpo.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Sem leads aqui'}</div>`;
+      corpo.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
     } else {
       leadsDoNivel.forEach(lead => {
         const etapa = TODAS_ETAPAS.find(e => e.id === lead.etapa) || STAGES[0];
@@ -587,7 +592,7 @@ function renderizarBoardPotencial(){
   const listaAtual = leadsFiltrados().filter(l => l.emPotencial);
 
   if (listaAtual.length === 0) {
-    container.innerHTML = `<div class="vazio">${termoBusca ? 'Nenhum resultado aqui' : 'Nenhum lead marcado como "em potencial" no momento.'}</div>`;
+    container.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Nenhum lead marcado como "em potencial" no momento.'}</div>`;
     return;
   }
 
@@ -921,12 +926,12 @@ document.getElementById('campo-etapa').addEventListener('change', atualizarVisib
 
 document.getElementById('filtro-de').addEventListener('change', (e) => {
   filtroDe = e.target.value;
-  renderizarResumo();
+  renderizarTudo();
   atualizarRotuloFiltro();
 });
 document.getElementById('filtro-ate').addEventListener('change', (e) => {
   filtroAte = e.target.value;
-  renderizarResumo();
+  renderizarTudo();
   atualizarRotuloFiltro();
 });
 document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
@@ -934,7 +939,7 @@ document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
   filtroAte = '';
   document.getElementById('filtro-de').value = '';
   document.getElementById('filtro-ate').value = '';
-  renderizarResumo();
+  renderizarTudo();
   atualizarRotuloFiltro();
 });
 document.getElementById('btn-gerar-relatorio').addEventListener('click', abrirRelatorio);
