@@ -109,6 +109,12 @@
 
   /* ---------- Board de follow-up ---------- */
   .coluna-followup { flex: 0 0 205px; }
+  .coluna.coluna-sem-qualificacao { margin-left: 16px; }
+  .nota-coluna {
+    margin: 0 8px 8px; padding: 6px 8px; font-size: 11px; line-height: 1.4;
+    color: var(--text-secondary); background: var(--bg-elevated-2);
+    border: 1px dashed var(--border); border-radius: 5px;
+  }
   .followup-mensagem {
     margin: 0 8px 8px; width: calc(100% - 16px); min-height: 48px; resize: vertical;
     background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text);
@@ -270,6 +276,11 @@
     </div>
 
     <div class="relatorio-bloco">
+      <h3>Encerrados sem sair da qualificação</h3>
+      <div id="relatorio-encerrados"></div>
+    </div>
+
+    <div class="relatorio-bloco">
       <h3>Valor parado (R$)</h3>
       <div id="relatorio-valores"></div>
     </div>
@@ -306,8 +317,22 @@ const STAGES = [
 const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
 const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
 
-const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8','#d17fa8','#8fae52','#a37fd1'];
+// Follow-up vai de 1 a 7. O 7 é o follow-up de encerramento.
+const FOLLOWUP_MAX = 7;
+const FOLLOWUP_ENCERRAMENTO = 7;
+const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8'];
+const COR_ENCERRADO_SEM_QUALIFICACAO = '#d17fa8';
+
 function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length]; }
+function nomeFollowup(n){ return n === FOLLOWUP_ENCERRAMENTO ? `Follow up ${n} (encerramento)` : `Follow up ${n}`; }
+function rotuloChipFollowup(n){ return Number(n) === FOLLOWUP_ENCERRAMENTO ? 'Encerramento' : `Follow-up ${n}`; }
+
+// Lead em follow-up de encerramento que nunca saiu da etapa Qualificação.
+// É calculado direto dos dados: não existe campo extra pra marcar, então
+// basta qualificar uma vez (follow-up 7) que ele entra sozinho na coluna própria.
+function ehEncerradoSemSairDaQualificacao(l){
+  return Number(l.followUp) === FOLLOWUP_ENCERRAMENTO && l.etapa === 'qualificacao';
+}
 
 function parseReais(str){
   if (!str) return 0;
@@ -395,6 +420,15 @@ function iniciarLeads(){
         orfaos.forEach(d => lote.update(d.ref, { etapa: 'venda_aprovada' }));
         lote.commit().catch(err => alert('Não consegui migrar leads de etapas antigas: ' + err.message));
       }
+
+      // Migração de segurança: o follow-up agora vai de 1 a 7 (o 7 é o encerramento).
+      // Quem estava nas tentativas 8, 9 ou 10 vai para o 7, pra não sumir do board.
+      const followUpAlto = snap.docs.filter(d => Number(d.data().followUp) > FOLLOWUP_MAX);
+      if (followUpAlto.length > 0) {
+        const loteFollow = db.batch();
+        followUpAlto.forEach(d => loteFollow.update(d.ref, { followUp: FOLLOWUP_ENCERRAMENTO }));
+        loteFollow.commit().catch(err => alert('Não consegui migrar os follow-ups antigos: ' + err.message));
+      }
     }
   }).catch(err => alert('Não consegui ler os leads do banco: ' + err.message));
   db.collection(COLLECTION).onSnapshot(snap => {
@@ -467,6 +501,7 @@ function renderizarResumo(){
   const ativos = base.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
   const emProducao = base.filter(l => l.etapa === 'em_producao').length;
   const cancelados = base.filter(l => l.etapa === 'cancelado').length;
+  const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const valorProspectado = base
     .filter(l => l.etapa === 'cotacao_enviada' || l.etapa === 'pedido_aberto')
     .reduce((soma, l) => soma + parseReais(l.valorEstimado), 0);
@@ -475,6 +510,7 @@ function renderizarResumo(){
     <div class="item"><span class="valor">${ativos}</span><span class="rotulo">Em andamento</span></div>
     <div class="item"><span class="valor">${emProducao}</span><span class="rotulo">Em produção</span></div>
     <div class="item"><span class="valor">${cancelados}</span><span class="rotulo">Cancelados</span></div>
+    <div class="item"><span class="valor">${encerradosSemQualificacao}</span><span class="rotulo">Encerrados sem sair da qualificação</span></div>
     <div class="item"><span class="valor">${formatarReais(valorProspectado)}</span><span class="rotulo">Valor prospectado</span></div>
   `;
 }
@@ -532,7 +568,7 @@ function mudarAba(nome){
 
   const dica = document.getElementById('toolbar-dica');
   if (nome === 'funil') dica.textContent = 'Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.';
-  else if (nome === 'followup') dica.textContent = 'Arraste um card pra mudar a tentativa de follow-up, ou clique pra editar o lead. Edite a mensagem de cada coluna no campo acima dela.';
+  else if (nome === 'followup') dica.textContent = 'Arraste um card pra mudar a tentativa de follow-up, ou clique pra editar o lead. Quem está no follow-up 7 (encerramento) e ainda na Qualificação entra sozinho na última coluna.';
   else dica.textContent = 'Leads marcados como "em potencial", agrupados pela etapa em que estão hoje no funil.';
 
   if (nome === 'followup') renderizarBoardFollowup();
@@ -544,7 +580,7 @@ function renderizarBoardFollowup(){
   board.innerHTML = '';
   const listaAtual = leadsFiltrados();
 
-  for (let n = 1; n <= 10; n++) {
+  for (let n = 1; n <= FOLLOWUP_MAX; n++) {
     const leadsDoNivel = listaAtual.filter(l => Number(l.followUp) === n);
     const coluna = document.createElement('div');
     coluna.className = 'coluna coluna-followup';
@@ -552,12 +588,12 @@ function renderizarBoardFollowup(){
     const header = document.createElement('div');
     header.className = 'coluna-header';
     header.style.background = corFollowup(n);
-    header.innerHTML = `<span class="nome-etapa">Follow up ${n}</span><span class="contagem">${leadsDoNivel.length}</span>`;
+    header.innerHTML = `<span class="nome-etapa">${nomeFollowup(n)}</span><span class="contagem">${leadsDoNivel.length}</span>`;
     coluna.appendChild(header);
 
     const mensagemBox = document.createElement('textarea');
     mensagemBox.className = 'followup-mensagem';
-    mensagemBox.placeholder = `Mensagem da tentativa ${n}...`;
+    mensagemBox.placeholder = n === FOLLOWUP_ENCERRAMENTO ? 'Mensagem de encerramento...' : `Mensagem da tentativa ${n}...`;
     mensagemBox.value = (configFollowup.mensagens && configFollowup.mensagens['msg' + n]) || '';
     mensagemBox.addEventListener('change', () => salvarMensagemFollowup(n, mensagemBox.value));
     coluna.appendChild(mensagemBox);
@@ -584,6 +620,36 @@ function renderizarBoardFollowup(){
     coluna.appendChild(corpo);
     board.appendChild(coluna);
   }
+
+  // Coluna automática: encerrados que nunca saíram da Qualificação.
+  // Ela só exibe, não aceita arrastar pra dentro: o lead entra aqui sozinho
+  // quando está no follow-up 7 e na etapa Qualificação.
+  const leadsSemQualificacao = listaAtual.filter(ehEncerradoSemSairDaQualificacao);
+  const etapaQualificacao = STAGES[0];
+
+  const colunaSQ = document.createElement('div');
+  colunaSQ.className = 'coluna coluna-followup coluna-sem-qualificacao';
+
+  const headerSQ = document.createElement('div');
+  headerSQ.className = 'coluna-header';
+  headerSQ.style.background = COR_ENCERRADO_SEM_QUALIFICACAO;
+  headerSQ.innerHTML = `<span class="nome-etapa">Encerrados sem sair da qualificação</span><span class="contagem">${leadsSemQualificacao.length}</span>`;
+  colunaSQ.appendChild(headerSQ);
+
+  const nota = document.createElement('div');
+  nota.className = 'nota-coluna';
+  nota.textContent = 'Preenchida automaticamente: leads do follow-up 7 que ainda estão na Qualificação. Base para conversar com o tráfego pago.';
+  colunaSQ.appendChild(nota);
+
+  const corpoSQ = document.createElement('div');
+  corpoSQ.className = 'coluna-corpo';
+  if (leadsSemQualificacao.length === 0) {
+    corpoSQ.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
+  } else {
+    leadsSemQualificacao.forEach(lead => corpoSQ.appendChild(criarCard(lead, etapaQualificacao)));
+  }
+  colunaSQ.appendChild(corpoSQ);
+  board.appendChild(colunaSQ);
 }
 
 function renderizarBoardPotencial(){
@@ -632,7 +698,7 @@ function criarCard(lead, etapa){
       ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
       <span class="marcadores">
         ${lead.emPotencial ? '<span class="marcador">Em potencial</span>' : ''}
-        ${lead.followUp ? `<span class="marcador-followup" style="background:${corFollowup(lead.followUp)};">Follow-up ${lead.followUp}</span>` : ''}
+        ${lead.followUp ? `<span class="marcador-followup" style="background:${corFollowup(lead.followUp)};">${rotuloChipFollowup(lead.followUp)}</span>` : ''}
       </span>
     </div>
   `;
@@ -645,7 +711,10 @@ function preencherSelectEtapas(){
 
 function preencherSelectFollowup(){
   const opcoes = ['<option value="0">Nenhuma</option>'];
-  for (let i = 1; i <= 10; i++) opcoes.push(`<option value="${i}">Follow-up ${i}</option>`);
+  for (let i = 1; i <= FOLLOWUP_MAX; i++) {
+    const rotulo = i === FOLLOWUP_ENCERRAMENTO ? `Follow-up ${i} (encerramento)` : `Follow-up ${i}`;
+    opcoes.push(`<option value="${i}">${rotulo}</option>`);
+  }
   document.getElementById('campo-followup').innerHTML = opcoes.join('');
 }
 
@@ -788,7 +857,14 @@ function abrirRelatorio(){
   const valorPedido = base.filter(l => l.etapa === 'pedido_aberto').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
   const valorEsfriado = base.filter(l => l.etapa === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
 
-  ultimoRelatorio = { porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado };
+  const encerradosTotal = base.filter(l => Number(l.followUp) === FOLLOWUP_ENCERRAMENTO).length;
+  const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
+  const pctSemQualificacao = base.length ? Math.round(encerradosSemQualificacao / base.length * 100) : 0;
+
+  ultimoRelatorio = {
+    porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado,
+    encerradosTotal, encerradosSemQualificacao, pctSemQualificacao, totalLeads: base.length
+  };
 
   const textoPeriodo = (filtroDe || filtroAte)
     ? `Período: ${filtroDe ? formatarData(filtroDe) : '...'} até ${filtroAte ? formatarData(filtroAte) : '...'}`
@@ -805,6 +881,11 @@ function abrirRelatorio(){
   document.getElementById('relatorio-travados').innerHTML = travados.length
     ? travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
     : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
+
+  document.getElementById('relatorio-encerrados').innerHTML = `
+    <div class="relatorio-linha">Leads encerrados sem sair da Qualificação: ${encerradosSemQualificacao} (de ${encerradosTotal} encerrados no total)</div>
+    <div class="relatorio-linha">Equivale a ${pctSemQualificacao}% dos ${base.length} leads do período. Base para conversar com o tráfego pago.</div>
+  `;
 
   document.getElementById('relatorio-valores').innerHTML = `
     <div class="relatorio-linha">Em cotação enviada: ${formatarReais(valorCotacao)}</div>
@@ -890,6 +971,12 @@ function baixarRelatorioPDF(){
     });
   }
   y += 8;
+
+  doc.setFontSize(12);
+  doc.text('Encerrados sem sair da qualificacao', margem, y); y += 16;
+  doc.setFontSize(9);
+  doc.text(`Leads encerrados sem sair da qualificacao: ${ultimoRelatorio.encerradosSemQualificacao} (de ${ultimoRelatorio.encerradosTotal} encerrados no total)`, margem, y); y += 14;
+  doc.text(`Equivale a ${ultimoRelatorio.pctSemQualificacao}% dos ${ultimoRelatorio.totalLeads} leads do periodo`, margem, y); y += 22;
 
   doc.setFontSize(12);
   doc.text('Valor parado (R$)', margem, y); y += 16;
