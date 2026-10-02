@@ -21,6 +21,8 @@
     --fase-aprovacao: #d4af5a;
     --fase-formalizacao: #7fb39a;
     --fase-cancelado: #c46a5e;
+    --fase-encerrado: #6fa8d8;
+    --fase-encerrado-q: #d17fa8;
   }
 
   main { padding: 18px 24px 40px; }
@@ -55,7 +57,7 @@
     background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
     overflow: hidden;
   }
-  .coluna.coluna-cancelado { margin-left: 16px; }
+  .coluna.coluna-cancelado, .coluna.coluna-encerrada-inicio { margin-left: 16px; }
 
   .coluna-header { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
   .coluna-header .nome-etapa { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--bg); }
@@ -84,6 +86,7 @@
   }
 
   .vazio { font-size: 10.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
+  .card .etapa-origem { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
 
   .hidden { display: none !important; }
 
@@ -190,7 +193,7 @@
   </div>
 
   <div class="toolbar">
-    <span class="toolbar-dica" id="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.</span>
+    <span class="toolbar-dica" id="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa. Quem recebeu o follow-up de encerramento sai do funil e fica nas duas últimas colunas.</span>
     <div style="display:flex; gap:8px;">
       <button class="btn" id="btn-gerar-relatorio">📄 Gerar relatório</button>
       <button class="btn btn-solid" onclick="abrirModalNovo()">+ Adicionar lead</button>
@@ -276,7 +279,7 @@
     </div>
 
     <div class="relatorio-bloco">
-      <h3>Encerrados sem sair da qualificação</h3>
+      <h3>Encerradas ainda na qualificação</h3>
       <div id="relatorio-encerrados"></div>
     </div>
 
@@ -327,11 +330,32 @@ function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length];
 function nomeFollowup(n){ return n === FOLLOWUP_ENCERRAMENTO ? `Follow up ${n} (encerramento)` : `Follow up ${n}`; }
 function rotuloChipFollowup(n){ return Number(n) === FOLLOWUP_ENCERRAMENTO ? 'Encerramento' : `Follow-up ${n}`; }
 
-// Lead em follow-up de encerramento que nunca saiu da etapa Qualificação.
-// É calculado direto dos dados: não existe campo extra pra marcar, então
-// basta qualificar uma vez (follow-up 7) que ele entra sozinho na coluna própria.
+// Lead em follow-up de encerramento sai do funil e vai para uma das duas colunas finais.
+// Tudo é calculado direto dos dados (follow-up 7 + etapa): não existe campo extra pra marcar,
+// então basta qualificar uma vez e o lead cai na coluna certa sozinho.
+// Lead que já comprou (venda aprovada em diante) nunca é tratado como encerrado,
+// mesmo que tenha ficado com o follow-up 7 marcado de antes.
+const ETAPAS_VENDA_FECHADA = ['venda_aprovada', 'em_producao', 'saiu_entrega', 'fechado_contato'];
+
+const COLUNA_ENCERRADAS = { id:'encerradas', nome:'Encerradas', fase:'encerrado' };
+const COLUNA_ENCERRADAS_QUALIFICACAO = { id:'encerradas_qualificacao', nome:'Encerradas ainda na qualificação', fase:'encerrado-q' };
+const COLUNAS_FUNIL = [...TODAS_ETAPAS, COLUNA_ENCERRADAS, COLUNA_ENCERRADAS_QUALIFICACAO];
+
+const NOTAS_COLUNAS_ENCERRADAS = {
+  [COLUNA_ENCERRADAS.id]: 'Já receberam o follow-up de encerramento. O card mostra em que etapa o lead parou. Arraste para uma etapa do funil para reabrir.',
+  [COLUNA_ENCERRADAS_QUALIFICACAO.id]: 'Encerradas sem nunca sair da Qualificação. Base para conversar com o tráfego pago.',
+};
+
+function ehEncerrado(l){
+  return Number(l.followUp) === FOLLOWUP_ENCERRAMENTO && !ETAPAS_VENDA_FECHADA.includes(l.etapa);
+}
 function ehEncerradoSemSairDaQualificacao(l){
-  return Number(l.followUp) === FOLLOWUP_ENCERRAMENTO && l.etapa === 'qualificacao';
+  return ehEncerrado(l) && l.etapa === 'qualificacao';
+}
+// Em qual coluna do funil o lead aparece (encerradas ficam fora das colunas de etapa).
+function colunaDoFunil(l){
+  if (!ehEncerrado(l)) return l.etapa;
+  return l.etapa === 'qualificacao' ? COLUNA_ENCERRADAS_QUALIFICACAO.id : COLUNA_ENCERRADAS.id;
 }
 
 function parseReais(str){
@@ -498,19 +522,22 @@ function renderizarTudo(){
 
 function renderizarResumo(){
   const base = leadsNoPeriodo(leads);
-  const ativos = base.filter(l => l.etapa !== 'cancelado' && l.etapa !== 'venda_aprovada' && l.etapa !== 'em_producao').length;
+  const naoAtivas = ['cancelado', 'venda_aprovada', 'em_producao', COLUNA_ENCERRADAS.id, COLUNA_ENCERRADAS_QUALIFICACAO.id];
+  const ativos = base.filter(l => !naoAtivas.includes(colunaDoFunil(l))).length;
   const emProducao = base.filter(l => l.etapa === 'em_producao').length;
-  const cancelados = base.filter(l => l.etapa === 'cancelado').length;
-  const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
+  const cancelados = base.filter(l => colunaDoFunil(l) === 'cancelado').length;
+  const encerradas = base.filter(ehEncerrado).length;
+  const encerradasSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const valorProspectado = base
-    .filter(l => l.etapa === 'cotacao_enviada' || l.etapa === 'pedido_aberto')
+    .filter(l => ['cotacao_enviada', 'pedido_aberto'].includes(colunaDoFunil(l)))
     .reduce((soma, l) => soma + parseReais(l.valorEstimado), 0);
   document.getElementById('resumo').innerHTML = `
     <div class="item"><span class="valor">${base.length}</span><span class="rotulo">Total de leads</span></div>
     <div class="item"><span class="valor">${ativos}</span><span class="rotulo">Em andamento</span></div>
     <div class="item"><span class="valor">${emProducao}</span><span class="rotulo">Em produção</span></div>
     <div class="item"><span class="valor">${cancelados}</span><span class="rotulo">Cancelados</span></div>
-    <div class="item"><span class="valor">${encerradosSemQualificacao}</span><span class="rotulo">Encerrados sem sair da qualificação</span></div>
+    <div class="item"><span class="valor">${encerradas}</span><span class="rotulo">Encerradas</span></div>
+    <div class="item"><span class="valor">${encerradasSemQualificacao}</span><span class="rotulo">Encerradas ainda na qualificação</span></div>
     <div class="item"><span class="valor">${formatarReais(valorProspectado)}</span><span class="rotulo">Valor prospectado</span></div>
   `;
 }
@@ -527,10 +554,12 @@ function renderizarBoard(){
   const board = document.getElementById('board');
   board.innerHTML = '';
   const listaAtual = leadsFiltrados();
-  TODAS_ETAPAS.forEach(etapa => {
-    const leadsDaEtapa = listaAtual.filter(l => l.etapa === etapa.id);
+  COLUNAS_FUNIL.forEach(etapa => {
+    const leadsDaEtapa = listaAtual.filter(l => colunaDoFunil(l) === etapa.id);
     const coluna = document.createElement('div');
-    coluna.className = 'coluna' + (etapa.id === 'cancelado' ? ' coluna-cancelado' : '');
+    coluna.className = 'coluna'
+      + (etapa.id === 'cancelado' ? ' coluna-cancelado' : '')
+      + (etapa.id === COLUNA_ENCERRADAS.id ? ' coluna-encerrada-inicio' : '');
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
@@ -541,22 +570,69 @@ function renderizarBoard(){
     const corpo = document.createElement('div');
     corpo.className = 'coluna-corpo';
     corpo.dataset.etapa = etapa.id;
+    if (NOTAS_COLUNAS_ENCERRADAS[etapa.id]) {
+      const nota = document.createElement('div');
+      nota.className = 'nota-coluna';
+      nota.textContent = NOTAS_COLUNAS_ENCERRADAS[etapa.id];
+      coluna.appendChild(nota);
+    }
     corpo.addEventListener('dragover', e => e.preventDefault());
     corpo.addEventListener('drop', e => {
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
       const lead = leads.find(l => l.id === id);
-      if (lead && lead.etapa !== etapa.id) { lead.etapa = etapa.id; persistirLead(lead); }
+      if (lead) moverLeadParaColuna(lead, etapa.id);
     });
 
     if (leadsDaEtapa.length === 0) {
       corpo.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
     } else {
-      leadsDaEtapa.forEach(lead => corpo.appendChild(criarCard(lead, etapa)));
+      leadsDaEtapa.forEach(lead => {
+        if (etapa.id === COLUNA_ENCERRADAS.id) {
+          // Nesta coluna o ponto do card e a linha "Parou em" mostram a etapa real do lead.
+          const etapaReal = TODAS_ETAPAS.find(e => e.id === lead.etapa) || STAGES[0];
+          corpo.appendChild(criarCard(lead, etapaReal, true));
+        } else if (etapa.id === COLUNA_ENCERRADAS_QUALIFICACAO.id) {
+          corpo.appendChild(criarCard(lead, STAGES[0]));
+        } else {
+          corpo.appendChild(criarCard(lead, etapa));
+        }
+      });
     }
     coluna.appendChild(corpo);
     board.appendChild(coluna);
   });
+}
+
+// Soltar um card numa coluna do funil.
+// - Coluna de etapa: muda a etapa. Se o lead estava encerrado, ele é reaberto (follow-up zerado).
+// - Encerradas: marca o follow-up de encerramento e mantém a etapa onde o lead parou.
+// - Encerradas ainda na qualificação: só aceita quem ainda está na Qualificação,
+//   pra essa contagem continuar confiável como base de cobrança do tráfego pago.
+function moverLeadParaColuna(lead, colunaId){
+  if (colunaDoFunil(lead) === colunaId) return;
+
+  const destinoEncerrada = colunaId === COLUNA_ENCERRADAS.id || colunaId === COLUNA_ENCERRADAS_QUALIFICACAO.id;
+  if (destinoEncerrada) {
+    if (ETAPAS_VENDA_FECHADA.includes(lead.etapa)) {
+      mostrarToast('Esse lead já tem venda fechada, não entra em encerradas');
+      return;
+    }
+    if (colunaId === COLUNA_ENCERRADAS_QUALIFICACAO.id && lead.etapa !== 'qualificacao') {
+      mostrarToast('Esse lead já saiu da qualificação');
+      return;
+    }
+    lead.followUp = FOLLOWUP_ENCERRAMENTO;
+    persistirLead(lead);
+    mostrarToast('Lead encerrado');
+    return;
+  }
+
+  const estavaEncerrado = ehEncerrado(lead);
+  lead.etapa = colunaId;
+  if (estavaEncerrado) lead.followUp = 0;
+  persistirLead(lead);
+  if (estavaEncerrado) mostrarToast('Lead reaberto no funil');
 }
 
 function mudarAba(nome){
@@ -567,7 +643,7 @@ function mudarAba(nome){
   document.getElementById('board-potencial').classList.toggle('hidden', nome !== 'potencial');
 
   const dica = document.getElementById('toolbar-dica');
-  if (nome === 'funil') dica.textContent = 'Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa.';
+  if (nome === 'funil') dica.textContent = 'Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa. Quem recebeu o follow-up de encerramento sai do funil e fica nas duas últimas colunas.';
   else if (nome === 'followup') dica.textContent = 'Arraste um card pra mudar a tentativa de follow-up, ou clique pra editar o lead. Quem está no follow-up 7 (encerramento) e ainda na Qualificação entra sozinho na última coluna.';
   else dica.textContent = 'Leads marcados como "em potencial", agrupados pela etapa em que estão hoje no funil.';
 
@@ -633,7 +709,7 @@ function renderizarBoardFollowup(){
   const headerSQ = document.createElement('div');
   headerSQ.className = 'coluna-header';
   headerSQ.style.background = COR_ENCERRADO_SEM_QUALIFICACAO;
-  headerSQ.innerHTML = `<span class="nome-etapa">Encerrados sem sair da qualificação</span><span class="contagem">${leadsSemQualificacao.length}</span>`;
+  headerSQ.innerHTML = `<span class="nome-etapa">Encerradas ainda na qualificação</span><span class="contagem">${leadsSemQualificacao.length}</span>`;
   colunaSQ.appendChild(headerSQ);
 
   const nota = document.createElement('div');
@@ -662,8 +738,8 @@ function renderizarBoardPotencial(){
     return;
   }
 
-  TODAS_ETAPAS.forEach(etapa => {
-    const leadsDaEtapa = listaAtual.filter(l => l.etapa === etapa.id);
+  COLUNAS_FUNIL.forEach(etapa => {
+    const leadsDaEtapa = listaAtual.filter(l => colunaDoFunil(l) === etapa.id);
     if (leadsDaEtapa.length === 0) return;
     const secao = document.createElement('div');
     secao.className = 'secao-potencial';
@@ -676,7 +752,7 @@ function renderizarBoardPotencial(){
   });
 }
 
-function criarCard(lead, etapa){
+function criarCard(lead, etapa, mostrarEtapa = false){
   const card = document.createElement('div');
   card.className = 'card';
   card.draggable = true;
@@ -692,6 +768,7 @@ function criarCard(lead, etapa){
       <span class="nome">${nomeExibido}</span>
       <span class="data">${formatarData(lead.dataEntrada)}</span>
     </div>
+    ${mostrarEtapa ? `<div class="etapa-origem">Parou em: ${etapa.nome}</div>` : ''}
     ${lead.observacoes ? `<div class="obs-preview">${lead.observacoes}</div>` : ''}
     ${lead.valorEstimado ? `<div class="valor-estimado">${lead.valorEstimado}</div>` : ''}
     <div class="linha-baixo">
@@ -832,17 +909,17 @@ function abrirRelatorio(){
   const base = leadsNoPeriodo(leads);
   const total = base.length || 1;
 
-  const porEtapa = TODAS_ETAPAS.map(etapa => ({
+  const porEtapa = COLUNAS_FUNIL.map(etapa => ({
     etapa,
-    qtd: base.filter(l => l.etapa === etapa.id).length
+    qtd: base.filter(l => colunaDoFunil(l) === etapa.id).length
   }));
 
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
   const travados = porEtapa
-    .filter(p => p.qtd > 0 && p.etapa.id !== 'cancelado')
+    .filter(p => p.qtd > 0 && p.etapa.id !== 'cancelado' && p.etapa.id !== COLUNA_ENCERRADAS.id && p.etapa.id !== COLUNA_ENCERRADAS_QUALIFICACAO.id)
     .map(p => {
-      const leadsDaEtapa = base.filter(l => l.etapa === p.etapa.id);
+      const leadsDaEtapa = base.filter(l => colunaDoFunil(l) === p.etapa.id);
       const maisAntigo = leadsDaEtapa.reduce((antigo, l) => {
         if (!l.dataEntrada) return antigo;
         return (!antigo || l.dataEntrada < antigo) ? l.dataEntrada : antigo;
@@ -853,16 +930,17 @@ function abrirRelatorio(){
     .sort((a, b) => b.qtd - a.qtd)
     .slice(0, 5);
 
-  const valorCotacao = base.filter(l => l.etapa === 'cotacao_enviada').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
-  const valorPedido = base.filter(l => l.etapa === 'pedido_aberto').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
-  const valorEsfriado = base.filter(l => l.etapa === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorCotacao = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorPedido = base.filter(l => colunaDoFunil(l) === 'pedido_aberto').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorEsfriado = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorEncerrado = base.filter(l => ehEncerrado(l) && (l.etapa === 'cotacao_enviada' || l.etapa === 'pedido_aberto')).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
 
-  const encerradosTotal = base.filter(l => Number(l.followUp) === FOLLOWUP_ENCERRAMENTO).length;
+  const encerradosTotal = base.filter(ehEncerrado).length;
   const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const pctSemQualificacao = base.length ? Math.round(encerradosSemQualificacao / base.length * 100) : 0;
 
   ultimoRelatorio = {
-    porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado,
+    porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
     encerradosTotal, encerradosSemQualificacao, pctSemQualificacao, totalLeads: base.length
   };
 
@@ -891,6 +969,7 @@ function abrirRelatorio(){
     <div class="relatorio-linha">Em cotação enviada: ${formatarReais(valorCotacao)}</div>
     <div class="relatorio-linha">Em pedido aberto (aprovado, não fechado): ${formatarReais(valorPedido)}</div>
     <div class="relatorio-linha">Cotações já em follow-up, esfriando: ${formatarReais(valorEsfriado)}</div>
+    <div class="relatorio-linha">Cotações e pedidos já encerrados (fora do funil): ${formatarReais(valorEncerrado)}</div>
   `;
 
   const sugestoes = [];
@@ -973,7 +1052,7 @@ function baixarRelatorioPDF(){
   y += 8;
 
   doc.setFontSize(12);
-  doc.text('Encerrados sem sair da qualificacao', margem, y); y += 16;
+  doc.text('Encerradas ainda na qualificacao', margem, y); y += 16;
   doc.setFontSize(9);
   doc.text(`Leads encerrados sem sair da qualificacao: ${ultimoRelatorio.encerradosSemQualificacao} (de ${ultimoRelatorio.encerradosTotal} encerrados no total)`, margem, y); y += 14;
   doc.text(`Equivale a ${ultimoRelatorio.pctSemQualificacao}% dos ${ultimoRelatorio.totalLeads} leads do periodo`, margem, y); y += 22;
@@ -983,7 +1062,8 @@ function baixarRelatorioPDF(){
   doc.setFontSize(9);
   doc.text(`Em cotacao enviada: ${formatarReais(ultimoRelatorio.valorCotacao)}`, margem, y); y += 14;
   doc.text(`Em pedido aberto: ${formatarReais(ultimoRelatorio.valorPedido)}`, margem, y); y += 14;
-  doc.text(`Cotacoes esfriando em follow-up: ${formatarReais(ultimoRelatorio.valorEsfriado)}`, margem, y); y += 20;
+  doc.text(`Cotacoes esfriando em follow-up: ${formatarReais(ultimoRelatorio.valorEsfriado)}`, margem, y); y += 14;
+  doc.text(`Cotacoes e pedidos ja encerrados (fora do funil): ${formatarReais(ultimoRelatorio.valorEncerrado)}`, margem, y); y += 20;
 
   doc.setFontSize(12);
   doc.text('Sugestoes', margem, y); y += 16;
