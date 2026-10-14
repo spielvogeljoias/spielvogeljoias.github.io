@@ -87,6 +87,7 @@
 
   .vazio { font-size: 10.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
   .card .etapa-origem { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+  .card .chip-origem { font-size: 9.5px; color: var(--gold-soft); margin-top: 3px; }
 
   .hidden { display: none !important; }
 
@@ -229,6 +230,11 @@
     </div>
 
     <div class="field">
+      <label for="campo-origem">Anel / criativo de origem</label>
+      <select id="campo-origem"></select>
+    </div>
+
+    <div class="field">
       <label for="campo-etapa">Etapa</label>
       <select id="campo-etapa"></select>
     </div>
@@ -279,6 +285,11 @@
     </div>
 
     <div class="relatorio-bloco">
+      <h3>Leads por anel / criativo de origem</h3>
+      <div id="relatorio-origens"></div>
+    </div>
+
+    <div class="relatorio-bloco">
       <h3>Encerradas ainda na qualificação</h3>
       <div id="relatorio-encerrados"></div>
     </div>
@@ -325,6 +336,13 @@ const FOLLOWUP_MAX = 7;
 const FOLLOWUP_ENCERRAMENTO = 7;
 const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8'];
 const COR_ENCERRADO_SEM_QUALIFICACAO = '#d17fa8';
+
+// Anel / criativo de onde o lead veio. Para incluir um novo, basta acrescentar o nome na lista.
+const ORIGENS = ['Ziel', 'Sechs', 'Marquise', 'Laub', 'Oval', 'Landing Page', 'Não identificado'];
+const ORIGEM_NAO_IDENTIFICADO = 'Não identificado';
+const ORIGEM_VAZIA = 'Sem origem registrada';
+// Etapas que indicam que o lead chegou a receber cotação (inclui quem avançou depois dela).
+const ETAPAS_CHEGARAM_COTACAO = ['cotacao_enviada', 'pedido_aberto', 'venda_aprovada', 'em_producao', 'saiu_entrega', 'fechado_contato'];
 
 function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length]; }
 function nomeFollowup(n){ return n === FOLLOWUP_ENCERRAMENTO ? `Follow up ${n} (encerramento)` : `Follow up ${n}`; }
@@ -771,6 +789,7 @@ function criarCard(lead, etapa, mostrarEtapa = false){
     ${mostrarEtapa ? `<div class="etapa-origem">Parou em: ${etapa.nome}</div>` : ''}
     ${lead.observacoes ? `<div class="obs-preview">${lead.observacoes}</div>` : ''}
     ${lead.valorEstimado ? `<div class="valor-estimado">${lead.valorEstimado}</div>` : ''}
+    ${lead.origem ? `<div class="chip-origem">Origem: ${lead.origem}</div>` : ''}
     <div class="linha-baixo">
       ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
       <span class="marcadores">
@@ -784,6 +803,12 @@ function criarCard(lead, etapa, mostrarEtapa = false){
 
 function preencherSelectEtapas(){
   document.getElementById('campo-etapa').innerHTML = TODAS_ETAPAS.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+}
+
+function preencherSelectOrigem(){
+  const opcoes = ['<option value="">Selecione...</option>'];
+  ORIGENS.forEach(o => opcoes.push(`<option value="${o}">${o}</option>`));
+  document.getElementById('campo-origem').innerHTML = opcoes.join('');
 }
 
 function preencherSelectFollowup(){
@@ -838,6 +863,7 @@ function abrirModalNovo(){
   document.getElementById('campo-telefone').value = '';
   document.getElementById('campo-data').value = new Date().toISOString().slice(0,10);
   document.getElementById('campo-etapa').value = 'qualificacao';
+  document.getElementById('campo-origem').value = '';
   document.getElementById('campo-valor-estimado').value = '';
   document.getElementById('campo-potencial').checked = false;
   document.getElementById('campo-followup').value = '0';
@@ -857,6 +883,7 @@ function abrirModalEdicao(id){
   document.getElementById('campo-telefone').value = lead.telefone ? formatarTelefone(lead.telefone) : '';
   document.getElementById('campo-data').value = lead.dataEntrada || '';
   document.getElementById('campo-etapa').value = lead.etapa;
+  document.getElementById('campo-origem').value = lead.origem || '';
   document.getElementById('campo-valor-estimado').value = lead.valorEstimado || '';
   document.getElementById('campo-potencial').checked = !!lead.emPotencial;
   document.getElementById('campo-followup').value = String(lead.followUp || 0);
@@ -887,6 +914,7 @@ function salvarLeadAtual(){
     telefone: telefoneDigits,
     dataEntrada: document.getElementById('campo-data').value,
     etapa: document.getElementById('campo-etapa').value,
+    origem: document.getElementById('campo-origem').value,
     valorEstimado: document.getElementById('campo-valor-estimado').value.trim(),
     emPotencial: document.getElementById('campo-potencial').checked,
     followUp: Number(document.getElementById('campo-followup').value) || 0,
@@ -939,8 +967,18 @@ function abrirRelatorio(){
   const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const pctSemQualificacao = base.length ? Math.round(encerradosSemQualificacao / base.length * 100) : 0;
 
+  const mapaOrigem = {};
+  base.forEach(l => {
+    const nome = l.origem || ORIGEM_VAZIA;
+    if (!mapaOrigem[nome]) mapaOrigem[nome] = { nome, qtd: 0, cotacao: 0, vendas: 0 };
+    mapaOrigem[nome].qtd++;
+    if (ETAPAS_CHEGARAM_COTACAO.includes(l.etapa)) mapaOrigem[nome].cotacao++;
+    if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) mapaOrigem[nome].vendas++;
+  });
+  const porOrigem = Object.values(mapaOrigem).sort((a, b) => b.qtd - a.qtd);
+
   ultimoRelatorio = {
-    porEtapa, total, travados, valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
+    porEtapa, total, travados, porOrigem, valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
     encerradosTotal, encerradosSemQualificacao, pctSemQualificacao, totalLeads: base.length
   };
 
@@ -960,6 +998,14 @@ function abrirRelatorio(){
     ? travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
     : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
 
+  document.getElementById('relatorio-origens').innerHTML = porOrigem.length
+    ? porOrigem.map(o => {
+        const pct = Math.round(o.qtd / total * 100);
+        const pctCot = o.qtd ? Math.round(o.cotacao / o.qtd * 100) : 0;
+        return `<div class="relatorio-linha">${o.nome}: ${o.qtd} lead${o.qtd > 1 ? 's' : ''} (${pct}%), ${o.cotacao} chegaram à cotação (${pctCot}%), ${o.vendas} venda${o.vendas === 1 ? '' : 's'}</div>`;
+      }).join('')
+    : '<div class="relatorio-linha">Nenhum lead nesse período.</div>';
+
   document.getElementById('relatorio-encerrados').innerHTML = `
     <div class="relatorio-linha">Leads encerrados sem sair da Qualificação: ${encerradosSemQualificacao} (de ${encerradosTotal} encerrados no total)</div>
     <div class="relatorio-linha">Equivale a ${pctSemQualificacao}% dos ${base.length} leads do período. Base para conversar com o tráfego pago.</div>
@@ -977,6 +1023,13 @@ function abrirRelatorio(){
   if (maiorTravado && maiorTravado.qtd >= 3) sugestoes.push(`"${maiorTravado.etapa.nome}" concentra o maior número de leads parados, vale priorizar esse grupo.`);
   if (valorEsfriado > 0) sugestoes.push(`${formatarReais(valorEsfriado)} em cotações já entraram em follow-up sem fechar, esse é o valor mais urgente de retomar.`);
   if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em pedidos aprovados ainda não fechados, considere confirmar esses com prioridade.`);
+  const semOrigem = mapaOrigem[ORIGEM_VAZIA] ? mapaOrigem[ORIGEM_VAZIA].qtd : 0;
+  if (semOrigem > 0 && semOrigem < base.length) sugestoes.push(`${semOrigem} lead${semOrigem > 1 ? 's' : ''} sem origem registrada, preencher o anel de origem deixa a leitura por criativo mais confiável.`);
+  const origensComDado = porOrigem.filter(o => o.nome !== ORIGEM_VAZIA && o.nome !== ORIGEM_NAO_IDENTIFICADO && o.qtd >= 3);
+  if (origensComDado.length >= 2) {
+    const melhor = [...origensComDado].sort((a, b) => (b.cotacao / b.qtd) - (a.cotacao / a.qtd))[0];
+    sugestoes.push(`"${melhor.nome}" tem a melhor taxa de chegada à cotação (${Math.round(melhor.cotacao / melhor.qtd * 100)}%) entre os criativos com 3 leads ou mais.`);
+  }
   if (sugestoes.length === 0) sugestoes.push('Sem pontos de atenção fora do comum nesse período.');
   document.getElementById('relatorio-sugestoes').innerHTML = sugestoes.map(s => `<div class="relatorio-linha">${s}</div>`).join('');
 
@@ -1020,6 +1073,7 @@ function baixarRelatorioPDF(){
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const margem = 40;
   let y = margem;
+  const quebra = () => { if (y > 770) { doc.addPage(); y = margem; } };
 
   doc.setFontSize(16);
   doc.text('Relatorio de Leads - Spielvogel Joias', margem, y); y += 20;
@@ -1052,6 +1106,23 @@ function baixarRelatorioPDF(){
   y += 8;
 
   doc.setFontSize(12);
+  doc.text('Leads por anel / criativo de origem', margem, y); y += 16;
+  doc.setFontSize(9);
+  if (ultimoRelatorio.porOrigem.length === 0) {
+    doc.text('Nenhum lead nesse periodo.', margem, y); y += 14;
+  } else {
+    ultimoRelatorio.porOrigem.forEach(o => {
+      quebra();
+      const pct = Math.round(o.qtd / ultimoRelatorio.total * 100);
+      const pctCot = o.qtd ? Math.round(o.cotacao / o.qtd * 100) : 0;
+      doc.text(`${o.nome}: ${o.qtd} lead(s) (${pct}%), ${o.cotacao} chegaram a cotacao (${pctCot}%), ${o.vendas} venda(s)`, margem, y);
+      y += 14;
+    });
+  }
+  y += 8;
+
+  quebra();
+  doc.setFontSize(12);
   doc.text('Encerradas ainda na qualificacao', margem, y); y += 16;
   doc.setFontSize(9);
   doc.text(`Leads encerrados sem sair da qualificacao: ${ultimoRelatorio.encerradosSemQualificacao} (de ${ultimoRelatorio.encerradosTotal} encerrados no total)`, margem, y); y += 14;
@@ -1069,6 +1140,7 @@ function baixarRelatorioPDF(){
   doc.text('Sugestoes', margem, y); y += 16;
   doc.setFontSize(9);
   document.querySelectorAll('#relatorio-sugestoes .relatorio-linha').forEach(el => {
+    quebra();
     const linhas = doc.splitTextToSize(el.textContent, 500);
     doc.text(linhas, margem, y);
     y += 14 * linhas.length;
@@ -1078,6 +1150,7 @@ function baixarRelatorioPDF(){
 }
 
 preencherSelectEtapas();
+preencherSelectOrigem();
 preencherSelectFollowup();
 ativarArrastarScroll(document.getElementById('board'));
 ativarArrastarScroll(document.getElementById('board-followup'));
