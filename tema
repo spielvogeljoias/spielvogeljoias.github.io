@@ -1,0 +1,110 @@
+/* ============================================================
+   TEMA — Spielvogel Joias
+   Cores, fontes, barra de navegação e botão de modo claro/escuro.
+   Usado por todas as páginas (inclusive o simulador).
+   Mudou uma cor ou fonte? Muda aqui, uma vez só.
+   O modo (claro ou escuro) é escolhido pelo botão da barra e guardado no navegador de cada pessoa.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+/* Modo escuro (padrão) */
+:root {
+  --bg: #131615;              /* fundo da página */
+  --bg-elevated: #1b1f1d;     /* cards, colunas, painéis */
+  --bg-elevated-2: #232825;   /* campos e elementos aninhados */
+  --border: #2c322f;
+  --gold: #d8a76a;            /* dourado de destaque */
+  --gold-hover: #e8bc86;
+  --gold-soft: #b08a58;
+  --on-gold: #1a1209;         /* texto sobre fundo dourado */
+  --text: #e8ebe8;
+  --text-secondary: #a2a9a5;
+  --text-muted: #7d8580;
+  --danger: #e0786b;
+  --amber: #d8a76a;
+  --overlay: rgba(0, 0, 0, 0.65);
+  --logo-filter: none;
+
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: dark;
+}
+
+/* Modo claro */
+:root[data-theme="light"] {
+  --bg: #f1f0ed;
+  --bg-elevated: #fbfaf8;
+  --bg-elevated-2: #ffffff;
+  --border: #d9d7d1;
+  --gold: #7d5a2c;
+  --gold-hover: #664820;
+  --gold-soft: #9a7a4e;
+  --on-gold: #ffffff;
+  --text: #1e2321;
+  --text-secondary: #59605c;
+  --text-muted: #8a908c;
+  --danger: #b3463a;
+  --amber: #96660f;
+  --overlay: rgba(20, 22, 21, 0.45);
+  --logo-filter: brightness(0) invert(0.13);
+  color-scheme: light;
+}
+
+/* A logo é clara e de uma cor só: no fundo claro ela escurece. */
+img[src$="logo.png"] { filter: var(--logo-filter); }
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+.sv-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 28px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  font-family: var(--font-body);
+}
+.sv-nav .sv-nav-brand { display: flex; align-items: center; text-decoration: none; color: var(--text); }
+.sv-nav .sv-nav-brand img { height: 28px; display: block; }
+.sv-nav-links { display: flex; gap: 24px; flex-wrap: wrap; margin-left: auto; }
+.sv-nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 0;
+  border-bottom: 1.5px solid transparent;
+  white-space: nowrap;
+}
+.sv-nav-links a:hover { color: var(--text); }
+.sv-nav-links a.ativo { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* Botão de modo claro / escuro */
+.tema-btn {
+  flex: none;
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+.tema-btn:hover { color: var(--gold); border-color: var(--gold); }
+.tema-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.tema-btn svg { width: 18px; height: 18px; display: block; }
+.tema-btn .icone-sol { display: none; }
+:root[data-theme="dark"] .tema-btn .icone-sol,
+:root:not([data-theme]) .tema-btn .icone-sol { display: block; }
+:root[data-theme="dark"] .tema-btn .icone-lua,
+:root:not([data-theme]) .tema-btn .icone-lua { display: none; }
+.tema-btn.flutuante { position: fixed; top: 16px; right: 16px; z-index: 50; }
+
+@media (max-width: 640px) {
+  .sv-nav { padding: 12px 16px; }
+  .sv-nav-links { gap: 16px; margin-left: 0; order: 3; width: 100%; }
+  .tema-btn { margin-left: auto; }
+}
