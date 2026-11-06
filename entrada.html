@@ -3,108 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spielvogel Joias — Painel Interno</title>
+<title>Spielvogel Joias — Painel interno</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tema.css">
 <link rel="stylesheet" href="estilo.css">
+<script src="tema.js"></script>
 <style>
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 56px 20px; }
+  .entrada { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
+  .entrada-logo { height: 54px; display: block; margin: 0 auto 14px; }
+  .entrada-sub { margin: 0 0 40px; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); text-align: center; }
+  .menu { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .menu a {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 20px 24px; text-decoration: none;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px;
+    color: var(--text); transition: border-color .15s, transform .15s;
   }
-  .entrada {
-    max-width: 480px;
-    width: 100%;
-    text-align: center;
-  }
-  .entrada-logo { max-width: 320px; width: 100%; height: auto; margin-bottom: 28px; }
-  .entrada-boas-vindas {
-    font-family: var(--font-display);
-    font-size: 22px;
-    color: var(--text);
-    margin: 0 0 6px;
-    font-weight: 500;
-  }
-  .entrada-sub {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0 0 36px;
-  }
-  .entrada-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .entrada-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 3px;
-    padding: 18px 20px 16px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .entrada-item:hover { border-color: var(--gold); background: var(--bg-elevated-2); }
-  .entrada-item-nome {
-    font-family: var(--font-display);
-    font-size: 19px;
-    color: var(--text);
-  }
-  .entrada-item-desc {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .entrada-item-seta {
-    color: var(--gold);
-    font-size: 14px;
-    margin-top: 6px;
-    opacity: 0;
-    transition: opacity 0.15s, transform 0.15s;
-    transform: translateY(-2px);
-  }
-  .entrada-item:hover .entrada-item-seta { opacity: 1; transform: translateY(0); }
-  .entrada-rodape {
-    margin-top: 36px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .menu a:hover { border-color: var(--gold); transform: translateY(-1px); }
+  .menu a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .menu .titulo { display: block; font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.1; }
+  .menu .desc { display: block; margin-top: 4px; font-size: 13.5px; color: var(--text-secondary); }
+  .menu .seta { color: var(--gold); font-size: 20px; flex: none; }
+  @media (max-width: 480px) { .menu a { padding: 18px 18px; } .menu .titulo { font-size: 25px; } }
 </style>
 </head>
 <body>
 
-<div class="entrada">
+<main class="entrada">
   <img class="entrada-logo" src="logo.png" alt="Spielvogel Joias">
-  <p class="entrada-boas-vindas">Bem-vindo ao painel interno</p>
-  <p class="entrada-sub">Escolha uma ferramenta para começar</p>
+  <p class="entrada-sub">Painel interno</p>
 
-  <div class="entrada-menu">
-    <a class="entrada-item" href="leads.html">
-      <div class="entrada-item-nome">Leads</div>
-      <div class="entrada-item-desc">Acompanhamento de contatos e vendas em andamento</div>
-      <span class="entrada-item-seta">→</span>
-    </a>
-    <a class="entrada-item" href="index.html">
-      <div class="entrada-item-nome">Painel de Encomendas</div>
-      <div class="entrada-item-desc">Pedidos em produção, do aprovado à entrega</div>
-      <span class="entrada-item-seta">→</span>
-    </a>
-    <a class="entrada-item" href="tabela-precos.html">
-      <div class="entrada-item-nome">Tabela de Preços</div>
-      <div class="entrada-item-desc">Modelos, pedras e valores de referência</div>
-      <span class="entrada-item-seta">→</span>
-    </a>
-  </div>
-
-  <p class="entrada-rodape">Spielvogel Joias</p>
-</div>
+  <nav class="menu" aria-label="Ferramentas">
+    <a href="leads.html"><span><span class="titulo">Leads</span><span class="desc">Funil de vendas e follow-ups</span></span><span class="seta">→</span></a>
+    <a href="index.html"><span><span class="titulo">Painel de encomendas</span><span class="desc">Pedidos em produção e prazos de envio</span></span><span class="seta">→</span></a>
+    <a href="tabela-precos.html"><span><span class="titulo">Tabela de valores</span><span class="desc">Modelos, pedras e preços</span></span><span class="seta">→</span></a>
+    <a href="simulador.html"><span><span class="titulo">Simulador de conversas</span><span class="desc">Roteiros do atendimento, passo a passo</span></span><span class="seta">→</span></a>
+  </nav>
+</main>
 
 </body>
 </html>
