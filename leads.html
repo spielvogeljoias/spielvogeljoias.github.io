@@ -6,8 +6,9 @@
 <title>Leads — Spielvogel Joias</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tema.css">
 <link rel="stylesheet" href="estilo.css">
+<script src="tema.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -26,13 +27,20 @@
     --fase-finalizada: #4fae7c;
     --fase-iniciar: #8a8275;
   }
+  :root[data-theme="light"] {
+    --fase-descoberta: #a8864f;
+    --fase-aprovacao: #b58a2a;
+    --fase-formalizacao: #4f9477;
+    --fase-finalizada: #2f8f5f;
+    --fase-iniciar: #8a8f8b;
+  }
 
-  main { padding: 18px 24px 40px; }
+  main { max-width: 1760px; margin: 0 auto; padding: 30px 28px 64px; }
 
-  .resumo { display: flex; gap: 28px; padding: 4px 0 18px; flex-wrap: wrap; }
+  .resumo { display: flex; gap: 36px; padding: 2px 0 22px; flex-wrap: wrap; }
   .resumo .item { display: flex; flex-direction: column; gap: 2px; }
-  .resumo .item .valor { font-size: 20px; font-weight: 700; color: var(--text); }
-  .resumo .item .rotulo { font-size: 12px; color: var(--text-secondary); }
+  .resumo .item .valor { font-family: var(--font-display); font-size: 34px; line-height: 1; font-weight: 700; color: var(--text); }
+  .resumo .item .rotulo { font-size: 12.5px; color: var(--text-secondary); }
 
   .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
   .toolbar-dica { font-size: 13px; color: var(--text-secondary); }
@@ -41,107 +49,108 @@
   .busca-icone { font-size: 14px; opacity: 0.7; }
   .busca-linha .search-input {
     width: 100%; background: var(--bg-elevated-2); border: 1px solid var(--border);
-    color: var(--text); padding: 9px 12px; border-radius: 6px; font-family: var(--font-body); font-size: 14px;
+    color: var(--text); padding: 10px 14px; border-radius: 12px; font-family: var(--font-body); font-size: 14px;
   }
   .busca-linha .search-input:focus { outline: none; border-color: var(--gold); }
 
   #banner-firebase {
     display: none; margin-bottom: 14px; padding: 10px 14px;
-    background: rgba(212,175,90,0.12); border: 1px solid var(--gold);
-    border-radius: 8px; font-size: 13px; color: var(--gold-hover);
+    background: color-mix(in srgb, var(--gold) 12%, transparent); border: 1px solid var(--gold);
+    border-radius: 12px; font-size: 13px; color: var(--gold);
   }
 
   .board { display: flex; gap: 10px; overflow-x: auto; cursor: grab; }
   .board.arrastando-board { cursor: grabbing; user-select: none; }
 
   .coluna {
-    flex: 0 0 190px; display: flex; flex-direction: column;
-    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+    flex: 0 0 200px; display: flex; flex-direction: column;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px;
     overflow: hidden;
   }
   .coluna.coluna-encerrada-inicio { margin-left: 16px; }
-  .coluna.coluna-finalizadas { border-color: rgba(79,174,124,0.55); }
-  .coluna.coluna-finalizadas .coluna-corpo { background: rgba(79,174,124,0.08); }
+  .coluna.coluna-finalizadas { border-color: color-mix(in srgb, var(--fase-finalizada) 55%, transparent); }
+  .coluna.coluna-finalizadas .coluna-corpo { background: color-mix(in srgb, var(--fase-finalizada) 9%, transparent); }
 
-  .coluna-header { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .coluna-header .nome-etapa { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--bg); }
+  .coluna-header { padding: 12px 13px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; border-top: 4px solid var(--cor, var(--border)); }
+  .coluna-header .nome-etapa { font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1.1; color: var(--text); }
   .coluna-header .contagem {
-    font-size: 10.5px; font-weight: 700; color: var(--text);
-    background: rgba(0,0,0,0.28); padding: 1px 7px; border-radius: 999px; flex-shrink: 0;
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    background: var(--bg-elevated-2); border: 1px solid var(--border); padding: 1px 8px; border-radius: 999px; flex-shrink: 0;
   }
 
-  .coluna-corpo { padding: 8px; display: flex; flex-direction: column; gap: 7px; min-height: 50px; }
+  .coluna-corpo { padding: 9px; display: flex; flex-direction: column; gap: 8px; min-height: 50px; }
 
-  .card { background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 9px; cursor: pointer; }
+  .card { background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 11px; cursor: pointer; }
   .card:hover { border-color: var(--gold); }
   .card .linha-topo { display: flex; align-items: center; gap: 5px; }
   .card .ponto { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .card .nome { font-size: 12px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-  .card .data { font-size: 10px; color: var(--text-muted); }
-  .card .linha-baixo { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-  .card .telefone-link { font-size: 10px; color: var(--gold); text-decoration: none; }
+  .card .nome { font-size: 13px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .card .data { font-size: 11px; color: var(--text-muted); }
+  .card .linha-baixo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin-top: 5px; }
+  .card .telefone-link { font-size: 11px; color: var(--gold); text-decoration: none; }
   .card .telefone-link:hover { text-decoration: underline; }
-  .card .marcador { font-size: 9px; font-weight: 700; color: var(--bg); background: var(--gold); padding: 1px 6px; border-radius: 999px; }
-  .card .marcador-followup { font-size: 9px; font-weight: 700; color: var(--bg); padding: 1px 6px; border-radius: 999px; }
+  .card .marcador { font-size: 10px; font-weight: 700; color: var(--on-gold); background: var(--gold); padding: 1px 6px; border-radius: 999px; }
+  .card .marcador-followup { font-size: 10px; font-weight: 700; color: #1b1712; padding: 1px 6px; border-radius: 999px; }
   .card .marcadores { display: flex; gap: 4px; flex-wrap: wrap; }
+  .card .marcador, .card .marcador-followup { white-space: nowrap; }
   .card .obs-preview {
-    font-size: 10px; color: var(--text-secondary); margin-top: 3px;
+    font-size: 11px; color: var(--text-secondary); margin-top: 3px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
 
-  .vazio { font-size: 10.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
-  .card .etapa-origem { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
-  .card .chip-origem { font-size: 9.5px; color: var(--gold-soft); margin-top: 3px; }
+  .vazio { font-size: 11.5px; color: var(--text-muted); text-align: center; padding: 14px 4px; }
+  .card .etapa-origem { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .card .chip-origem { font-size: 10.5px; color: var(--gold-soft); margin-top: 3px; }
 
   .hidden { display: none !important; }
 
   /* ---------- Filtro por período ---------- */
   .filtro-periodo { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .filtro-campo { display: flex; flex-direction: column; gap: 3px; }
-  .filtro-campo label { font-size: 11px; color: var(--text-secondary); }
+  .filtro-campo label { font-size: 12px; color: var(--text-secondary); }
   .filtro-campo input[type="date"] {
     background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 9px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; color-scheme: dark;
+    padding: 8px 11px; border-radius: 10px; font-family: var(--font-body); font-size: 13px;
   }
   .filtro-campo input[type="date"]:focus { outline: none; border-color: var(--gold); }
   .rotulo-periodo { font-size: 12px; color: var(--text-muted); padding-bottom: 8px; }
 
   /* ---------- Abas ---------- */
-  .abas { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .abas { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
   .aba {
     background: none; border: none; color: var(--text-secondary); font-family: var(--font-body);
-    font-size: 13px; font-weight: 600; padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent;
+    font-size: 14px; font-weight: 600; padding: 9px 16px; cursor: pointer; border-bottom: 2px solid transparent;
   }
-  .aba:hover { color: var(--gold-soft); }
+  .aba:hover { color: var(--text); }
   .aba.ativa { color: var(--gold); border-bottom-color: var(--gold); }
 
   /* ---------- Board de follow-up ---------- */
-  .coluna-followup { flex: 0 0 205px; }
+  .coluna-followup { flex: 0 0 218px; }
   .coluna.coluna-sem-qualificacao { margin-left: 16px; }
   .nota-coluna {
-    margin: 0 8px 8px; padding: 6px 8px; font-size: 11px; line-height: 1.4;
+    margin: 0 9px 8px; padding: 7px 9px; font-size: 11.5px; line-height: 1.4;
     color: var(--text-secondary); background: var(--bg-elevated-2);
-    border: 1px dashed var(--border); border-radius: 5px;
+    border: 1px dashed var(--border); border-radius: 10px;
   }
   .followup-mensagem {
-    margin: 0 8px 8px; width: calc(100% - 16px); min-height: 48px; resize: vertical;
+    margin: 0 9px 8px; width: calc(100% - 18px); min-height: 54px; resize: vertical;
     background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text);
-    padding: 6px 8px; border-radius: 5px; font-family: var(--font-body); font-size: 11px; line-height: 1.4;
+    padding: 8px 10px; border-radius: 10px; font-family: var(--font-body); font-size: 12px; line-height: 1.45;
   }
   .followup-mensagem:focus { outline: none; border-color: var(--gold); }
   .followup-mensagem::placeholder { color: var(--text-muted); }
 
-  .card .valor-estimado { font-size: 10.5px; font-weight: 700; color: var(--gold); margin-top: 3px; }
+  .card .valor-estimado { font-size: 11.5px; font-weight: 700; color: var(--gold); margin-top: 3px; }
 
   /* ---------- Aba "Em potencial" ---------- */
   .secoes-potencial { display: flex; flex-direction: column; gap: 20px; }
   .secao-titulo {
-    display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text);
     margin-bottom: 9px;
   }
-  .secao-titulo .contagem { font-size: 10.5px; color: var(--text-muted); font-weight: 500; }
+  .secao-titulo .contagem { font-family: var(--font-body); font-size: 12px; color: var(--text-muted); font-weight: 500; }
   .secao-cards { display: flex; gap: 8px; flex-wrap: wrap; }
-  .secao-cards .card { width: 195px; }
+  .secao-cards .card { width: 210px; }
 
   /* ---------- Modal de relatório ---------- */
   .modal-relatorio { max-width: 580px; }
@@ -151,14 +160,14 @@
   .legenda-item { display: flex; align-items: center; gap: 6px; }
   .legenda-cor { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
   .relatorio-bloco { margin-bottom: 16px; }
-  .relatorio-bloco h3 { font-size: 13px; color: var(--gold); margin: 0 0 8px; font-family: var(--font-body); }
+  .relatorio-bloco h3 { font-size: 20px; color: var(--text); margin: 0 0 8px; font-family: var(--font-display); font-weight: 700; }
   .relatorio-linha { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
 
   /* ---------- Modo teste ---------- */
   #banner-teste {
     display: none; margin-bottom: 14px; padding: 10px 14px;
-    background: rgba(111,168,216,0.14); border: 1px solid #6fa8d8;
-    border-radius: 8px; font-size: 13px; color: #9cc6ea;
+    background: color-mix(in srgb, #6fa8d8 14%, transparent); border: 1px solid #6fa8d8;
+    border-radius: 12px; font-size: 13px; color: var(--text);
   }
 
   /* ---------- Trilhas do follow-up ---------- */
@@ -169,34 +178,34 @@
     cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
   }
   .trilha-pill:hover { border-color: var(--gold-soft); color: var(--text); }
-  .trilha-pill.ativa { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+  .trilha-pill.ativa { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
   .trilha-pill .badge-pill {
-    font-size: 10.5px; font-weight: 700; background: var(--danger); color: var(--text);
+    font-size: 10.5px; font-weight: 700; background: var(--danger); color: #fff;
     padding: 0 6px; border-radius: 999px; line-height: 17px;
   }
-  .trilha-pill.ativa .badge-pill { background: var(--bg); color: var(--gold); }
+  .trilha-pill.ativa .badge-pill { background: var(--on-gold); color: var(--gold); }
   .trilhas-dica { font-size: 11.5px; color: var(--text-muted); margin-left: 6px; }
 
-  .rotulo-msg { margin: 0 8px 4px; font-size: 10.5px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.2px; }
+  .rotulo-msg { margin: 0 9px 4px; font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.2px; }
   .rotulo-msg .tag-msg { color: var(--gold-soft); font-weight: 500; }
 
   /* ---------- Prazo e ações nos cards do follow-up ---------- */
-  .card .linha-fu { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
-  .chip-prazo { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; color: var(--bg); }
+  .card .linha-fu { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+  .chip-prazo { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; color: #1b1712; }
   .prazo-atrasado { background: #d9705f; }
   .prazo-hoje { background: #e3b04b; }
   .prazo-emdia { background: #7fb39a; }
   .prazo-semdata { background: transparent; color: var(--text-muted); border: 1px dashed var(--text-muted); }
   .card-acoes { display: flex; gap: 5px; margin-top: 7px; }
   .card-acoes button {
-    flex: 1; font-family: var(--font-body); font-size: 10.5px; font-weight: 600; cursor: pointer;
+    flex: 1; font-family: var(--font-body); font-size: 11.5px; font-weight: 600; cursor: pointer;
     background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
-    padding: 4px 4px; border-radius: 5px;
+    padding: 5px 4px; border-radius: 8px;
   }
   .card-acoes button:hover { border-color: var(--gold); color: var(--gold); }
   .card-acoes button.fiz { border-color: var(--gold-soft); color: var(--gold); }
-  .card-acoes button.fiz:hover { background: var(--gold); color: var(--bg); }
-  .tag-contexto { font-size: 9.5px; color: var(--gold-soft); margin-top: 3px; }
+  .card-acoes button.fiz:hover { background: var(--gold); color: var(--on-gold); }
+  .tag-contexto { font-size: 10.5px; color: var(--gold-soft); margin-top: 3px; }
 
   /* ---------- Linha do tempo no modal ---------- */
   .timeline { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
@@ -208,22 +217,25 @@
 
   /* ---------- Relatório de follow-ups ---------- */
   .modal-fu { max-width: 1040px; }
-  .tabela-wrap { overflow-x: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; max-height: 46vh; overflow-y: auto; }
+  .tabela-wrap { overflow-x: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 12px; max-height: 46vh; overflow-y: auto; }
   .tabela-fu { border-collapse: collapse; width: 100%; font-size: 12px; }
   .tabela-fu th, .tabela-fu td { padding: 7px 9px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
-  .tabela-fu th { position: sticky; top: 0; background: var(--bg-elevated-2); color: var(--gold); font-weight: 600; font-size: 11.5px; }
+  .tabela-fu th { position: sticky; top: 0; background: var(--bg-elevated-2); color: var(--text); font-weight: 600; font-size: 11.5px; }
   .tabela-fu td { color: var(--text-secondary); }
   .tabela-fu td.nome-col { color: var(--text); font-weight: 600; }
   .tabela-fu td.vazio-col { color: var(--text-muted); }
   .resumo-fu { display: flex; gap: 22px; flex-wrap: wrap; margin: 12px 0 14px; }
   .resumo-fu .item { display: flex; flex-direction: column; gap: 2px; }
-  .resumo-fu .item .valor { font-size: 18px; font-weight: 700; color: var(--text); }
+  .resumo-fu .item .valor { font-family: var(--font-display); font-size: 28px; line-height: 1; font-weight: 700; color: var(--text); }
   .resumo-fu .item .rotulo { font-size: 11.5px; color: var(--text-secondary); }
 
   @media (max-width: 600px) {
     main { padding: 14px; }
     .timeline { grid-template-columns: 1fr; }
-    .coluna { flex-basis: 168px; }
+    .coluna { flex-basis: 178px; }
+    .page-title { font-size: 32px; }
+    .resumo { gap: 18px 26px; }
+    .resumo .item .valor { font-size: 26px; }
   }
 </style>
 </head>
@@ -235,9 +247,14 @@
     <a href="index.html">Painel de Encomendas</a>
     <a href="tabela-precos.html">Tabela de Preços</a>
     <a href="leads.html" class="ativo">Leads</a>
+    <a href="simulador.html">Simulador</a>
   </div>
 </nav>
 <main>
+  <header class="page-head">
+    <p class="page-eyebrow">Spielvogel Joias</p>
+    <h1 class="page-title">Leads</h1>
+  </header>
   <div class="resumo" id="resumo"></div>
 
   <div class="filtro-periodo">
@@ -1046,7 +1063,7 @@ function renderizarBoard(){
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
-    header.style.background = `var(--fase-${etapa.fase})`;
+    header.style.setProperty('--cor', `var(--fase-${etapa.fase})`);
     header.innerHTML = `<span class="nome-etapa">${etapa.nome}</span><span class="contagem">${leadsDaEtapa.length}</span>`;
     coluna.appendChild(header);
 
@@ -1198,7 +1215,7 @@ function renderizarBoardFollowup(){
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
-    header.style.background = n === 0 ? 'var(--fase-iniciar)' : corFollowup(n);
+    header.style.setProperty('--cor', n === 0 ? 'var(--fase-iniciar)' : corFollowup(n));
     header.innerHTML = `<span class="nome-etapa">${n === 0 ? 'A iniciar (sem follow-up)' : nomeFollowup(n)}</span><span class="contagem">${leadsDoNivel.length}</span>`;
     coluna.appendChild(header);
 
