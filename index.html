@@ -6,81 +6,82 @@
 <title>Spielvogel Joias — Painel de Encomendas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tema.css">
 <link rel="stylesheet" href="estilo.css">
+<script src="tema.js"></script>
 <style>
-  main { padding: 18px 24px 40px; }
+  main { max-width: 1560px; margin: 0 auto; padding: 30px 28px 64px; }
 
-  .toolbar { display: flex; justify-content: center; margin-bottom: 18px; }
+  .page-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+  .page-top .page-head { margin: 0; }
 
-  .board { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 10px; cursor: grab; }
+  .board { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 14px; cursor: grab; align-items: start; }
   .board.arrastando-board { cursor: grabbing; user-select: none; }
 
   .column {
     display: flex; flex-direction: column;
-    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
-    padding: 10px 9px;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px;
+    padding: 14px 12px 6px;
   }
-
-  .column-title {
-    font-family: var(--font-body); font-weight: 700; font-size: 14px; color: var(--gold);
-    text-align: center; margin: 0 0 2px; letter-spacing: 0.3px;
-  }
-  .column-count { text-align: center; font-size: 10.5px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; }
+  .column-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 4px 12px; }
+  .column-title { font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.1; color: var(--text); }
+  .column-count { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
   .card {
-    background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 7px;
-    padding: 9px; margin-bottom: 8px; cursor: pointer;
+    background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 11px; margin-bottom: 10px; cursor: pointer;
   }
   .card:hover { border-color: var(--gold-soft); }
 
-  .card-photo { width: 100%; height: 88px; object-fit: cover; border-radius: 5px; margin-bottom: 7px; display: block; background: var(--border); cursor: zoom-in; }
+  .card-photo { width: 100%; height: 96px; object-fit: cover; border-radius: 8px; margin-bottom: 9px; display: block; background: var(--border); cursor: zoom-in; }
 
-  .card-client { font-family: var(--font-body); font-weight: 700; font-size: 13.5px; color: var(--text); margin: 0 0 1px; }
-  .card-model { font-size: 11px; color: var(--gold); margin: 0 0 4px; font-style: italic; }
-  .card-investment { font-size: 11px; color: var(--text-secondary); margin: 0 0 5px; }
+  .card-client { font-weight: 700; font-size: 14.5px; color: var(--text); margin: 0 0 2px; }
+  .card-model { font-size: 12.5px; color: var(--gold); margin: 0 0 5px; }
+  .card-investment { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 5px; }
   .card-notes {
-    font-size: 10.5px; color: var(--text-secondary); margin: 0 0 6px;
+    font-size: 12px; color: var(--text-secondary); margin: 0 0 6px;
     overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
 
   .due-badge {
-    display: inline-flex; align-items: center; gap: 4px; font-size: 10px;
-    padding: 2px 7px; border-radius: 4px; margin-bottom: 6px; border: 1px solid;
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px; margin-bottom: 7px; border: 1px solid;
   }
-  .badge-danger { color: var(--danger); border-color: var(--danger); background: rgba(196,103,90,0.12); }
-  .badge-amber { color: var(--amber); border-color: var(--amber); background: rgba(212,162,74,0.12); }
-  .badge-neutral { color: var(--text-muted); border-color: var(--border); background: rgba(255,255,255,0.03); }
+  .badge-danger { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 13%, transparent); }
+  .badge-amber { color: var(--amber); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 13%, transparent); }
+  .badge-neutral { color: var(--text-muted); border-color: var(--border); background: transparent; }
 
   .photo-count-badge {
-    position: absolute; bottom: 15px; right: 5px; background: rgba(0,0,0,0.7);
-    color: var(--text); font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    position: absolute; bottom: 15px; right: 6px; background: rgba(0,0,0,0.7);
+    color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px;
   }
   .attachment-badge {
-    display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--gold-soft);
-    border: 1px solid var(--border); padding: 2px 7px; border-radius: 4px; margin-bottom: 6px;
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--gold-soft);
+    border: 1px solid var(--border); padding: 2px 9px; border-radius: 999px; margin-bottom: 7px;
   }
 
-  .empty-column { text-align: center; color: var(--text-muted); font-size: 11px; padding: 16px 4px; opacity: 0.7; }
+  .empty-column { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 18px 4px 22px; }
 
   .photos-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
   .photo-count-badge-modal {
     position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.7);
-    color: var(--text); font-size: 11px; padding: 2px 6px; border-radius: 3px;
+    color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 999px;
   }
   .pdf-thumb {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; height: 100%; background: var(--border); color: var(--gold);
     text-decoration: none; padding: 4px; text-align: center;
   }
-  .pdf-thumb .pdf-label { font-family: var(--font-body); font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .pdf-thumb .pdf-label { font-size: 14px; font-weight: 700; letter-spacing: 1px; }
   .pdf-thumb .pdf-name { color: var(--text-muted); font-size: 9px; margin-top: 3px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  .upload-status { font-size: 12px; color: var(--gold-soft); margin-top: 6px; min-height: 16px; }
 
   @media (max-width: 1000px) {
     .board { display: flex; overflow-x: auto; }
-    .column { flex: 0 0 178px; }
+    .column { flex: 0 0 230px; }
+  }
+  @media (max-width: 640px) {
+    main { padding: 22px 16px 48px; }
+    .page-title { font-size: 32px; }
   }
 </style>
 </head>
@@ -92,12 +93,17 @@
     <a href="index.html" class="ativo">Painel de Encomendas</a>
     <a href="tabela-precos.html">Tabela de Preços</a>
     <a href="leads.html">Leads</a>
+    <a href="simulador.html">Simulador</a>
   </div>
 </nav>
 
 <main>
-  <div class="toolbar">
-    <button class="btn btn-solid" id="addBtn">+ Nova Encomenda</button>
+  <div class="page-top">
+    <header class="page-head">
+      <p class="page-eyebrow">Spielvogel Joias</p>
+      <h1 class="page-title">Painel de encomendas</h1>
+    </header>
+    <button class="btn btn-solid" id="addBtn">+ Nova encomenda</button>
   </div>
   <div class="board" id="board"></div>
 </main>
@@ -348,8 +354,10 @@ function renderBoard() {
     });
 
     colEl.innerHTML = `
-      <div class="column-title">${colName}</div>
-      <div class="column-count">${cardsInCol.length} ${cardsInCol.length === 1 ? "item" : "itens"}</div>
+      <div class="column-head">
+        <div class="column-title">${colName}</div>
+        <div class="column-count">${cardsInCol.length} ${cardsInCol.length === 1 ? "item" : "itens"}</div>
+      </div>
     `;
 
     colEl.addEventListener("dragover", e => e.preventDefault());
