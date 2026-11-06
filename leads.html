@@ -23,6 +23,8 @@
     --fase-cancelado: #c46a5e;
     --fase-encerrado: #6fa8d8;
     --fase-encerrado-q: #d17fa8;
+    --fase-finalizada: #4fae7c;
+    --fase-iniciar: #8a8275;
   }
 
   main { padding: 18px 24px 40px; }
@@ -57,7 +59,9 @@
     background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
     overflow: hidden;
   }
-  .coluna.coluna-cancelado, .coluna.coluna-encerrada-inicio { margin-left: 16px; }
+  .coluna.coluna-encerrada-inicio { margin-left: 16px; }
+  .coluna.coluna-finalizadas { border-color: rgba(79,174,124,0.55); }
+  .coluna.coluna-finalizadas .coluna-corpo { background: rgba(79,174,124,0.08); }
 
   .coluna-header { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
   .coluna-header .nome-etapa { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--bg); }
@@ -150,8 +154,75 @@
   .relatorio-bloco h3 { font-size: 13px; color: var(--gold); margin: 0 0 8px; font-family: var(--font-body); }
   .relatorio-linha { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
 
+  /* ---------- Modo teste ---------- */
+  #banner-teste {
+    display: none; margin-bottom: 14px; padding: 10px 14px;
+    background: rgba(111,168,216,0.14); border: 1px solid #6fa8d8;
+    border-radius: 8px; font-size: 13px; color: #9cc6ea;
+  }
+
+  /* ---------- Trilhas do follow-up ---------- */
+  .trilhas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .trilha-pill {
+    background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary);
+    font-family: var(--font-body); font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .trilha-pill:hover { border-color: var(--gold-soft); color: var(--text); }
+  .trilha-pill.ativa { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+  .trilha-pill .badge-pill {
+    font-size: 10.5px; font-weight: 700; background: var(--danger); color: var(--text);
+    padding: 0 6px; border-radius: 999px; line-height: 17px;
+  }
+  .trilha-pill.ativa .badge-pill { background: var(--bg); color: var(--gold); }
+  .trilhas-dica { font-size: 11.5px; color: var(--text-muted); margin-left: 6px; }
+
+  .rotulo-msg { margin: 0 8px 4px; font-size: 10.5px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.2px; }
+  .rotulo-msg .tag-msg { color: var(--gold-soft); font-weight: 500; }
+
+  /* ---------- Prazo e ações nos cards do follow-up ---------- */
+  .card .linha-fu { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+  .chip-prazo { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; color: var(--bg); }
+  .prazo-atrasado { background: #d9705f; }
+  .prazo-hoje { background: #e3b04b; }
+  .prazo-emdia { background: #7fb39a; }
+  .prazo-semdata { background: transparent; color: var(--text-muted); border: 1px dashed var(--text-muted); }
+  .card-acoes { display: flex; gap: 5px; margin-top: 7px; }
+  .card-acoes button {
+    flex: 1; font-family: var(--font-body); font-size: 10.5px; font-weight: 600; cursor: pointer;
+    background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+    padding: 4px 4px; border-radius: 5px;
+  }
+  .card-acoes button:hover { border-color: var(--gold); color: var(--gold); }
+  .card-acoes button.fiz { border-color: var(--gold-soft); color: var(--gold); }
+  .card-acoes button.fiz:hover { background: var(--gold); color: var(--bg); }
+  .tag-contexto { font-size: 9.5px; color: var(--gold-soft); margin-top: 3px; }
+
+  /* ---------- Linha do tempo no modal ---------- */
+  .timeline { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .timeline .linha-tl { display: flex; align-items: center; gap: 6px; }
+  .timeline .linha-tl span { font-size: 11.5px; color: var(--text-secondary); min-width: 34px; font-weight: 600; }
+  .timeline .linha-tl input[type="date"] { padding: 6px 7px; font-size: 12px; }
+  .timeline .linha-tl.inativa { opacity: 0.4; }
+  .timeline-nota { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+  /* ---------- Relatório de follow-ups ---------- */
+  .modal-fu { max-width: 1040px; }
+  .tabela-wrap { overflow-x: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; max-height: 46vh; overflow-y: auto; }
+  .tabela-fu { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .tabela-fu th, .tabela-fu td { padding: 7px 9px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  .tabela-fu th { position: sticky; top: 0; background: var(--bg-elevated-2); color: var(--gold); font-weight: 600; font-size: 11.5px; }
+  .tabela-fu td { color: var(--text-secondary); }
+  .tabela-fu td.nome-col { color: var(--text); font-weight: 600; }
+  .tabela-fu td.vazio-col { color: var(--text-muted); }
+  .resumo-fu { display: flex; gap: 22px; flex-wrap: wrap; margin: 12px 0 14px; }
+  .resumo-fu .item { display: flex; flex-direction: column; gap: 2px; }
+  .resumo-fu .item .valor { font-size: 18px; font-weight: 700; color: var(--text); }
+  .resumo-fu .item .rotulo { font-size: 11.5px; color: var(--text-secondary); }
+
   @media (max-width: 600px) {
     main { padding: 14px; }
+    .timeline { grid-template-columns: 1fr; }
     .coluna { flex-basis: 168px; }
   }
 </style>
@@ -196,13 +267,16 @@
   <div class="toolbar">
     <span class="toolbar-dica" id="toolbar-dica">Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa. Quem recebeu o follow-up de encerramento sai do funil e fica nas duas últimas colunas.</span>
     <div style="display:flex; gap:8px;">
+      <button class="btn hidden" id="btn-relatorio-fu">📊 Relatório de follow-ups</button>
       <button class="btn" id="btn-gerar-relatorio">📄 Gerar relatório</button>
       <button class="btn btn-solid" onclick="abrirModalNovo()">+ Adicionar lead</button>
     </div>
   </div>
 
   <div id="banner-firebase"></div>
+  <div id="banner-teste">MODO TESTE: esta página está usando uma cópia dos leads. O que você mexer aqui não altera o painel real.</div>
 
+  <div class="trilhas hidden" id="trilhas"></div>
   <div class="board" id="board"></div>
   <div class="board hidden" id="board-followup"></div>
   <div class="secoes-potencial hidden" id="board-potencial"></div>
@@ -250,8 +324,24 @@
     </div>
 
     <div class="field">
-      <label for="campo-followup">Tentativa de follow-up</label>
+      <label for="campo-followup">Tentativa de follow-up (quantas já foram feitas)</label>
       <select id="campo-followup"></select>
+    </div>
+
+    <div class="field">
+      <label>Datas dos follow-ups</label>
+      <div class="timeline" id="timeline-followups"></div>
+      <div class="timeline-nota">A data de hoje entra sozinha quando você sobe o número do follow-up. Se esqueceu de marcar na hora, corrija a data aqui. Deixe em branco o que não foi feito.</div>
+    </div>
+
+    <div class="field">
+      <label for="campo-contexto">Contexto conhecido (troca a próxima mensagem)</label>
+      <select id="campo-contexto"></select>
+    </div>
+
+    <div class="field">
+      <label for="campo-retorno">Retorno combinado para (opcional)</label>
+      <input type="date" id="campo-retorno">
     </div>
 
     <div class="field">
@@ -261,6 +351,7 @@
 
     <div class="modal-actions">
       <button class="btn-text btn-danger" id="btn-excluir" style="display:none;" onclick="excluirLeadAtual()">Excluir</button>
+      <button class="btn-text" id="btn-respondeu" style="display:none;" onclick="clienteRespondeu()">Cliente respondeu</button>
       <div style="flex:1;"></div>
       <button class="btn" onclick="fecharModal()">Cancelar</button>
       <button class="btn btn-solid" onclick="salvarLeadAtual()">Salvar</button>
@@ -290,7 +381,7 @@
     </div>
 
     <div class="relatorio-bloco">
-      <h3>Encerradas ainda na qualificação</h3>
+      <h3>Encerradas sem resposta</h3>
       <div id="relatorio-encerrados"></div>
     </div>
 
@@ -312,24 +403,66 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="modal-fu-fundo">
+  <div class="modal modal-fu">
+    <button class="modal-fechar" onclick="fecharRelatorioFU()">✕</button>
+    <h2>Relatório de follow-ups</h2>
+    <div class="relatorio-periodo" id="fu-periodo"></div>
+
+    <div class="field" style="max-width:280px;">
+      <label for="fu-filtro-trilha">Trilha</label>
+      <select id="fu-filtro-trilha"></select>
+    </div>
+
+    <div class="resumo-fu" id="fu-resumo"></div>
+
+    <div class="tabela-wrap"><table class="tabela-fu" id="fu-tabela"></table></div>
+
+    <div class="relatorio-bloco">
+      <h3>Follow-ups feitos por dia (últimos 14 dias)</h3>
+      <div id="fu-por-dia"></div>
+    </div>
+
+    <div class="modal-actions">
+      <div style="flex:1;"></div>
+      <button class="btn" onclick="fecharRelatorioFU()">Fechar</button>
+      <button class="btn btn-solid" onclick="baixarCSVFollowups()">Baixar planilha (CSV)</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast-el"></div>
 
 <script>
+// ============================================================
+// ETAPAS DO FUNIL
+// ============================================================
 const STAGES = [
-  { id:'qualificacao',      nome:'Qualificação',                          fase:'descoberta' },
-  { id:'entendimento',      nome:'Entendimento do projeto',               fase:'descoberta' },
-  { id:'inspiracoes',       nome:'Inspirações enviadas',                  fase:'criacao' },
-  { id:'desenho_3d',        nome:'Desenho 3D personalizado',              fase:'criacao' },
-  { id:'cotacao_dev',       nome:'Cotação em desenvolvimento',            fase:'criacao' },
-  { id:'cotacao_enviada',   nome:'Cotação enviada',                       fase:'decisao' },
-  { id:'pedido_aberto',     nome:'Pedido em aberto (aprovado)',           fase:'aprovacao' },
-  { id:'venda_aprovada',    nome:'Venda aprovada',                        fase:'aprovacao' },
-  { id:'em_producao',       nome:'Em produção',                           fase:'formalizacao' },
-  { id:'saiu_entrega',      nome:'Saiu para entrega',                     fase:'formalizacao' },
-  { id:'fechado_contato',   nome:'Fechado, manter contato',               fase:'formalizacao' },
+  { id:'qualificacao',      nome:'Qualificação',                 fase:'descoberta' },
+  { id:'entendimento',      nome:'Entendimento do projeto',      fase:'descoberta' },
+  { id:'inspiracoes',       nome:'Inspirações enviadas',         fase:'criacao' },
+  { id:'desenho_3d',        nome:'Desenho 3D personalizado',     fase:'criacao' },
+  { id:'cotacao_enviada',   nome:'Cotação enviada',              fase:'decisao' },
+  { id:'venda_semi',        nome:'Venda semi-aprovada',          fase:'aprovacao' },
+  { id:'em_producao',       nome:'Fechado, em produção',         fase:'formalizacao' },
+  { id:'finalizadas',       nome:'Finalizadas (entregues)',      fase:'finalizada' },
 ];
-const STAGE_CANCELADO = { id:'cancelado', nome:'Pedido cancelado (deixamos as portas abertas)', fase:'cancelado' };
+// "Cancelado" não é mais coluna: o lead cancelado aparece na coluna Encerradas.
+// A etapa continua existindo como opção no formulário, pra você marcar um cancelamento do cliente.
+const STAGE_CANCELADO = { id:'cancelado', nome:'Cancelado pelo cliente', fase:'cancelado' };
 const TODAS_ETAPAS = [...STAGES, STAGE_CANCELADO];
+
+// Etapas antigas que saíram do funil. Na leitura, cada uma é tratada como a etapa nova correspondente.
+// O banco só é atualizado quando você mexe no lead (arrastar ou salvar).
+const ETAPAS_LEGADO = {
+  cotacao_dev: 'desenho_3d',
+  pedido_aberto: 'venda_semi',
+  venda_aprovada: 'venda_semi',
+  termo_enviado: 'venda_semi',
+  link_pagamento: 'venda_semi',
+  saiu_entrega: 'finalizadas',
+  fechado_contato: 'finalizadas',
+};
 
 // Follow-up vai de 1 a 7. O 7 é o follow-up de encerramento.
 const FOLLOWUP_MAX = 7;
@@ -337,44 +470,145 @@ const FOLLOWUP_ENCERRAMENTO = 7;
 const CORES_FOLLOWUP = ['#e0916b','#b08fcb','#7fb39a','#d4af5a','#c46a5e','#c4a77d','#6fa8d8'];
 const COR_ENCERRADO_SEM_QUALIFICACAO = '#d17fa8';
 
+// Quantos dias esperar até a próxima tentativa. A chave é o número da tentativa que vem a seguir:
+// 1 = dias entre a entrada do lead e o FU1, 2 = dias entre o FU1 e o FU2, e assim por diante.
+// Quer mudar o ritmo? É só ajustar os números aqui.
+const INTERVALO_PARA = { 1: 1, 2: 2, 3: 3, 4: 5, 5: 7, 6: 10, 7: 14 };
+
 // Anel / criativo de onde o lead veio. Para incluir um novo, basta acrescentar o nome na lista.
 const ORIGENS = ['Ziel', 'Sechs', 'Marquise', 'Laub', 'Oval', 'Landing Page', 'Não identificado'];
 const ORIGEM_NAO_IDENTIFICADO = 'Não identificado';
 const ORIGEM_VAZIA = 'Sem origem registrada';
 // Etapas que indicam que o lead chegou a receber cotação (inclui quem avançou depois dela).
-const ETAPAS_CHEGARAM_COTACAO = ['cotacao_enviada', 'pedido_aberto', 'venda_aprovada', 'em_producao', 'saiu_entrega', 'fechado_contato'];
+const ETAPAS_CHEGARAM_COTACAO = ['cotacao_enviada', 'venda_semi', 'em_producao', 'finalizadas'];
 
 function corFollowup(n){ return CORES_FOLLOWUP[(n - 1) % CORES_FOLLOWUP.length]; }
 function nomeFollowup(n){ return n === FOLLOWUP_ENCERRAMENTO ? `Follow up ${n} (encerramento)` : `Follow up ${n}`; }
 function rotuloChipFollowup(n){ return Number(n) === FOLLOWUP_ENCERRAMENTO ? 'Encerramento' : `Follow-up ${n}`; }
 
-// Lead em follow-up de encerramento sai do funil e vai para uma das duas colunas finais.
-// Tudo é calculado direto dos dados (follow-up 7 + etapa): não existe campo extra pra marcar,
-// então basta qualificar uma vez e o lead cai na coluna certa sozinho.
-// Lead que já comprou (venda aprovada em diante) nunca é tratado como encerrado,
-// mesmo que tenha ficado com o follow-up 7 marcado de antes.
-const ETAPAS_VENDA_FECHADA = ['venda_aprovada', 'em_producao', 'saiu_entrega', 'fechado_contato'];
+// Lead em follow-up de encerramento (ou cancelado pelo cliente) sai do funil e vai para uma das duas colunas finais.
+// Tudo é calculado direto dos dados, não existe campo extra pra marcar.
+// Lead que já fechou a venda (em produção ou finalizada) nunca é tratado como encerrado.
+const ETAPAS_VENDA_FECHADA = ['em_producao', 'finalizadas'];
 
 const COLUNA_ENCERRADAS = { id:'encerradas', nome:'Encerradas', fase:'encerrado' };
-const COLUNA_ENCERRADAS_QUALIFICACAO = { id:'encerradas_qualificacao', nome:'Encerradas ainda na qualificação', fase:'encerrado-q' };
-const COLUNAS_FUNIL = [...TODAS_ETAPAS, COLUNA_ENCERRADAS, COLUNA_ENCERRADAS_QUALIFICACAO];
+const COLUNA_ENCERRADAS_QUALIFICACAO = { id:'encerradas_qualificacao', nome:'Encerradas sem resposta', fase:'encerrado-q' };
+const COLUNAS_FUNIL = [...STAGES, COLUNA_ENCERRADAS, COLUNA_ENCERRADAS_QUALIFICACAO];
 
 const NOTAS_COLUNAS_ENCERRADAS = {
-  [COLUNA_ENCERRADAS.id]: 'Já receberam o follow-up de encerramento. O card mostra em que etapa o lead parou. Arraste para uma etapa do funil para reabrir.',
-  [COLUNA_ENCERRADAS_QUALIFICACAO.id]: 'Encerradas sem nunca sair da Qualificação. Base para conversar com o tráfego pago.',
+  [COLUNA_ENCERRADAS.id]: 'Cancelados pelo cliente e quem já recebeu o follow-up de encerramento. O card mostra em que etapa o lead parou. Arraste para uma etapa do funil para reabrir.',
+  [COLUNA_ENCERRADAS_QUALIFICACAO.id]: 'Chegaram ao follow-up 7 e nunca saíram da Qualificação, ou seja, nunca responderam. Base para conversar com o tráfego pago.',
 };
 
 function ehEncerrado(l){
+  if (l.etapa === 'cancelado') return true;
   return Number(l.followUp) === FOLLOWUP_ENCERRAMENTO && !ETAPAS_VENDA_FECHADA.includes(l.etapa);
 }
 function ehEncerradoSemSairDaQualificacao(l){
-  return ehEncerrado(l) && l.etapa === 'qualificacao';
+  return l.etapa === 'qualificacao' && Number(l.followUp) === FOLLOWUP_ENCERRAMENTO;
 }
 // Em qual coluna do funil o lead aparece (encerradas ficam fora das colunas de etapa).
 function colunaDoFunil(l){
   if (!ehEncerrado(l)) return l.etapa;
-  return l.etapa === 'qualificacao' ? COLUNA_ENCERRADAS_QUALIFICACAO.id : COLUNA_ENCERRADAS.id;
+  return ehEncerradoSemSairDaQualificacao(l) ? COLUNA_ENCERRADAS_QUALIFICACAO.id : COLUNA_ENCERRADAS.id;
 }
+
+// ============================================================
+// TRILHAS DE FOLLOW-UP
+// Cada trilha é uma sequência de 7 mensagens, escolhida pela etapa em que o lead está.
+// "Retorno combinado" é uma trilha especial: vale para qualquer lead com data de retorno marcada.
+// Desenho 3D personalizado, Fechado em produção e Finalizadas não têm follow-up.
+// ============================================================
+const TRILHAS = [
+  { id:'qualificacao',    nome:'Qualificação',            etapas:['qualificacao'] },
+  { id:'entendimento',    nome:'Entendimento do projeto', etapas:['entendimento'] },
+  { id:'inspiracoes',     nome:'Inspirações enviadas',    etapas:['inspiracoes'] },
+  { id:'cotacao_enviada', nome:'Cotação enviada',         etapas:['cotacao_enviada'] },
+  { id:'venda_semi',      nome:'Venda semi-aprovada',     etapas:['venda_semi'] },
+  { id:'retorno',         nome:'Retorno combinado',       etapas:[] },
+];
+const ETAPAS_COM_FOLLOWUP = ['qualificacao', 'entendimento', 'inspiracoes', 'desenho_3d', 'cotacao_enviada', 'venda_semi'];
+
+function trilhaDoLead(l){
+  if (!ETAPAS_COM_FOLLOWUP.includes(l.etapa)) return null;
+  if (l.retornoCombinado) return 'retorno';
+  const t = TRILHAS.find(t => t.etapas.includes(l.etapa));
+  return t ? t.id : null;
+}
+
+// Mensagens padrão de cada trilha, vindas do roteiro. Você pode editar qualquer uma direto no quadro
+// (a edição fica salva no banco e vale no lugar da padrão). [nome] é trocado pelo primeiro nome do lead ao copiar.
+// Os outros colchetes, como [tempo] ou [data], ficam no texto para você completar antes de enviar.
+const MENSAGENS_PADRAO = {
+  qualificacao: [
+    { texto: 'Olá, [nome]! Aqui é a Lohana, do atelier Spielvogel. Sei que as nossas joias chamaram a sua atenção ☺️ Tentei falar com você nesses dias.\n\nGostaria de entender o que você procura para te ajudar nessa busca. Para qual ocasião seria essa joia?' },
+    { texto: 'Oi, [nome], tudo bem? Fiquei curiosa para saber o que despertou o seu interesse. Foi algum modelo em especial que você viu no anúncio?' },
+    { tag: 'áudio, até 20 segundos', texto: 'Oi, [nome], tudo bem? Aqui é a Lohana, do atelier Spielvogel. Vi que você se interessou pelas nossas joias e queria te ajudar a escolher a sua. Se quiser, me conta para qual ocasião seria, e eu te apresento alguns modelos.' },
+    { texto: 'Bom dia, [nome]! Espero que esteja tudo bem por aí. Tivemos contato esses dias pelo seu interesse nas nossas joias.\n\nTerei o maior prazer em te ajudar a escolher essa joia tão especial! Posso te apresentar alguns modelos?' },
+    { texto: 'Oi, [nome], tudo bem? Faz alguns dias que não conversamos, então estou retomando para saber se você ainda está em busca dessa joia.\n\nSe sim, posso te mostrar alguns modelos do nosso portfólio, criados pelo Tiago. Quer ver?' },
+    { texto: 'Bom dia, [nome]! Espero que esteja tudo bem. Tivemos contato há um tempo pelo seu interesse em uma das nossas joias.\n\nGostaria de saber se essa busca ainda segue em aberto, ou se você já encontrou o que procurava?\n\nSe ainda estiver à procura, terei o maior prazer em te ajudar a escolher essa joia tão especial!' },
+    { tag: 'encerramento', texto: 'Oi, [nome]! Vou encerrar por aqui o nosso contato para não te incomodar, mas as nossas portas continuam abertas.\n\nSe em algum momento você quiser retomar a busca por uma joia, é só me chamar que será um prazer te ajudar 🤍' },
+  ],
+  entendimento: [
+    { texto: 'Oi, [nome], tudo bem? Estou na expectativa de saber como você imagina essa joia.\n\nVocê já tem algum modelo ou estilo em mente, ou prefere que eu te apresente algumas opções?' },
+    { texto: 'Oi, [nome]! Faz alguns dias que não nos falamos, então estou retomando para saber as suas impressões.\n\n[Um pedido de namoro] é um momento muito especial, e eu queria muito te ajudar a escolher a joia certa. O que você achou do que conversamos até aqui?' },
+    { texto: 'Oi, [nome]! Tudo bem? Já faz alguns dias, então estou retomando para saber as suas impressões.\n\nAqui no atelier, o Tiago cria cada joia com muito cuidado e gosta de entender a história por trás dela, para desenhar algo que combine de verdade com a pessoa que vai receber a joia. Ficou com alguma dúvida sobre o nosso trabalho?' },
+    { texto: 'Oi! Faz tempo que não conversamos, então estou retomando para saber as suas impressões.\n\nVocê ainda está em busca dessa joia?\n\nSe sim, vamos retomar essa busca juntos? 😊' },
+    { texto: 'Oi, [nome]! Faz um tempo que não conversamos, então estou retomando para saber as suas impressões.\n\nVocê ainda está pensando nessa joia para [você / o pedido de namoro]?' },
+    { texto: 'Oi, [nome]! Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nÀs vezes o que pesa é o atendimento, algo que ficou pouco claro na conversa, o investimento em si, a confiança no processo de criação, o momento de decidir ou até ter encontrado outra opção.\n\nQual dessas coisas ainda está pesando para você?\n\nQuero entender para a gente avançar.' },
+    { tag: 'encerramento', texto: 'Oi, [nome]! Em respeito ao seu tempo, vou encerrar por aqui o nosso acompanhamento, mas as nossas portas continuam abertas.\n\nSe em algum momento você quiser retomar a busca pela sua joia, é só me chamar que seguimos de onde paramos 🤍' },
+  ],
+  inspiracoes: [
+    { texto: 'Oi, [nome], tudo bem? Se nenhuma das joias que te enviei for exatamente o que você procura, me conta que eu separo outras para você.\n\nQual delas mais chamou a sua atenção?' },
+    { texto: 'Oi, [nome]! Faz alguns dias que não conversamos, então estou retomando para saber as suas impressões.\n\nVocê chegou a olhar com calma os modelos que te enviei? Algum deles combina com o que você imagina?' },
+    { texto: 'Oi, [nome], tudo bem? Às vezes ver vários modelos de uma vez deixa a escolha mais difícil.\n\nSe quiser, me conta o estilo que você mais gosta, mais delicado, mais imponente ou mais clássico, que eu te mostro só o que combina com isso. Qual desses estilos mais te agrada?' },
+    { texto: 'Oi, [nome], tudo bem? Aqui no atelier, cada joia é criada do zero para cada cliente, então você pode escolher a pedra e a tonalidade do ouro.\n\nFicou com alguma dúvida sobre como funciona o nosso trabalho?' },
+    { texto: 'Oi, [nome]! Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nSe algum modelo chamou a sua atenção, conseguimos adaptar a joia ao seu investimento, inclusive em ouro 10k. Posso te mostrar como fica?' },
+    { texto: 'Oi, [nome], tudo bem? Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nÀs vezes o que pesa é não ter encontrado o modelo certo, o investimento em si, a dúvida entre as pedras, a segurança na compra ou o momento de decidir.\n\nQual dessas coisas ainda está pesando para você?\n\nQuero entender para a gente avançar.' },
+    { tag: 'encerramento', texto: 'Oi, [nome]! Em respeito ao seu tempo, vou encerrar por aqui o nosso acompanhamento, mas as nossas portas continuam abertas.\n\nSe em algum momento você quiser retomar a escolha da sua joia, é só me chamar que seguimos de onde paramos 🤍' },
+  ],
+  cotacao_enviada: [
+    { tag: '1 a 2 dias depois da cotação', texto: 'Oi, [nome], tudo bem? Estou na expectativa de saber o que você achou da cotação.\n\nTem algo na cotação que você gostaria de ajustar?' },
+    { texto: 'Bom dia, [nome], como está?\n\nA proposta ficou dentro do que você esperava? Se preferir, a gente ajusta alguma coisa, escolhendo outra linha ou outro modelo.\n\nTem algo na cotação que você gostaria de ajustar?' },
+    { texto: 'Oi, [nome], tudo bem? Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nÀs vezes o que pesa é o atendimento, algo que ficou pouco claro na conversa, o investimento em si, a forma de pagamento ou o prazo.\n\nQual dessas coisas ainda está pesando para você?\n\nQuero entender para a gente avançar.' },
+    { texto: 'Oi, [nome], tudo bem? Fiquei pensando que talvez eu tenha deixado alguma coisa pouco clara na nossa conversa.\n\nPensando em hoje, o que ainda faltaria você analisar para avançarmos com a sua joia?' },
+    { texto: 'Oi, [nome], tudo bem? Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nÀs vezes o que pesa é o investimento em si, a segurança na compra, a confiança no processo ou o momento de decidir.\n\nQual dessas coisas ainda está pesando para você?\n\nQuero entender para a gente avançar.' },
+    { texto: 'Oi, [nome], tudo bem? Estou retomando contato para saber as suas impressões sobre a proposta. Já faz um tempo, então imagino que alguma coisa possa ter mudado, e está tudo bem se for isso.\n\nPode me contar com sinceridade, vai me ajudar a te atender melhor. O que mudou desde que a gente conversou, o seu interesse na joia ou o momento?' },
+    { tag: 'último contato, com prazo', texto: 'Olá, [nome]! Em respeito ao seu tempo e também ao da nossa produção, preciso concluir o acompanhamento da sua joia, já que não tivemos retorno. Cada joia do atelier é desenvolvida sob medida, e a nossa agenda é organizada com cuidado.\n\nSe ainda fizer sentido para você, aguardo o seu retorno até o final do dia de hoje. Sem retorno até lá, o seu atendimento será encerrado e o seu espaço na agenda será liberado.' },
+  ],
+  venda_semi: [
+    { texto: 'Oi, [nome], tudo bem? Se os dados do termo estiverem corretos, é só fazer a assinatura digital. Conseguiu conferir?' },
+    { texto: 'Oi, [nome]! O prazo de 30 dias da sua joia começa a contar na assinatura do termo. Para enviarmos até o dia [data], o ideal é assinarmos até [data]. Consegue assinar hoje?' },
+    { texto: 'Oi, [nome], tudo bem? O termo já está assinado dos dois lados, e agora falta só o pagamento para iniciarmos a produção da sua joia. O [link de pagamento / Pix] continua disponível. Conseguiu realizar o pagamento?' },
+    { texto: 'Oi, [nome]! Se ainda houver alguma insegurança com o pagamento, podemos fazer uma chamada de vídeo para você conhecer o atelier antes de pagar, ou combinar o pagamento em duas partes. Qual dessas opções fica melhor para você?' },
+    { texto: 'Oi, [nome], tudo bem? Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nA sua joia está pronta para iniciar a produção assim que o pagamento for confirmado. Tem algo que eu possa ajustar para você avançar?' },
+    { texto: '[nome], quero ser transparente com você: assim que o pagamento é confirmado, o Tiago adquire o ouro e a pedra da sua joia. Enquanto isso não acontece, não conseguimos garantir a disponibilidade da pedra nem o prazo combinado.\n\nPodemos conversar sobre o melhor caminho para você?' },
+    { tag: 'encerramento', texto: 'Oi, [nome]! Em respeito ao seu tempo e ao da nossa produção, vou encerrar o seu pedido por aqui.\n\nSe em algum momento você quiser retomar, é só me chamar que seguimos de onde paramos, com todo o prazer 🤍' },
+  ],
+  retorno: [
+    { tag: 'no dia combinado', texto: 'Boa tarde, [nome]. Tudo bem?\n\nComo combinamos, estou voltando para saber as suas impressões sobre as opções que lhe enviei. Alguma delas chamou mais a sua atenção?' },
+    { texto: 'Oi, [nome], tudo bem? Sei que você pediu um tempo para analisar com calma, então fiquei na espera.\n\nSe surgiu alguma dúvida nesse meio tempo, me conta que eu te ajudo. Já conseguiu avançar na sua análise?' },
+    { texto: 'Oi, [nome]! Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nA sua proposta continua guardada. Quando você imagina que consegue decidir?' },
+    { texto: 'Oi, [nome], tudo bem? Cada joia do atelier é feita do zero para cada cliente, então conseguimos ajustar a pedra, a tonalidade do ouro e o investimento.\n\nTem algum ajuste que você gostaria de fazer na sua proposta?' },
+    { texto: 'Oi, [nome], tudo bem? Fiquei pensando que talvez eu tenha deixado alguma coisa pouco clara na nossa conversa.\n\nPensando em hoje, o que ainda faltaria você analisar para avançarmos com a sua joia?' },
+    { texto: 'Oi, [nome], tudo bem? Faz [tempo] que não conversamos, então estou retomando para saber as suas impressões.\n\nJá faz um tempo, então imagino que alguma coisa possa ter mudado. O que mudou desde que a gente conversou, o seu interesse na joia ou o momento?' },
+    { tag: 'encerramento', texto: 'Oi, [nome]! Vou deixar a nossa conversa registrada por aqui, sem pressa nenhuma.\n\nQuando você se sentir à vontade para retomar, é só me chamar que seguimos de onde paramos, com todo o prazer 🤍' },
+  ],
+};
+
+// Mensagens para quando você já sabe o contexto do cliente. A escolhida troca a mensagem da vez
+// (o contexto é limpo sozinho depois que você marca o follow-up como feito).
+const CONTEXTOS = [
+  { id:'familia', nome:'Está alinhando com a família', texto: 'Oi, [nome], tudo bem? Conseguiu conversar com [pessoa]? Sem pressa, só queria saber como estão as coisas.' },
+  { id:'viagem', nome:'Estava viajando', texto: 'Oi, [nome], tudo bem? Como foi a viagem? Quando fizer sentido, retomamos a sua joia de onde paramos.' },
+  { id:'pausa', nome:'Pediu pausa por outras demandas', texto: 'Imagina, [nome], fica tranquilo e pode dar toda a atenção às suas demandas. Escolher [uma joia] pede cabeça tranquila mesmo, então sem pressa nenhuma.\n\nTudo o que conversamos fica registrado por aqui. Quando se sentir à vontade para retomar, é só me chamar que seguimos de onde paramos, com todo o prazer! Te desejo uma ótima semana e muita calma com tudo por aí ☺️' },
+  { id:'pagamento', nome:'Pagamento agendado, antes da data', texto: 'Oi, [nome], tudo bem? Como estão as coisas por aí? 🤗\n\nAinda não é o dia que combinamos, mas quis te chamar mesmo assim, para dizer que te chamo novamente no dia [data].' },
+  { id:'impede', nome:'Perguntar o que está impedindo de avançar', texto: 'Oi, [nome], tudo bem? Geralmente, quando ficamos sem retorno, há um ponto pesando. Me conta o que está nos impedindo de avançar, para a gente ajustar e dar continuidade ao seu projeto.\n\nO que ainda está pesando para você?' },
+  { id:'ouro10k', nome:'Oferecer o ouro 10k', texto: 'Oi, [nome], tudo bem? Se o valor for o que está pesando, podemos trabalhar com o ouro 10k, com moissanite, em que o investimento fica bem mais acessível. Posso te apresentar as opções?' },
+  { id:'pedra', nome:'Pedra ainda não comprada (disponibilidade e valores)', texto: '[nome], quero falar com você com toda a transparência sobre o momento em que estamos com o seu projeto. Sei que essa é uma decisão importante, envolve [diamantes], uma joia pensada especialmente para você, e decisões assim realmente pedem tempo. Isso nunca foi um problema aqui.\n\nSó preciso ser honesta sobre um ponto: trabalhamos com pedras únicas, e a pedra que você escolheu ainda não está conosco. Ela é adquirida junto ao fornecedor a partir da confirmação do modelo. Enquanto aguardamos a sua decisão, ela continua disponível no mercado para outras pessoas, e não temos como garantir que ainda estará lá quando a resposta vier. Por isso, também não consigo mais assegurar os valores e as especificações que conversamos, já que dependem diretamente dessa disponibilidade.\n\nNão estou dizendo isso para apressar você, e muito menos para sinalizar que estamos deixando o projeto de lado. Pelo contrário, queremos muito fazer essa joia para você. Só considero justo que você tenha esse cenário real diante de si, para decidir com todas as informações que temos.\n\nComo você prefere seguir, [nome]?' },
+  { id:'audio_cotacao', nome:'Áudio da cotação (até 20 segundos)', texto: 'Oi, [nome], tudo bem? Aqui é a Lohana, do atelier Spielvogel. Estou retomando para saber as suas impressões sobre a cotação. Tem algo nela que você gostaria de ajustar? Fico por aqui.' },
+  { id:'depois_prazo', nome:'Depois do prazo, sem retorno', texto: 'Tudo bem, [nome]. Encerramos o acompanhamento por aqui, mas as nossas portas continuam abertas. Se em algum momento você quiser retomar, será um prazer criar a sua joia com você 🤍' },
+];
 
 function parseReais(str){
   if (!str) return 0;
@@ -418,9 +652,15 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const COLLECTION = "leads_crm";
-const COLLECTION_CONFIG = "leads_config";
+// Modo teste: abra leads.html?teste=1 e a página trabalha numa cópia dos leads
+// (coleções leads_crm_teste e leads_config_teste), sem tocar no painel real.
+const MODO_TESTE = new URLSearchParams(location.search).has('teste');
+const COLLECTION_REAL = "leads_crm";
+const COLLECTION = MODO_TESTE ? "leads_crm_teste" : COLLECTION_REAL;
+const COLLECTION_CONFIG = MODO_TESTE ? "leads_config_teste" : "leads_config";
+const DOC_MENSAGENS = "followup_mensagens_v2";
 
+let trilhaAtiva = 'qualificacao';
 let leads = [];
 let idLeadAberto = null;
 let termoBusca = '';
@@ -429,6 +669,71 @@ let filtroDe = '';
 let filtroAte = '';
 let configFollowup = { mensagens: {} };
 let ultimoRelatorio = null;
+
+// ============================================================
+// DATAS (sempre no horário local do computador, nunca em UTC)
+// ============================================================
+function doisDigitos(n){ return String(n).padStart(2, '0'); }
+function hojeISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}`;
+}
+function horaAgora(){
+  const d = new Date();
+  return `${doisDigitos(d.getHours())}:${doisDigitos(d.getMinutes())}`;
+}
+// Quantos dias de a até b (positivo quando b é depois de a).
+function diasEntre(a, b){
+  const [ya, ma, da] = a.split('-').map(Number);
+  const [yb, mb, db] = b.split('-').map(Number);
+  return Math.round((Date.UTC(yb, mb - 1, db) - Date.UTC(ya, ma - 1, da)) / 86400000);
+}
+function somarDias(iso, n){
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
+// ============================================================
+// LEITURA E NORMALIZAÇÃO DOS LEADS
+// ============================================================
+const NUMEROS_EXTENSO = { um:1, uma:1, dois:2, duas:2, tres:3, 'três':3, quatro:4, cinco:5, seis:6, sete:7 };
+
+// Leads antigos guardam a data do follow-up só no texto das observações, tipo
+// "FOLLOW UP UM - 11/09/2026". Aproveito isso para começar o histórico deles.
+function extrairFollowUpsDasObs(obs){
+  const achados = [];
+  if (!obs) return achados;
+  const re = /follow[\s-]*up\s*(\d|um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|sete)\s*[-–:]?\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/gi;
+  let m;
+  while ((m = re.exec(obs)) !== null) {
+    const bruto = m[1].toLowerCase();
+    const n = /^\d$/.test(bruto) ? Number(bruto) : NUMEROS_EXTENSO[bruto];
+    if (!n || n > FOLLOWUP_MAX) continue;
+    let ano = m[4] ? Number(m[4]) : new Date().getFullYear();
+    if (ano < 100) ano += 2000;
+    const iso = `${ano}-${doisDigitos(m[3])}-${doisDigitos(m[2])}`;
+    if (!achados.some(a => a.n === n)) achados.push({ n, data: iso, hora: '', origem: 'obs' });
+  }
+  return achados.sort((a, b) => a.n - b.n);
+}
+
+// Traduz etapas antigas para as novas e garante os campos novos. Não escreve nada no banco.
+function normalizarLead(bruto){
+  const lead = { ...bruto };
+  const etapaAntiga = lead.etapa;
+  if (ETAPAS_LEGADO[lead.etapa]) lead.etapa = ETAPAS_LEGADO[lead.etapa];
+  // Quem estava em "venda aprovada" com follow-up 7 sobrando não é um lead encerrado.
+  if (etapaAntiga === 'venda_aprovada' && Number(lead.followUp) === FOLLOWUP_ENCERRAMENTO) lead.followUp = 0;
+  lead.followUp = Number(lead.followUp) || 0;
+  if (!Array.isArray(lead.followUps)) {
+    lead.followUps = lead.followUp > 0
+      ? extrairFollowUpsDasObs(lead.observacoes).filter(e => e.n <= lead.followUp)
+      : [];
+  }
+  if (!lead.contexto) lead.contexto = '';
+  if (!lead.retornoCombinado) lead.retornoCombinado = '';
+  return lead;
+}
 
 function leadsFiltrados(){
   const base = leadsNoPeriodo(leads);
@@ -446,24 +751,41 @@ function haFiltroAtivo(){
   return !!(termoBusca || filtroDe || filtroAte);
 }
 
+function copiarRealParaTeste(){
+  db.collection(COLLECTION_REAL).get().then(snap => {
+    const docs = snap.docs;
+    const lotes = [];
+    for (let i = 0; i < docs.length; i += 400) {
+      const lote = db.batch();
+      docs.slice(i, i + 400).forEach(d => lote.set(db.collection(COLLECTION).doc(d.id), d.data()));
+      lotes.push(lote.commit());
+    }
+    return Promise.all(lotes);
+  }).then(() => mostrarToast('Cópia de teste criada'))
+    .catch(err => alert('Não consegui criar a cópia de teste: ' + err.message));
+}
+
 function iniciarLeads(){
+  if (MODO_TESTE) document.getElementById('banner-teste').style.display = 'block';
   db.collection(COLLECTION).get().then(snap => {
     if (snap.empty) {
-      const lote = db.batch();
-      SEED_LEADS.forEach(l => lote.set(db.collection(COLLECTION).doc(l.id), l));
-      lote.commit().catch(err => alert('Não consegui criar os leads iniciais no banco: ' + err.message));
+      if (MODO_TESTE) {
+        copiarRealParaTeste();
+      } else {
+        const lote = db.batch();
+        SEED_LEADS.forEach(l => lote.set(db.collection(COLLECTION).doc(l.id), l));
+        lote.commit().catch(err => alert('Não consegui criar os leads iniciais no banco: ' + err.message));
+      }
     } else {
-      // Migração de segurança: etapas antigas "termo_enviado" e "link_pagamento" saíram do
-      // funil. Qualquer lead que ainda estivesse nelas vai para "venda_aprovada" (a etapa
-      // anterior que continua existindo), pra não ficar invisível em nenhuma coluna.
+      // Migração de segurança: etapas muito antigas ("termo_enviado" e "link_pagamento") foram para a Venda semi-aprovada.
       const orfaos = snap.docs.filter(d => ['termo_enviado', 'link_pagamento'].includes(d.data().etapa));
       if (orfaos.length > 0) {
         const lote = db.batch();
-        orfaos.forEach(d => lote.update(d.ref, { etapa: 'venda_aprovada' }));
+        orfaos.forEach(d => lote.update(d.ref, { etapa: 'venda_semi' }));
         lote.commit().catch(err => alert('Não consegui migrar leads de etapas antigas: ' + err.message));
       }
 
-      // Migração de segurança: o follow-up agora vai de 1 a 7 (o 7 é o encerramento).
+      // Migração de segurança: o follow-up vai de 1 a 7 (o 7 é o encerramento).
       // Quem estava nas tentativas 8, 9 ou 10 vai para o 7, pra não sumir do board.
       const followUpAlto = snap.docs.filter(d => Number(d.data().followUp) > FOLLOWUP_MAX);
       if (followUpAlto.length > 0) {
@@ -474,13 +796,15 @@ function iniciarLeads(){
     }
   }).catch(err => alert('Não consegui ler os leads do banco: ' + err.message));
   db.collection(COLLECTION).onSnapshot(snap => {
-    leads = snap.docs.map(d => d.data());
+    leads = snap.docs.map(d => normalizarLead(d.data()));
     renderizarTudo();
   }, err => alert('Perdi a conexão com o banco de dados: ' + err.message));
 }
 
 function persistirLead(lead){
-  db.collection(COLLECTION).doc(lead.id).set(lead)
+  // O JSON garante que nenhum campo "undefined" chegue ao banco (o Firestore recusa).
+  const limpo = JSON.parse(JSON.stringify(lead));
+  db.collection(COLLECTION).doc(lead.id).set(limpo)
     .catch(err => alert('Não consegui salvar esse lead: ' + err.message));
 }
 function persistirExclusao(id){
@@ -488,18 +812,155 @@ function persistirExclusao(id){
     .catch(err => alert('Não consegui excluir esse lead: ' + err.message));
 }
 
+// ============================================================
+// FOLLOW-UPS: DATAS, PRAZOS E PRIORIDADE
+// ============================================================
+function entradaFU(lead, n){
+  return (lead.followUps || []).find(e => e.n === n) || null;
+}
+
+// Marca o follow-up n como feito agora. A data é a de hoje, tirada do relógio no momento do clique.
+// Entradas de números maiores ou iguais a n são refeitas; as anteriores continuam como estavam.
+function marcarFollowUp(lead, n, dataISO){
+  const data = dataISO || hojeISO();
+  lead.followUps = (lead.followUps || []).filter(e => e.n < n);
+  lead.followUps.push({ n, data, hora: data === hojeISO() ? horaAgora() : '', origem: 'auto' });
+  lead.followUp = n;
+  lead.contexto = '';
+}
+
+// Volta o contador para n (ou 0) sem criar data nova, descartando o que vinha depois.
+function voltarFollowUp(lead, n){
+  lead.followUps = (lead.followUps || []).filter(e => e.n <= n);
+  lead.followUp = n;
+}
+
+// Guarda o histórico atual numa lista de arquivo e zera o contador (mudou de etapa, ou o cliente respondeu).
+function arquivarFollowUps(lead, motivo){
+  if ((lead.followUps || []).length > 0) {
+    lead.followUpsArquivo = [
+      ...(lead.followUpsArquivo || []),
+      { etapa: lead.etapa, motivo, arquivadoEm: hojeISO(), itens: lead.followUps },
+    ];
+  }
+  lead.followUps = [];
+  lead.followUp = 0;
+  lead.contexto = '';
+}
+
+// Muda a etapa do lead. Como cada etapa tem sua trilha de mensagens, o contador recomeça do zero.
+function trocarEtapa(lead, novaEtapa){
+  if (lead.etapa === novaEtapa) return false;
+  const tinhaFollowUp = lead.followUp > 0;
+  arquivarFollowUps(lead, 'mudou de etapa');
+  lead.etapa = novaEtapa;
+  return tinhaFollowUp;
+}
+
+function ultimaDataContato(lead){
+  const fu = Number(lead.followUp) || 0;
+  if (fu > 0) {
+    const datas = (lead.followUps || []).filter(e => e.data && e.n <= fu).map(e => e.data).sort();
+    return datas.length ? datas[datas.length - 1] : null;
+  }
+  return lead.dataEntrada || null;
+}
+
+// Em que pé está o prazo do próximo follow-up deste lead.
+// tipo: 'atrasado' | 'hoje' | 'emdia' | 'semdata' (tem follow-up mas sem data) | 'fim' (já no encerramento)
+function situacaoPrazo(lead){
+  const fu = Number(lead.followUp) || 0;
+  if (fu >= FOLLOWUP_MAX) return { tipo: 'fim' };
+  const ultima = ultimaDataContato(lead);
+  if (!ultima) return { tipo: 'semdata' };
+  let vence = somarDias(ultima, INTERVALO_PARA[fu + 1]);
+  if (lead.retornoCombinado && lead.retornoCombinado > ultima) vence = lead.retornoCombinado;
+  const hoje = hojeISO();
+  const atraso = diasEntre(vence, hoje);
+  return {
+    tipo: atraso > 0 ? 'atrasado' : atraso === 0 ? 'hoje' : 'emdia',
+    atraso, vence, ultima, diasSem: diasEntre(ultima, hoje),
+  };
+}
+
+// Mais atrasado primeiro. Quem tem follow-up marcado mas sem data fica no fim (não dá pra medir).
+function ordenarPorPrioridade(lista){
+  const peso = l => {
+    const s = situacaoPrazo(l);
+    return s.tipo === 'semdata' || s.tipo === 'fim' ? -1e9 : s.atraso;
+  };
+  return [...lista].sort((a, b) => {
+    const diff = peso(b) - peso(a);
+    if (diff !== 0) return diff;
+    return (ultimaDataContato(a) || '9999').localeCompare(ultimaDataContato(b) || '9999');
+  });
+}
+
+// ============================================================
+// MENSAGENS DO FOLLOW-UP
+// ============================================================
 function iniciarConfigFollowup(){
-  db.collection(COLLECTION_CONFIG).doc('followup_mensagens').onSnapshot(doc => {
+  db.collection(COLLECTION_CONFIG).doc(DOC_MENSAGENS).onSnapshot(doc => {
     configFollowup.mensagens = doc.exists ? doc.data() : {};
     if (abaAtiva === 'followup') renderizarBoardFollowup();
   }, err => alert('Não consegui carregar as mensagens de follow-up: ' + err.message));
 }
 
-function salvarMensagemFollowup(n, texto){
-  db.collection(COLLECTION_CONFIG).doc('followup_mensagens')
-    .set({ ['msg' + n]: texto }, { merge: true })
+function salvarMensagemFollowup(chave, texto){
+  db.collection(COLLECTION_CONFIG).doc(DOC_MENSAGENS)
+    .set({ [chave]: texto }, { merge: true })
     .then(() => mostrarToast('Mensagem salva'))
     .catch(err => alert('Não consegui salvar essa mensagem: ' + err.message));
+}
+
+function padraoDaMensagem(trilha, n){
+  const lista = MENSAGENS_PADRAO[trilha];
+  return lista && lista[n - 1] ? lista[n - 1] : null;
+}
+function textoMensagem(trilha, n){
+  const salvo = configFollowup.mensagens && configFollowup.mensagens[`${trilha}__${n}`];
+  if (salvo && salvo.trim()) return salvo;
+  const padrao = padraoDaMensagem(trilha, n);
+  return padrao ? padrao.texto : '';
+}
+function textoContexto(id){
+  const salvo = configFollowup.mensagens && configFollowup.mensagens[`ctx__${id}`];
+  if (salvo && salvo.trim()) return salvo;
+  const c = CONTEXTOS.find(c => c.id === id);
+  return c ? c.texto : '';
+}
+
+// Coloca o primeiro nome do lead no lugar de [nome]. Sem nome, a mensagem sai sem ele.
+function preencherNome(texto, lead){
+  const primeiro = (lead.nome || '').trim().split(/\s+/)[0] || '';
+  if (primeiro) return texto.replace(/\[nome\]/g, primeiro);
+  return texto
+    .replace(/^\[nome\],\s*/gm, '')
+    .replace(/,?\s*\[nome\]/g, '');
+}
+
+// A mensagem que este lead deve receber agora: a do contexto (se houver) ou a próxima da trilha.
+function proximaMensagemDoLead(lead){
+  const fu = Number(lead.followUp) || 0;
+  if (lead.contexto) return preencherNome(textoContexto(lead.contexto), lead);
+  const trilha = trilhaDoLead(lead);
+  if (!trilha || fu >= FOLLOWUP_MAX) return '';
+  return preencherNome(textoMensagem(trilha, fu + 1), lead);
+}
+
+function copiarTexto(texto){
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(texto);
+  return new Promise((resolve, reject) => {
+    const area = document.createElement('textarea');
+    area.value = texto;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy') ? resolve() : reject(new Error('copy')); }
+    catch (e) { reject(e); }
+    document.body.removeChild(area);
+  });
 }
 
 function formatarTelefone(digits){
@@ -538,24 +999,28 @@ function renderizarTudo(){
   renderizarBoardPotencial();
 }
 
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+
 function renderizarResumo(){
   const base = leadsNoPeriodo(leads);
-  const naoAtivas = ['cancelado', 'venda_aprovada', 'em_producao', COLUNA_ENCERRADAS.id, COLUNA_ENCERRADAS_QUALIFICACAO.id];
+  const naoAtivas = ['em_producao', 'finalizadas', COLUNA_ENCERRADAS.id, COLUNA_ENCERRADAS_QUALIFICACAO.id];
   const ativos = base.filter(l => !naoAtivas.includes(colunaDoFunil(l))).length;
-  const emProducao = base.filter(l => l.etapa === 'em_producao').length;
-  const cancelados = base.filter(l => colunaDoFunil(l) === 'cancelado').length;
+  const emProducao = base.filter(l => colunaDoFunil(l) === 'em_producao').length;
+  const finalizadas = base.filter(l => colunaDoFunil(l) === 'finalizadas').length;
   const encerradas = base.filter(ehEncerrado).length;
-  const encerradasSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
+  const encerradasSemResposta = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const valorProspectado = base
-    .filter(l => ['cotacao_enviada', 'pedido_aberto'].includes(colunaDoFunil(l)))
+    .filter(l => ['cotacao_enviada', 'venda_semi'].includes(colunaDoFunil(l)))
     .reduce((soma, l) => soma + parseReais(l.valorEstimado), 0);
   document.getElementById('resumo').innerHTML = `
     <div class="item"><span class="valor">${base.length}</span><span class="rotulo">Total de leads</span></div>
     <div class="item"><span class="valor">${ativos}</span><span class="rotulo">Em andamento</span></div>
     <div class="item"><span class="valor">${emProducao}</span><span class="rotulo">Em produção</span></div>
-    <div class="item"><span class="valor">${cancelados}</span><span class="rotulo">Cancelados</span></div>
+    <div class="item"><span class="valor" style="color:var(--fase-finalizada);">${finalizadas}</span><span class="rotulo">Finalizadas</span></div>
     <div class="item"><span class="valor">${encerradas}</span><span class="rotulo">Encerradas</span></div>
-    <div class="item"><span class="valor">${encerradasSemQualificacao}</span><span class="rotulo">Encerradas ainda na qualificação</span></div>
+    <div class="item"><span class="valor">${encerradasSemResposta}</span><span class="rotulo">Encerradas sem resposta</span></div>
     <div class="item"><span class="valor">${formatarReais(valorProspectado)}</span><span class="rotulo">Valor prospectado</span></div>
   `;
 }
@@ -576,8 +1041,8 @@ function renderizarBoard(){
     const leadsDaEtapa = listaAtual.filter(l => colunaDoFunil(l) === etapa.id);
     const coluna = document.createElement('div');
     coluna.className = 'coluna'
-      + (etapa.id === 'cancelado' ? ' coluna-cancelado' : '')
-      + (etapa.id === COLUNA_ENCERRADAS.id ? ' coluna-encerrada-inicio' : '');
+      + (etapa.id === COLUNA_ENCERRADAS.id ? ' coluna-encerrada-inicio' : '')
+      + (etapa.id === 'finalizadas' ? ' coluna-finalizadas' : '');
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
@@ -609,7 +1074,7 @@ function renderizarBoard(){
         if (etapa.id === COLUNA_ENCERRADAS.id) {
           // Nesta coluna o ponto do card e a linha "Parou em" mostram a etapa real do lead.
           const etapaReal = TODAS_ETAPAS.find(e => e.id === lead.etapa) || STAGES[0];
-          corpo.appendChild(criarCard(lead, etapaReal, true));
+          corpo.appendChild(criarCard(lead, etapaReal, { mostrarEtapa: true }));
         } else if (etapa.id === COLUNA_ENCERRADAS_QUALIFICACAO.id) {
           corpo.appendChild(criarCard(lead, STAGES[0]));
         } else {
@@ -623,9 +1088,9 @@ function renderizarBoard(){
 }
 
 // Soltar um card numa coluna do funil.
-// - Coluna de etapa: muda a etapa. Se o lead estava encerrado, ele é reaberto (follow-up zerado).
+// - Coluna de etapa: muda a etapa. O contador de follow-up recomeça (cada etapa tem sua trilha de mensagens).
 // - Encerradas: marca o follow-up de encerramento e mantém a etapa onde o lead parou.
-// - Encerradas ainda na qualificação: só aceita quem ainda está na Qualificação,
+// - Encerradas sem resposta: só aceita quem ainda está na Qualificação,
 //   pra essa contagem continuar confiável como base de cobrança do tráfego pago.
 function moverLeadParaColuna(lead, colunaId){
   if (colunaDoFunil(lead) === colunaId) return;
@@ -640,17 +1105,21 @@ function moverLeadParaColuna(lead, colunaId){
       mostrarToast('Esse lead já saiu da qualificação');
       return;
     }
-    lead.followUp = FOLLOWUP_ENCERRAMENTO;
+    if (lead.etapa === 'cancelado') {
+      mostrarToast('Esse lead foi cancelado pelo cliente. Reabra em uma etapa antes de encerrar de outro jeito');
+      return;
+    }
+    marcarFollowUp(lead, FOLLOWUP_ENCERRAMENTO);
     persistirLead(lead);
     mostrarToast('Lead encerrado');
     return;
   }
 
   const estavaEncerrado = ehEncerrado(lead);
-  lead.etapa = colunaId;
-  if (estavaEncerrado) lead.followUp = 0;
+  const zerouFollowUp = trocarEtapa(lead, colunaId);
   persistirLead(lead);
   if (estavaEncerrado) mostrarToast('Lead reaberto no funil');
+  else if (zerouFollowUp) mostrarToast('Etapa mudou: o contador de follow-up recomeçou');
 }
 
 function mudarAba(nome){
@@ -658,39 +1127,102 @@ function mudarAba(nome){
   document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === nome));
   document.getElementById('board').classList.toggle('hidden', nome !== 'funil');
   document.getElementById('board-followup').classList.toggle('hidden', nome !== 'followup');
+  document.getElementById('trilhas').classList.toggle('hidden', nome !== 'followup');
+  document.getElementById('btn-relatorio-fu').classList.toggle('hidden', nome !== 'followup');
   document.getElementById('board-potencial').classList.toggle('hidden', nome !== 'potencial');
 
   const dica = document.getElementById('toolbar-dica');
   if (nome === 'funil') dica.textContent = 'Clique num card pra ver os detalhes, ou arraste entre as colunas pra mudar a etapa. Quem recebeu o follow-up de encerramento sai do funil e fica nas duas últimas colunas.';
-  else if (nome === 'followup') dica.textContent = 'Arraste um card pra mudar a tentativa de follow-up, ou clique pra editar o lead. Quem está no follow-up 7 (encerramento) e ainda na Qualificação entra sozinho na última coluna.';
+  else if (nome === 'followup') dica.textContent = 'Escolha a trilha. Em cada coluna, o mais atrasado fica no topo. "Copiar" leva a próxima mensagem, e "Fiz hoje" registra o follow-up com a data de hoje.';
   else dica.textContent = 'Leads marcados como "em potencial", agrupados pela etapa em que estão hoje no funil.';
 
   if (nome === 'followup') renderizarBoardFollowup();
   if (nome === 'potencial') renderizarBoardPotencial();
 }
 
+function leadsDaTrilha(lista, trilhaId){
+  return lista.filter(l => trilhaDoLead(l) === trilhaId);
+}
+
+function renderizarTrilhas(listaAtual){
+  const el = document.getElementById('trilhas');
+  el.innerHTML = '';
+  TRILHAS.forEach(t => {
+    const doTrilha = leadsDaTrilha(listaAtual, t.id);
+    const pendentes = doTrilha.filter(l => {
+      const s = situacaoPrazo(l);
+      return s.tipo === 'atrasado' || s.tipo === 'hoje';
+    }).length;
+    const btn = document.createElement('button');
+    btn.className = 'trilha-pill' + (t.id === trilhaAtiva ? ' ativa' : '');
+    btn.innerHTML = `${t.nome}${pendentes ? `<span class="badge-pill" title="Para fazer hoje ou atrasados">${pendentes}</span>` : ''}`;
+    btn.addEventListener('click', () => { trilhaAtiva = t.id; renderizarBoardFollowup(); });
+    el.appendChild(btn);
+  });
+  const dica = document.createElement('span');
+  dica.className = 'trilhas-dica';
+  dica.textContent = 'O número vermelho mostra quantos estão atrasados ou vencem hoje.';
+  el.appendChild(dica);
+}
+
+function acaoFizHoje(lead){
+  const proximo = (Number(lead.followUp) || 0) + 1;
+  if (proximo > FOLLOWUP_MAX) return;
+  marcarFollowUp(lead, proximo);
+  persistirLead(lead);
+  mostrarToast(proximo === FOLLOWUP_ENCERRAMENTO
+    ? 'Encerramento registrado. O lead sai do funil.'
+    : `Follow-up ${proximo} registrado em ${formatarData(hojeISO())}`);
+}
+
+function acaoCopiar(lead){
+  const texto = proximaMensagemDoLead(lead);
+  if (!texto) { mostrarToast('Sem mensagem para este lead'); return; }
+  copiarTexto(texto).then(() => mostrarToast('Mensagem copiada'))
+    .catch(() => mostrarToast('Não consegui copiar, selecione o texto à mão'));
+}
+
 function renderizarBoardFollowup(){
   const board = document.getElementById('board-followup');
   board.innerHTML = '';
   const listaAtual = leadsFiltrados();
+  renderizarTrilhas(listaAtual);
 
-  for (let n = 1; n <= FOLLOWUP_MAX; n++) {
-    const leadsDoNivel = listaAtual.filter(l => Number(l.followUp) === n);
+  const trilha = TRILHAS.find(t => t.id === trilhaAtiva) || TRILHAS[0];
+  const doTrilha = leadsDaTrilha(listaAtual, trilha.id);
+
+  for (let n = 0; n <= FOLLOWUP_MAX; n++) {
+    const leadsDoNivel = doTrilha.filter(l => (Number(l.followUp) || 0) === n);
     const coluna = document.createElement('div');
     coluna.className = 'coluna coluna-followup';
 
     const header = document.createElement('div');
     header.className = 'coluna-header';
-    header.style.background = corFollowup(n);
-    header.innerHTML = `<span class="nome-etapa">${nomeFollowup(n)}</span><span class="contagem">${leadsDoNivel.length}</span>`;
+    header.style.background = n === 0 ? 'var(--fase-iniciar)' : corFollowup(n);
+    header.innerHTML = `<span class="nome-etapa">${n === 0 ? 'A iniciar (sem follow-up)' : nomeFollowup(n)}</span><span class="contagem">${leadsDoNivel.length}</span>`;
     coluna.appendChild(header);
 
-    const mensagemBox = document.createElement('textarea');
-    mensagemBox.className = 'followup-mensagem';
-    mensagemBox.placeholder = n === FOLLOWUP_ENCERRAMENTO ? 'Mensagem de encerramento...' : `Mensagem da tentativa ${n}...`;
-    mensagemBox.value = (configFollowup.mensagens && configFollowup.mensagens['msg' + n]) || '';
-    mensagemBox.addEventListener('change', () => salvarMensagemFollowup(n, mensagemBox.value));
-    coluna.appendChild(mensagemBox);
+    if (n < FOLLOWUP_MAX) {
+      const proxima = n + 1;
+      const padrao = padraoDaMensagem(trilha.id, proxima);
+      const rotulo = document.createElement('div');
+      rotulo.className = 'rotulo-msg';
+      rotulo.innerHTML = `Próxima mensagem: FU${proxima}${padrao && padrao.tag ? ` <span class="tag-msg">(${padrao.tag})</span>` : ''}`;
+      coluna.appendChild(rotulo);
+
+      const mensagemBox = document.createElement('textarea');
+      mensagemBox.className = 'followup-mensagem';
+      mensagemBox.placeholder = `Mensagem da tentativa ${proxima}...`;
+      mensagemBox.value = textoMensagem(trilha.id, proxima);
+      mensagemBox.rows = 6;
+      mensagemBox.addEventListener('change', () => salvarMensagemFollowup(`${trilha.id}__${proxima}`, mensagemBox.value));
+      coluna.appendChild(mensagemBox);
+    } else {
+      const nota = document.createElement('div');
+      nota.className = 'nota-coluna';
+      nota.textContent = 'Já receberam o encerramento. Saem do funil e ficam nas colunas Encerradas.';
+      coluna.appendChild(nota);
+    }
 
     const corpo = document.createElement('div');
     corpo.className = 'coluna-corpo';
@@ -700,50 +1232,36 @@ function renderizarBoardFollowup(){
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
       const lead = leads.find(l => l.id === id);
-      if (lead && Number(lead.followUp) !== n) { lead.followUp = n; persistirLead(lead); }
+      if (!lead) return;
+      const atual = Number(lead.followUp) || 0;
+      if (atual === n) return;
+      if (n > atual) {
+        marcarFollowUp(lead, n);
+        mostrarToast(n === FOLLOWUP_ENCERRAMENTO ? 'Encerramento registrado' : `Follow-up ${n} registrado em ${formatarData(hojeISO())}`);
+      } else if (n === 0) {
+        arquivarFollowUps(lead, 'voltou para o início');
+        mostrarToast('Contador zerado');
+      } else {
+        voltarFollowUp(lead, n);
+        mostrarToast(`Voltou para o follow-up ${n}`);
+      }
+      persistirLead(lead);
     });
 
     if (leadsDoNivel.length === 0) {
       corpo.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
     } else {
-      leadsDoNivel.forEach(lead => {
+      const ordenados = n === FOLLOWUP_MAX
+        ? [...leadsDoNivel].sort((a, b) => (ultimaDataContato(b) || '').localeCompare(ultimaDataContato(a) || ''))
+        : ordenarPorPrioridade(leadsDoNivel);
+      ordenados.forEach(lead => {
         const etapa = TODAS_ETAPAS.find(e => e.id === lead.etapa) || STAGES[0];
-        corpo.appendChild(criarCard(lead, etapa));
+        corpo.appendChild(criarCard(lead, etapa, { modo: 'followup' }));
       });
     }
     coluna.appendChild(corpo);
     board.appendChild(coluna);
   }
-
-  // Coluna automática: encerrados que nunca saíram da Qualificação.
-  // Ela só exibe, não aceita arrastar pra dentro: o lead entra aqui sozinho
-  // quando está no follow-up 7 e na etapa Qualificação.
-  const leadsSemQualificacao = listaAtual.filter(ehEncerradoSemSairDaQualificacao);
-  const etapaQualificacao = STAGES[0];
-
-  const colunaSQ = document.createElement('div');
-  colunaSQ.className = 'coluna coluna-followup coluna-sem-qualificacao';
-
-  const headerSQ = document.createElement('div');
-  headerSQ.className = 'coluna-header';
-  headerSQ.style.background = COR_ENCERRADO_SEM_QUALIFICACAO;
-  headerSQ.innerHTML = `<span class="nome-etapa">Encerradas ainda na qualificação</span><span class="contagem">${leadsSemQualificacao.length}</span>`;
-  colunaSQ.appendChild(headerSQ);
-
-  const nota = document.createElement('div');
-  nota.className = 'nota-coluna';
-  nota.textContent = 'Preenchida automaticamente: leads do follow-up 7 que ainda estão na Qualificação. Base para conversar com o tráfego pago.';
-  colunaSQ.appendChild(nota);
-
-  const corpoSQ = document.createElement('div');
-  corpoSQ.className = 'coluna-corpo';
-  if (leadsSemQualificacao.length === 0) {
-    corpoSQ.innerHTML = `<div class="vazio">${haFiltroAtivo() ? 'Nada encontrado com esse filtro' : 'Sem leads aqui'}</div>`;
-  } else {
-    leadsSemQualificacao.forEach(lead => corpoSQ.appendChild(criarCard(lead, etapaQualificacao)));
-  }
-  colunaSQ.appendChild(corpoSQ);
-  board.appendChild(colunaSQ);
 }
 
 function renderizarBoardPotencial(){
@@ -770,7 +1288,15 @@ function renderizarBoardPotencial(){
   });
 }
 
-function criarCard(lead, etapa, mostrarEtapa = false){
+function textoPrazo(s){
+  if (s.tipo === 'atrasado') return `atrasado ${s.atraso}d`;
+  if (s.tipo === 'hoje') return 'fazer hoje';
+  if (s.tipo === 'emdia') return `em ${-s.atraso}d`;
+  return '';
+}
+
+function criarCard(lead, etapa, opcoes = {}){
+  const { mostrarEtapa = false, modo = 'funil' } = opcoes;
   const card = document.createElement('div');
   card.className = 'card';
   card.draggable = true;
@@ -779,25 +1305,70 @@ function criarCard(lead, etapa, mostrarEtapa = false){
 
   const nomeExibido = lead.nome && lead.nome.trim() ? lead.nome : formatarTelefone(lead.telefone) || 'Sem nome';
   const link = linkWhatsapp(lead.telefone);
+  const fu = Number(lead.followUp) || 0;
+  const s = situacaoPrazo(lead);
+
+  let rotuloFollowup = '';
+  if (fu) {
+    const ultima = ultimaDataContato(lead);
+    const sufixo = modo === 'funil' && ultima ? ` · há ${diasEntre(ultima, hojeISO())}d` : '';
+    rotuloFollowup = `<span class="marcador-followup" style="background:${corFollowup(fu)};">${rotuloChipFollowup(fu)}${sufixo}</span>`;
+  }
+
+  let linhaFU = '';
+  let chipPrazo = '';
+  if (modo === 'followup') {
+    const ultima = ultimaDataContato(lead);
+    if (fu === 0) {
+      linhaFU = `<div class="linha-fu">Entrou em ${formatarData(lead.dataEntrada) || '?'}${ultima ? ` · há ${diasEntre(ultima, hojeISO())}d` : ''}</div>`;
+    } else if (ultima) {
+      linhaFU = `<div class="linha-fu">FU${fu} em ${formatarData(ultima)} · há ${diasEntre(ultima, hojeISO())}d</div>`;
+    } else if (fu < FOLLOWUP_MAX) {
+      linhaFU = `<div class="linha-fu">FU${fu} sem data registrada</div>`;
+    }
+    if (s.tipo === 'semdata') chipPrazo = '<span class="chip-prazo prazo-semdata">sem data</span>';
+    else if (s.tipo !== 'fim') chipPrazo = `<span class="chip-prazo prazo-${s.tipo}">${textoPrazo(s)}</span>`;
+  }
+
+  const contextoNome = lead.contexto ? (CONTEXTOS.find(c => c.id === lead.contexto) || {}).nome : '';
+  const tags = [];
+  if (contextoNome) tags.push(`Contexto: ${contextoNome}`);
+  if (lead.retornoCombinado) tags.push(`Retorno combinado: ${formatarData(lead.retornoCombinado)}`);
+
+  let acoes = '';
+  if (modo === 'followup' && fu < FOLLOWUP_MAX) {
+    acoes = `<div class="card-acoes">
+      <button type="button" data-acao="copiar">Copiar msg</button>
+      <button type="button" class="fiz" data-acao="fiz">${fu + 1 === FOLLOWUP_ENCERRAMENTO ? 'Encerrei' : 'Fiz hoje'}</button>
+    </div>`;
+  }
 
   card.innerHTML = `
     <div class="linha-topo">
       <span class="ponto" style="background:var(--fase-${etapa.fase});"></span>
-      <span class="nome">${nomeExibido}</span>
+      <span class="nome">${esc(nomeExibido)}</span>
       <span class="data">${formatarData(lead.dataEntrada)}</span>
     </div>
-    ${mostrarEtapa ? `<div class="etapa-origem">Parou em: ${etapa.nome}</div>` : ''}
-    ${lead.observacoes ? `<div class="obs-preview">${lead.observacoes}</div>` : ''}
-    ${lead.valorEstimado ? `<div class="valor-estimado">${lead.valorEstimado}</div>` : ''}
-    ${lead.origem ? `<div class="chip-origem">Origem: ${lead.origem}</div>` : ''}
+    ${mostrarEtapa ? `<div class="etapa-origem">${etapa.id === 'cancelado' ? 'Cancelado pelo cliente' : 'Parou em: ' + etapa.nome}</div>` : ''}
+    ${lead.observacoes ? `<div class="obs-preview">${esc(lead.observacoes)}</div>` : ''}
+    ${lead.valorEstimado ? `<div class="valor-estimado">${esc(lead.valorEstimado)}</div>` : ''}
+    ${lead.origem ? `<div class="chip-origem">Origem: ${esc(lead.origem)}</div>` : ''}
+    ${modo === 'followup' ? linhaFU : ''}
+    ${modo === 'followup' ? tags.map(t => `<div class="tag-contexto">${esc(t)}</div>`).join('') : ''}
     <div class="linha-baixo">
       ${link ? `<a class="telefone-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>` : '<span></span>'}
       <span class="marcadores">
         ${lead.emPotencial ? '<span class="marcador">Em potencial</span>' : ''}
-        ${lead.followUp ? `<span class="marcador-followup" style="background:${corFollowup(lead.followUp)};">${rotuloChipFollowup(lead.followUp)}</span>` : ''}
+        ${modo === 'followup' ? chipPrazo : rotuloFollowup}
       </span>
     </div>
+    ${acoes}
   `;
+
+  const btnCopiar = card.querySelector('[data-acao="copiar"]');
+  if (btnCopiar) btnCopiar.addEventListener('click', e => { e.stopPropagation(); acaoCopiar(lead); });
+  const btnFiz = card.querySelector('[data-acao="fiz"]');
+  if (btnFiz) btnFiz.addEventListener('click', e => { e.stopPropagation(); acaoFizHoje(lead); });
   return card;
 }
 
@@ -852,8 +1423,43 @@ function ativarArrastarScroll(board){
 
 function atualizarVisibilidadeValorEstimado(){
   const etapa = document.getElementById('campo-etapa').value;
-  const mostrar = etapa === 'cotacao_enviada' || etapa === 'pedido_aberto';
+  const mostrar = etapa === 'cotacao_enviada' || etapa === 'venda_semi';
   document.getElementById('linha-valor-estimado').style.display = mostrar ? 'block' : 'none';
+}
+
+function preencherSelectContexto(){
+  const opcoes = ['<option value="">Nenhum</option>'];
+  CONTEXTOS.forEach(c => opcoes.push(`<option value="${c.id}">${c.nome}</option>`));
+  document.getElementById('campo-contexto').innerHTML = opcoes.join('');
+}
+
+// Linhas de data da linha do tempo (FU1 a FU7) dentro do formulário.
+function montarTimeline(followUps, numeroAtual){
+  const el = document.getElementById('timeline-followups');
+  el.innerHTML = '';
+  for (let k = 1; k <= FOLLOWUP_MAX; k++) {
+    const e = (followUps || []).find(x => x.n === k);
+    const linha = document.createElement('div');
+    linha.className = 'linha-tl' + (k > numeroAtual ? ' inativa' : '');
+    linha.dataset.n = k;
+    linha.innerHTML = `<span>${k === FOLLOWUP_ENCERRAMENTO ? 'FU7' : 'FU' + k}</span><input type="date" value="${e ? e.data : ''}">`;
+    const input = linha.querySelector('input');
+    input.dataset.dataOriginal = e ? e.data : '';
+    input.dataset.hora = e ? (e.hora || '') : '';
+    input.dataset.origem = e ? (e.origem || 'manual') : '';
+    el.appendChild(linha);
+  }
+}
+
+// Quando o número do follow-up muda no formulário, a data de hoje entra sozinha na linha correspondente.
+function aoMudarFollowupNoModal(){
+  const n = Number(document.getElementById('campo-followup').value) || 0;
+  document.querySelectorAll('#timeline-followups .linha-tl').forEach(linha => {
+    const k = Number(linha.dataset.n);
+    linha.classList.toggle('inativa', k > n);
+    const input = linha.querySelector('input');
+    if (k === n && n > 0 && !input.value) input.value = hojeISO();
+  });
 }
 
 function abrirModalNovo(){
@@ -861,15 +1467,19 @@ function abrirModalNovo(){
   document.getElementById('modal-titulo').textContent = 'Adicionar lead';
   document.getElementById('campo-nome').value = '';
   document.getElementById('campo-telefone').value = '';
-  document.getElementById('campo-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('campo-data').value = hojeISO();
   document.getElementById('campo-etapa').value = 'qualificacao';
   document.getElementById('campo-origem').value = '';
   document.getElementById('campo-valor-estimado').value = '';
   document.getElementById('campo-potencial').checked = false;
   document.getElementById('campo-followup').value = '0';
+  document.getElementById('campo-contexto').value = '';
+  document.getElementById('campo-retorno').value = '';
   document.getElementById('campo-obs').value = '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'none';
+  document.getElementById('btn-respondeu').style.display = 'none';
+  montarTimeline([], 0);
   atualizarVisibilidadeValorEstimado();
   document.getElementById('modal-fundo').classList.remove('hidden');
 }
@@ -887,9 +1497,13 @@ function abrirModalEdicao(id){
   document.getElementById('campo-valor-estimado').value = lead.valorEstimado || '';
   document.getElementById('campo-potencial').checked = !!lead.emPotencial;
   document.getElementById('campo-followup').value = String(lead.followUp || 0);
+  document.getElementById('campo-contexto').value = lead.contexto || '';
+  document.getElementById('campo-retorno').value = lead.retornoCombinado || '';
   document.getElementById('campo-obs').value = lead.observacoes || '';
   document.getElementById('erro-nome').style.display = 'none';
   document.getElementById('btn-excluir').style.display = 'inline-block';
+  document.getElementById('btn-respondeu').style.display = (lead.followUp > 0 && lead.etapa !== 'cancelado') ? 'inline-block' : 'none';
+  montarTimeline(lead.followUps, Number(lead.followUp) || 0);
   atualizarVisibilidadeValorEstimado();
   document.getElementById('modal-fundo').classList.remove('hidden');
 }
@@ -908,20 +1522,70 @@ function salvarLeadAtual(){
   if (!nome) { document.getElementById('erro-nome').style.display = 'block'; return; }
   const telefoneDigits = document.getElementById('campo-telefone').value.trim().replace(/\D/g,'');
 
-  const lead = {
-    id: idLeadAberto || idNovo(),
-    nome,
-    telefone: telefoneDigits,
-    dataEntrada: document.getElementById('campo-data').value,
-    etapa: document.getElementById('campo-etapa').value,
-    origem: document.getElementById('campo-origem').value,
-    valorEstimado: document.getElementById('campo-valor-estimado').value.trim(),
-    emPotencial: document.getElementById('campo-potencial').checked,
-    followUp: Number(document.getElementById('campo-followup').value) || 0,
-    observacoes: document.getElementById('campo-obs').value.trim(),
-  };
+  // Parte do lead que já existe, para não perder os campos que o formulário não mostra (histórico, arquivo).
+  const base = idLeadAberto ? leads.find(l => l.id === idLeadAberto) : null;
+  const lead = base
+    ? { ...base }
+    : { id: idNovo(), followUp: 0, followUps: [], contexto: '', retornoCombinado: '' };
+
+  lead.nome = nome;
+  lead.telefone = telefoneDigits;
+  lead.dataEntrada = document.getElementById('campo-data').value;
+  lead.origem = document.getElementById('campo-origem').value;
+  lead.valorEstimado = document.getElementById('campo-valor-estimado').value.trim();
+  lead.emPotencial = document.getElementById('campo-potencial').checked;
+  lead.observacoes = document.getElementById('campo-obs').value.trim();
+  lead.retornoCombinado = document.getElementById('campo-retorno').value || '';
+
+  const novaEtapa = document.getElementById('campo-etapa').value;
+  const contextoEscolhido = document.getElementById('campo-contexto').value;
+  let avisoZerou = false;
+
+  if (base && base.etapa !== novaEtapa) {
+    // Mudou de etapa: o histórico vai para o arquivo e o contador recomeça.
+    avisoZerou = trocarEtapa(lead, novaEtapa);
+    lead.contexto = '';
+  } else {
+    lead.etapa = novaEtapa;
+    const n = Number(document.getElementById('campo-followup').value) || 0;
+    const anterior = base ? (Number(base.followUp) || 0) : 0;
+    const entradas = [];
+    document.querySelectorAll('#timeline-followups .linha-tl').forEach(linha => {
+      const k = Number(linha.dataset.n);
+      const input = linha.querySelector('input');
+      if (k > n || !input.value) return;
+      const igualAoOriginal = input.value === input.dataset.dataOriginal;
+      entradas.push({
+        n: k,
+        data: input.value,
+        hora: igualAoOriginal ? input.dataset.hora : '',
+        origem: igualAoOriginal && input.dataset.origem ? input.dataset.origem : 'manual',
+      });
+    });
+    if (n > 0 && !entradas.some(e => e.n === n)) {
+      entradas.push({ n, data: hojeISO(), hora: horaAgora(), origem: 'auto' });
+    }
+    lead.followUp = n;
+    lead.followUps = entradas.sort((a, b) => a.n - b.n);
+    lead.contexto = (n > anterior && contextoEscolhido === ((base && base.contexto) || '')) ? '' : contextoEscolhido;
+  }
+
   persistirLead(lead);
-  mostrarToast(idLeadAberto ? 'Lead atualizado' : 'Lead adicionado');
+  mostrarToast(avisoZerou ? 'Lead atualizado. Etapa nova, follow-up recomeçou do zero' : (idLeadAberto ? 'Lead atualizado' : 'Lead adicionado'));
+  fecharModal();
+}
+
+// O cliente respondeu: guarda o histórico no arquivo e zera o contador.
+function clienteRespondeu(){
+  if (!idLeadAberto) return;
+  const base = leads.find(l => l.id === idLeadAberto);
+  if (!base) return;
+  if (!confirm('Marcar que o cliente respondeu? O contador de follow-up volta para zero e o histórico fica guardado.')) return;
+  const lead = { ...base };
+  arquivarFollowUps(lead, 'cliente respondeu');
+  lead.ultimaResposta = hojeISO();
+  persistirLead(lead);
+  mostrarToast('Contador zerado. Histórico guardado');
   fecharModal();
 }
 
@@ -945,7 +1609,7 @@ function abrirRelatorio(){
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
   const travados = porEtapa
-    .filter(p => p.qtd > 0 && p.etapa.id !== 'cancelado' && p.etapa.id !== COLUNA_ENCERRADAS.id && p.etapa.id !== COLUNA_ENCERRADAS_QUALIFICACAO.id)
+    .filter(p => p.qtd > 0 && p.etapa.id !== 'finalizadas' && p.etapa.id !== COLUNA_ENCERRADAS.id && p.etapa.id !== COLUNA_ENCERRADAS_QUALIFICACAO.id)
     .map(p => {
       const leadsDaEtapa = base.filter(l => colunaDoFunil(l) === p.etapa.id);
       const maisAntigo = leadsDaEtapa.reduce((antigo, l) => {
@@ -959,9 +1623,9 @@ function abrirRelatorio(){
     .slice(0, 5);
 
   const valorCotacao = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
-  const valorPedido = base.filter(l => colunaDoFunil(l) === 'pedido_aberto').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorPedido = base.filter(l => colunaDoFunil(l) === 'venda_semi').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
   const valorEsfriado = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
-  const valorEncerrado = base.filter(l => ehEncerrado(l) && (l.etapa === 'cotacao_enviada' || l.etapa === 'pedido_aberto')).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
+  const valorEncerrado = base.filter(l => ehEncerrado(l) && (l.etapa === 'cotacao_enviada' || l.etapa === 'venda_semi')).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
 
   const encerradosTotal = base.filter(ehEncerrado).length;
   const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
@@ -1013,7 +1677,7 @@ function abrirRelatorio(){
 
   document.getElementById('relatorio-valores').innerHTML = `
     <div class="relatorio-linha">Em cotação enviada: ${formatarReais(valorCotacao)}</div>
-    <div class="relatorio-linha">Em pedido aberto (aprovado, não fechado): ${formatarReais(valorPedido)}</div>
+    <div class="relatorio-linha">Em venda semi-aprovada (ainda não fechada): ${formatarReais(valorPedido)}</div>
     <div class="relatorio-linha">Cotações já em follow-up, esfriando: ${formatarReais(valorEsfriado)}</div>
     <div class="relatorio-linha">Cotações e pedidos já encerrados (fora do funil): ${formatarReais(valorEncerrado)}</div>
   `;
@@ -1022,7 +1686,7 @@ function abrirRelatorio(){
   const maiorTravado = travados[0];
   if (maiorTravado && maiorTravado.qtd >= 3) sugestoes.push(`"${maiorTravado.etapa.nome}" concentra o maior número de leads parados, vale priorizar esse grupo.`);
   if (valorEsfriado > 0) sugestoes.push(`${formatarReais(valorEsfriado)} em cotações já entraram em follow-up sem fechar, esse é o valor mais urgente de retomar.`);
-  if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em pedidos aprovados ainda não fechados, considere confirmar esses com prioridade.`);
+  if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em vendas semi-aprovadas ainda não fechadas, considere confirmar esses com prioridade.`);
   const semOrigem = mapaOrigem[ORIGEM_VAZIA] ? mapaOrigem[ORIGEM_VAZIA].qtd : 0;
   if (semOrigem > 0 && semOrigem < base.length) sugestoes.push(`${semOrigem} lead${semOrigem > 1 ? 's' : ''} sem origem registrada, preencher o anel de origem deixa a leitura por criativo mais confiável.`);
   const origensComDado = porOrigem.filter(o => o.nome !== ORIGEM_VAZIA && o.nome !== ORIGEM_NAO_IDENTIFICADO && o.qtd >= 3);
@@ -1123,7 +1787,7 @@ function baixarRelatorioPDF(){
 
   quebra();
   doc.setFontSize(12);
-  doc.text('Encerradas ainda na qualificacao', margem, y); y += 16;
+  doc.text('Encerradas sem resposta', margem, y); y += 16;
   doc.setFontSize(9);
   doc.text(`Leads encerrados sem sair da qualificacao: ${ultimoRelatorio.encerradosSemQualificacao} (de ${ultimoRelatorio.encerradosTotal} encerrados no total)`, margem, y); y += 14;
   doc.text(`Equivale a ${ultimoRelatorio.pctSemQualificacao}% dos ${ultimoRelatorio.totalLeads} leads do periodo`, margem, y); y += 22;
@@ -1132,7 +1796,7 @@ function baixarRelatorioPDF(){
   doc.text('Valor parado (R$)', margem, y); y += 16;
   doc.setFontSize(9);
   doc.text(`Em cotacao enviada: ${formatarReais(ultimoRelatorio.valorCotacao)}`, margem, y); y += 14;
-  doc.text(`Em pedido aberto: ${formatarReais(ultimoRelatorio.valorPedido)}`, margem, y); y += 14;
+  doc.text(`Em venda semi-aprovada: ${formatarReais(ultimoRelatorio.valorPedido)}`, margem, y); y += 14;
   doc.text(`Cotacoes esfriando em follow-up: ${formatarReais(ultimoRelatorio.valorEsfriado)}`, margem, y); y += 14;
   doc.text(`Cotacoes e pedidos ja encerrados (fora do funil): ${formatarReais(ultimoRelatorio.valorEncerrado)}`, margem, y); y += 20;
 
@@ -1149,9 +1813,114 @@ function baixarRelatorioPDF(){
   doc.save(`relatorio-leads-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
+
+// ============================================================
+// RELATÓRIO DE FOLLOW-UPS
+// ============================================================
+let ultimaTabelaFU = [];
+
+function abrirRelatorioFU(){
+  const sel = document.getElementById('fu-filtro-trilha');
+  if (!sel.options.length) {
+    sel.innerHTML = '<option value="">Todas as trilhas</option>' + TRILHAS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+    sel.addEventListener('change', desenharRelatorioFU);
+  }
+  sel.value = trilhaAtiva;
+  document.getElementById('modal-fu-fundo').classList.remove('hidden');
+  desenharRelatorioFU();
+}
+function fecharRelatorioFU(){ document.getElementById('modal-fu-fundo').classList.add('hidden'); }
+
+function desenharRelatorioFU(){
+  const trilhaId = document.getElementById('fu-filtro-trilha').value;
+  const base = leadsNoPeriodo(leads);
+  const hoje = hojeISO();
+  const nomesEtapa = Object.fromEntries(TODAS_ETAPAS.map(e => [e.id, e.nome]));
+
+  document.getElementById('fu-periodo').textContent = (filtroDe || filtroAte)
+    ? `Período de entrada: ${filtroDe ? formatarData(filtroDe) : '...'} até ${filtroAte ? formatarData(filtroAte) : '...'}`
+    : 'Período: todos os leads cadastrados';
+
+  // Só entram leads que já tiveram algum follow-up (ou estão numa trilha com contador marcado).
+  const doFiltro = base.filter(l => (Number(l.followUp) || 0) > 0 && (!trilhaId || trilhaDoLead(l) === trilhaId));
+  const linhas = ordenarPorPrioridade(doFiltro).map(l => {
+    const s = situacaoPrazo(l);
+    const fus = [];
+    for (let n = 1; n <= FOLLOWUP_MAX; n++) { const e = entradaFU(l, n); fus.push(e ? e.data : ''); }
+    const ultima = ultimaDataContato(l);
+    return {
+      nome: (l.nome && l.nome.trim()) || formatarTelefone(l.telefone) || 'Sem nome',
+      telefone: l.telefone || '',
+      etapa: nomesEtapa[l.etapa] || l.etapa,
+      fu: Number(l.followUp) || 0,
+      fus,
+      ultima: ultima || '',
+      diasSem: ultima ? diasEntre(ultima, hoje) : '',
+      proximo: s.tipo === 'fim' ? 'Encerrado' : (s.vence ? s.vence : ''),
+      situacao: s.tipo === 'atrasado' ? `atrasado ${s.atraso}d` : s.tipo === 'hoje' ? 'fazer hoje' : s.tipo === 'emdia' ? 'em dia' : s.tipo === 'semdata' ? 'sem data' : 'encerrado',
+    };
+  });
+  ultimaTabelaFU = linhas;
+
+  const feitosHoje = [];
+  const porDia = {};
+  base.forEach(l => (l.followUps || []).forEach(e => {
+    if (!e.data) return;
+    porDia[e.data] = (porDia[e.data] || 0) + 1;
+    if (e.data === hoje) feitosHoje.push(l);
+  }));
+  const atrasados = doFiltro.filter(l => situacaoPrazo(l).tipo === 'atrasado').length;
+  const venceHoje = doFiltro.filter(l => situacaoPrazo(l).tipo === 'hoje').length;
+  const semData = doFiltro.filter(l => situacaoPrazo(l).tipo === 'semdata').length;
+  const semana = Object.keys(porDia).filter(d => { const x = diasEntre(d, hoje); return x >= 0 && x < 7; }).reduce((s, d) => s + porDia[d], 0);
+
+  document.getElementById('fu-resumo').innerHTML = `
+    <div class="item"><span class="valor">${linhas.length}</span><span class="rotulo">Leads com follow-up</span></div>
+    <div class="item"><span class="valor">${feitosHoje.length}</span><span class="rotulo">Follow-ups feitos hoje</span></div>
+    <div class="item"><span class="valor">${semana}</span><span class="rotulo">Feitos nos últimos 7 dias</span></div>
+    <div class="item"><span class="valor" style="color:#d9705f;">${atrasados}</span><span class="rotulo">Atrasados</span></div>
+    <div class="item"><span class="valor" style="color:#e3b04b;">${venceHoje}</span><span class="rotulo">Vencem hoje</span></div>
+    <div class="item"><span class="valor">${semData}</span><span class="rotulo">Sem data registrada</span></div>
+  `;
+
+  const cab = ['Lead', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Último contato', 'Dias sem contato', 'Próximo previsto', 'Situação'];
+  const dm = iso => iso ? formatarData(iso) : '';
+  const corpoHTML = linhas.map(r => `<tr>
+    <td class="nome-col">${esc(r.nome)}</td><td>${esc(r.etapa)}</td>
+    ${r.fus.map(d => d ? `<td>${dm(d)}</td>` : '<td class="vazio-col">·</td>').join('')}
+    <td>${dm(r.ultima)}</td><td>${r.diasSem === '' ? '' : r.diasSem}</td><td>${r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo)}</td><td>${r.situacao}</td>
+  </tr>`).join('');
+  document.getElementById('fu-tabela').innerHTML = `<thead><tr>${cab.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${corpoHTML || `<tr><td colspan="${cab.length}" class="vazio-col">Nenhum lead com follow-up nesse filtro.</td></tr>`}</tbody>`;
+
+  const dias = [];
+  for (let i = 0; i < 14; i++) dias.push(somarDias(hoje, -i));
+  document.getElementById('fu-por-dia').innerHTML = dias.map(d =>
+    `<div class="relatorio-linha">${formatarData(d)}${d === hoje ? ' (hoje)' : ''}: ${porDia[d] || 0} follow-up${(porDia[d] || 0) === 1 ? '' : 's'}</div>`
+  ).join('');
+}
+
+function baixarCSVFollowups(){
+  const cab = ['Lead', 'Telefone', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Ultimo contato', 'Dias sem contato', 'Proximo previsto', 'Situacao'];
+  const dm = iso => { if (!iso) return ''; const [a, m, d] = iso.split('-'); return `${d}/${m}/${a}`; };
+  const aspas = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const linhas = ultimaTabelaFU.map(r => [
+    r.nome, r.telefone, r.etapa, ...r.fus.map(dm), dm(r.ultima), r.diasSem, r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo), r.situacao,
+  ].map(aspas).join(';'));
+  const csv = '﻿' + [cab.map(aspas).join(';'), ...linhas].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `followups-${hojeISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 preencherSelectEtapas();
 preencherSelectOrigem();
 preencherSelectFollowup();
+preencherSelectContexto();
 ativarArrastarScroll(document.getElementById('board'));
 ativarArrastarScroll(document.getElementById('board-followup'));
 
@@ -1163,6 +1932,8 @@ document.getElementById('campo-busca').addEventListener('input', (e) => {
 });
 
 document.getElementById('campo-etapa').addEventListener('change', atualizarVisibilidadeValorEstimado);
+document.getElementById('campo-followup').addEventListener('change', aoMudarFollowupNoModal);
+document.getElementById('btn-relatorio-fu').addEventListener('click', abrirRelatorioFU);
 
 document.getElementById('filtro-de').addEventListener('change', (e) => {
   filtroDe = e.target.value;
