@@ -154,7 +154,7 @@
   .secao-cards .card { width: 210px; }
 
   /* ---------- Modal de relatório ---------- */
-  .modal-relatorio { max-width: 860px; }
+  .modal-relatorio { max-width: 920px; }
   .relatorio-periodo { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
   .relatorio-grid { display: flex; gap: 20px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
   .relatorio-legenda { display: flex; flex-direction: column; gap: 5px; font-size: 12px; flex: 1; min-width: 170px; }
@@ -164,13 +164,52 @@
   .relatorio-bloco h3 { font-size: 20px; color: var(--text); margin: 0 0 8px; font-family: var(--font-display); font-weight: 700; }
   .relatorio-linha { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
 
-  .funil-linha { display: grid; grid-template-columns: 230px 1fr 230px; gap: 12px; align-items: center; margin-bottom: 7px; font-size: 12.5px; color: var(--text-secondary); }
-  .funil-barra { height: 10px; background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
-  .funil-barra span { display: block; height: 100%; background: var(--gold); }
-  .funil-num { text-align: right; }
+  /* ---------- Relatório interativo ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
+  .kpi {
+    background: var(--bg-elevated-2); border: 1px solid var(--border); border-left: 5px solid var(--cor);
+    border-radius: 12px; padding: 11px 13px; cursor: pointer; text-align: left;
+    font-family: var(--font-body); color: var(--text);
+  }
+  .kpi:hover, .kpi.ativo-filtro { border-color: var(--gold); border-left-color: var(--cor); }
+  .kpi .kpi-valor { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1; }
+  .kpi .kpi-sub { font-size: 12.5px; color: var(--text-secondary); margin-left: 7px; font-weight: 600; }
+  .kpi .kpi-rot { font-size: 11.5px; color: var(--text-secondary); margin-top: 5px; }
+
+  .ponto-leg { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
+  .relatorio-dica { font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; }
   .relatorio-nota { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin-top: 8px; }
+
+  .funil-linha { display: grid; grid-template-columns: 250px 1fr 230px; gap: 12px; align-items: center; margin-bottom: 4px; padding: 4px 6px; border-radius: 8px; font-size: 12.5px; color: var(--text-secondary); }
+  .funil-barra { height: 10px; background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .funil-barra span { display: block; height: 100%; }
+  .funil-num { text-align: right; }
+  .clicavel { cursor: pointer; }
+  .clicavel:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
+  .funil-linha.ativo-filtro, tr.ativo-filtro td { background: color-mix(in srgb, var(--gold) 16%, transparent); }
+
+  .barra-emp { display: flex; height: 16px; border-radius: 999px; overflow: hidden; background: var(--bg-elevated-2); border: 1px solid var(--border); min-width: 120px; }
+  .barra-emp .seg { font-size: 10px; font-weight: 700; color: #1b1712; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .barra-emp.barra-grande { height: 28px; margin: 4px 0 8px; }
+  .barra-emp.barra-grande .seg { font-size: 12.5px; }
+
+  .leg-linha { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+  .leg-chip {
+    display: inline-flex; align-items: center; font-family: var(--font-body); font-size: 12px; color: var(--text-secondary);
+    background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; cursor: pointer;
+  }
+  .leg-chip:hover, .leg-chip.ativo-filtro { border-color: var(--gold); color: var(--text); }
+
+  .barras-h .linha-b { display: grid; grid-template-columns: 170px 1fr 36px; gap: 10px; align-items: center; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; }
+  .barras-h .trilho { height: 10px; background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .barras-h .trilho span { display: block; height: 100%; }
+
   .relatorio-bloco .tabela-wrap { max-height: none; }
-  #relatorio-tabela-leads-wrap .tabela-wrap { max-height: 46vh; }
+  .tabela-fu.tabela-grupos th { white-space: normal; line-height: 1.25; vertical-align: bottom; }
+  .tabela-fu.tabela-grupos th, .tabela-fu.tabela-grupos td { padding: 7px 8px; }
+  #relatorio-tabela-leads .tabela-wrap { max-height: 46vh; }
+  .pill-sit { display: inline-block; font-size: 10.5px; font-weight: 700; color: #1b1712; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+  .filtro-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
   .chk-linha { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 12px; }
   .chk-linha input { width: auto; }
 
@@ -244,8 +283,10 @@
     main { padding: 14px; }
     .timeline { grid-template-columns: 1fr; }
     .coluna { flex-basis: 178px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
     .funil-linha { grid-template-columns: 1fr; gap: 4px; }
     .funil-num { text-align: left; }
+    .barras-h .linha-b { grid-template-columns: 110px 1fr 30px; }
     .page-title { font-size: 32px; }
     .resumo { gap: 18px 26px; }
     .resumo .item .valor { font-size: 26px; }
@@ -395,10 +436,7 @@
     <h2>Relatório de leads</h2>
     <div class="relatorio-periodo" id="relatorio-periodo"></div>
 
-    <div class="relatorio-grid">
-      <canvas id="relatorio-pizza" width="200" height="200"></canvas>
-      <div class="relatorio-legenda" id="relatorio-legenda"></div>
-    </div>
+    <div class="kpis" id="relatorio-kpis"></div>
 
     <div class="relatorio-bloco">
       <h3>Qualidade dos leads</h3>
@@ -407,11 +445,13 @@
 
     <div class="relatorio-bloco">
       <h3>Qualidade por anel / criativo de origem</h3>
+      <div class="relatorio-dica">Clique numa linha para ver só os leads daquele criativo na lista.</div>
       <div id="relatorio-origens"></div>
     </div>
 
     <div class="relatorio-bloco">
       <h3>Leads por semana de chegada</h3>
+      <div class="relatorio-dica">Clique numa semana para ver só os leads que chegaram nela.</div>
       <div id="relatorio-semanas"></div>
     </div>
 
@@ -421,13 +461,21 @@
     </div>
 
     <div class="relatorio-bloco">
-      <h3>Onde os leads estão travando</h3>
-      <div id="relatorio-travados"></div>
+      <h3>Onde os leads estão hoje</h3>
+      <div class="relatorio-grid">
+        <canvas id="relatorio-pizza" width="200" height="200"></canvas>
+        <div class="relatorio-legenda" id="relatorio-legenda"></div>
+      </div>
     </div>
 
     <div class="relatorio-bloco">
       <h3>Encerradas sem resposta</h3>
       <div id="relatorio-encerrados"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Onde os leads estão travando</h3>
+      <div id="relatorio-travados"></div>
     </div>
 
     <div class="relatorio-bloco">
@@ -440,8 +488,9 @@
       <div id="relatorio-sugestoes"></div>
     </div>
 
-    <div class="relatorio-bloco" id="relatorio-tabela-leads-wrap">
+    <div class="relatorio-bloco" id="relatorio-lista-topo">
       <h3>Lista de leads: chegada e tentativas de follow-up</h3>
+      <div id="relatorio-filtro-info"></div>
       <div id="relatorio-tabela-leads"></div>
     </div>
 
@@ -1652,24 +1701,49 @@ function excluirLeadAtual(){
 // ============================================================
 // RELATÓRIO DE LEADS
 // Pensado para ser mostrado ao tráfego pago: foco na qualidade dos leads.
+// Na tela é interativo: clicar num número, barra ou linha filtra a lista de leads lá embaixo.
 // ============================================================
 
 // Até onde o lead chegou no funil. Desenho 3D conta como "inspirações" (etapa opcional).
 // Cancelado conta só como "respondeu", porque não dá para saber até onde ele chegou.
 const RANK_ETAPA = { qualificacao: 0, entendimento: 1, inspiracoes: 2, desenho_3d: 2, cotacao_enviada: 3, venda_semi: 4, em_producao: 5, finalizadas: 5, cancelado: 1 };
 const DEGRAUS_FUNIL = [
-  { nome: 'Leads recebidos',                      min: 0 },
-  { nome: 'Responderam (saíram da Qualificação)', min: 1 },
-  { nome: 'Chegaram às inspirações',              min: 2 },
-  { nome: 'Chegaram à cotação',                   min: 3 },
-  { nome: 'Chegaram à venda semi-aprovada',       min: 4 },
-  { nome: 'Fecharam (produção ou entregue)',      min: 5 },
+  { nome: 'Leads recebidos',                      min: 0, cor: '#8a8275' },
+  { nome: 'Responderam (saíram da Qualificação)', min: 1, cor: '#6fa8d8' },
+  { nome: 'Conversa se desenvolveu (inspirações)', min: 2, cor: '#b08fcb' },
+  { nome: 'Chegaram à cotação',                   min: 3, cor: '#e0916b' },
+  { nome: 'Chegaram à venda semi-aprovada',       min: 4, cor: '#c4a77d' },
+  { nome: 'Fecharam (produção ou entregue)',      min: 5, cor: '#4fae7c' },
 ];
-const NOTA_QUALIDADE = 'Como ler: "responderam" são os leads que saíram da etapa Qualificação. "Nunca responderam" são os que foram encerrados após as 7 tentativas de contato sem sair da Qualificação. Quem ainda está dentro das tentativas não entra nessa conta.';
+
+// Os quatro grupos de "até onde a conversa foi". Mesmas cores em toda parte (tela e PDF).
+// Qualificação = nunca respondeu. Entendimento do projeto = respondeu só uma vez.
+// Juntos, são os leads em que a conversa não se desenvolveu.
+const GRUPOS = [
+  { id: 'sem_resposta', nome: 'Nunca responderam (Qualificação)',                  curto: 'Nunca responderam',       cor: '#c46a5e' },
+  { id: 'uma_resposta', nome: 'Responderam só uma vez (Entendimento do projeto)',  curto: 'Responderam só uma vez',  cor: '#e3b04b' },
+  { id: 'desenvolveu',  nome: 'Conversa se desenvolveu (inspirações em diante)',   curto: 'Conversa se desenvolveu', cor: '#4fae7c' },
+  { id: 'cancelado',    nome: 'Cancelado pelo cliente',                            curto: 'Cancelado',               cor: '#8a8275' },
+];
+const NOTA_QUALIDADE = 'Como ler: "nunca responderam" são os leads que seguem na etapa Qualificação. "Responderam só uma vez" são os que estão em Entendimento do projeto. Somados, são os leads em que a conversa não se desenvolveu. "Conversa se desenvolveu" são os que chegaram a receber inspirações ou foram além.';
+
+let filtroRelatorio = 'todos';
 
 function respondeu(l){ return l.etapa !== 'qualificacao'; }
 function rankDoLead(l){ return RANK_ETAPA[l.etapa] || 0; }
+function grupoDoLead(l){
+  if (l.etapa === 'cancelado') return 'cancelado';
+  if (l.etapa === 'qualificacao') return 'sem_resposta';
+  if (l.etapa === 'entendimento') return 'uma_resposta';
+  return 'desenvolveu';
+}
+function contarGrupos(lista){
+  const g = { sem_resposta: 0, uma_resposta: 0, desenvolveu: 0, cancelado: 0 };
+  lista.forEach(l => { g[grupoDoLead(l)]++; });
+  return g;
+}
 function porcento(a, b){ return b ? Math.round(a / b * 100) : 0; }
+function pl(n, singular, plural){ return n === 1 ? singular : plural; }
 function mediaBR(n){ return n.toFixed(1).replace('.', ','); }
 function formatarDataCurta(iso){
   if (!iso) return '';
@@ -1700,13 +1774,14 @@ function historicoTentativas(l){
   return { total: base + atual, slots };
 }
 
-// Em que pé o lead está, do ponto de vista da qualidade.
+// Em que pé o lead está, do ponto de vista da qualidade (texto e cor da etiqueta).
 function situacaoDoLead(l){
-  if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) return { id: 'venda', texto: 'Venda fechada' };
-  if (ehEncerradoSemSairDaQualificacao(l)) return { id: 'sem_resposta', texto: 'Sem resposta, encerrado' };
-  if (l.etapa === 'qualificacao') return { id: 'tentando', texto: (Number(l.followUp) || 0) > 0 ? 'Sem resposta, em follow-up' : 'Aguardando 1ª resposta' };
-  if (ehEncerrado(l)) return { id: 'encerrado', texto: l.etapa === 'cancelado' ? 'Cancelado pelo cliente' : 'Encerrado após conversa' };
-  return { id: 'ativo', texto: 'Respondeu, em andamento' };
+  if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) return { id: 'venda', texto: 'Venda fechada', cor: '#3d9d6b' };
+  if (ehEncerradoSemSairDaQualificacao(l)) return { id: 'sem_resposta', texto: 'Sem resposta, encerrado', cor: '#c46a5e' };
+  if (l.etapa === 'qualificacao') return { id: 'tentando', texto: (Number(l.followUp) || 0) > 0 ? 'Sem resposta, em follow-up' : 'Aguardando 1ª resposta', cor: '#d98f84' };
+  if (l.etapa === 'entendimento') return { id: 'uma_resposta', texto: ehEncerrado(l) ? 'Respondeu só uma vez, encerrado' : 'Respondeu só uma vez', cor: '#e3b04b' };
+  if (ehEncerrado(l)) return { id: 'encerrado', texto: l.etapa === 'cancelado' ? 'Cancelado pelo cliente' : 'Encerrado após conversa', cor: '#8a8275' };
+  return { id: 'ativo', texto: 'Conversa em andamento', cor: '#8cc8a8' };
 }
 
 function calcularRelatorio(){
@@ -1747,49 +1822,44 @@ function calcularRelatorio(){
   const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
   const pctSemQualificacao = porcento(encerradosSemQualificacao, totalLeads);
 
-  // Qualidade: funil acumulado e taxa de resposta
-  const degraus = DEGRAUS_FUNIL.map(d => ({ nome: d.nome, qtd: base.filter(l => rankDoLead(l) >= d.min).length }));
+  // Qualidade: funil acumulado e grupos "até onde a conversa foi"
+  const degraus = DEGRAUS_FUNIL.map(d => ({ nome: d.nome, min: d.min, cor: d.cor, qtd: base.filter(l => rankDoLead(l) >= d.min).length }));
   degraus.forEach((d, i) => {
     d.pctTotal = porcento(d.qtd, totalLeads);
     d.pctAnterior = i === 0 ? 100 : porcento(d.qtd, degraus[i - 1].qtd);
   });
+  const gTotal = contarGrupos(base);
+  const grupos = GRUPOS.map(g => ({ ...g, qtd: gTotal[g.id], pct: porcento(gTotal[g.id], totalLeads) }));
   const responderam = degraus[1].qtd;
-  const aindaTentando = base.filter(l => l.etapa === 'qualificacao' && !ehEncerradoSemSairDaQualificacao(l)).length;
-  const comDesfecho = responderam + encerradosSemQualificacao;
+  const naoDesenvolveu = gTotal.sem_resposta + gTotal.uma_resposta;
   const qualidade = {
-    degraus,
-    responderam,
-    pctResponderam: porcento(responderam, totalLeads),
-    semResposta: encerradosSemQualificacao,
-    pctSemResposta: pctSemQualificacao,
-    aindaTentando,
-    comDesfecho,
-    pctResponderamDesfecho: porcento(responderam, comDesfecho),
+    degraus, grupos, gTotal,
+    responderam, pctResponderam: porcento(responderam, totalLeads),
+    sem: gTotal.sem_resposta, uma: gTotal.uma_resposta, desenvolveu: gTotal.desenvolveu, cancelados: gTotal.cancelado,
+    naoDesenvolveu, pctNaoDesenvolveu: porcento(naoDesenvolveu, totalLeads),
+    semEncerrados: encerradosSemQualificacao,
+    aindaTentando: gTotal.sem_resposta - encerradosSemQualificacao,
   };
+
+  const kpis = [
+    { rot: 'Leads recebidos',              val: totalLeads,        sub: '',                                         cor: '#8a8275', f: 'todos' },
+    { rot: 'Responderam',                  val: responderam,       sub: `${qualidade.pctResponderam}%`,             cor: '#6fa8d8', f: 'rank:1' },
+    { rot: 'Conversa não se desenvolveu',  val: naoDesenvolveu,    sub: `${qualidade.pctNaoDesenvolveu}%`,          cor: '#c46a5e', f: 'grupo:parou' },
+    { rot: 'Chegaram à cotação',           val: degraus[3].qtd,    sub: `${degraus[3].pctTotal}%`,                  cor: '#e0916b', f: 'rank:3' },
+    { rot: 'Vendas fechadas',              val: degraus[5].qtd,    sub: `${degraus[5].pctTotal}%`,                  cor: '#4fae7c', f: 'rank:5' },
+  ];
 
   // Por anel / criativo de origem
   const mapaOrigem = {};
   base.forEach(l => {
     const nome = l.origem || ORIGEM_VAZIA;
-    const o = mapaOrigem[nome] || (mapaOrigem[nome] = { nome, qtd: 0, respondeu: 0, semResposta: 0, cotacao: 0, vendas: 0 });
+    const o = mapaOrigem[nome] || (mapaOrigem[nome] = { nome, qtd: 0, g: { sem_resposta: 0, uma_resposta: 0, desenvolveu: 0, cancelado: 0 }, cotacao: 0, vendas: 0 });
     o.qtd++;
-    if (respondeu(l)) o.respondeu++;
-    if (ehEncerradoSemSairDaQualificacao(l)) o.semResposta++;
+    o.g[grupoDoLead(l)]++;
     if (ETAPAS_CHEGARAM_COTACAO.includes(l.etapa)) o.cotacao++;
     if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) o.vendas++;
   });
   const porOrigem = Object.values(mapaOrigem).sort((a, b) => b.qtd - a.qtd);
-  const tabOrigem = {
-    cab: ['Anel / criativo', 'Leads', 'Responderam', 'Sem resposta (encerrados)', 'Chegaram à cotação', 'Vendas'],
-    linhas: porOrigem.map(o => [
-      o.nome,
-      `${o.qtd} (${porcento(o.qtd, total)}%)`,
-      `${o.respondeu} (${porcento(o.respondeu, o.qtd)}%)`,
-      `${o.semResposta} (${porcento(o.semResposta, o.qtd)}%)`,
-      `${o.cotacao} (${porcento(o.cotacao, o.qtd)}%)`,
-      String(o.vendas),
-    ]),
-  };
 
   // Por semana de chegada (semana começa na segunda)
   const mapaSem = {};
@@ -1797,26 +1867,19 @@ function calcularRelatorio(){
   base.forEach(l => {
     if (!l.dataEntrada) { semData++; return; }
     const ini = inicioSemana(l.dataEntrada);
-    const s = mapaSem[ini] || (mapaSem[ini] = { ini, qtd: 0, resp: 0, cot: 0 });
+    const s = mapaSem[ini] || (mapaSem[ini] = { ini, qtd: 0, g: { sem_resposta: 0, uma_resposta: 0, desenvolveu: 0, cancelado: 0 }, cot: 0 });
     s.qtd++;
-    if (respondeu(l)) s.resp++;
+    s.g[grupoDoLead(l)]++;
     if (rankDoLead(l) >= 3) s.cot++;
   });
   const semanas = [];
   const chavesSem = Object.keys(mapaSem).sort();
   if (chavesSem.length) {
     for (let s = chavesSem[0]; s <= chavesSem[chavesSem.length - 1]; s = somarDias(s, 7)) {
-      semanas.push(mapaSem[s] || { ini: s, qtd: 0, resp: 0, cot: 0 });
+      semanas.push(mapaSem[s] || { ini: s, qtd: 0, g: { sem_resposta: 0, uma_resposta: 0, desenvolveu: 0, cancelado: 0 }, cot: 0 });
     }
   }
   const mediaSemana = semanas.length ? (totalLeads - semData) / semanas.length : 0;
-  const tabSemanas = {
-    cab: ['Semana de chegada', 'Leads', 'Responderam', '% que respondeu', 'Chegaram à cotação'],
-    linhas: semanas.map(s => [
-      `${formatarDataCurta(s.ini)} a ${formatarDataCurta(somarDias(s.ini, 6))}`,
-      String(s.qtd), String(s.resp), `${porcento(s.resp, s.qtd)}%`, String(s.cot),
-    ]),
-  };
 
   // Follow-ups realizados
   let totalTent = 0, comTent = 0, somaLat = 0, nLat = 0;
@@ -1854,7 +1917,7 @@ function calcularRelatorio(){
       rot: k === '1' ? '1 tentativa' : k === '7' ? '7 ou mais' : `${k} tentativas`,
       qtd: distTent[k] || 0,
     })),
-    respondeuApos: Object.keys(respondeuApos).map(Number).sort((a, b) => a - b).map(n => ({ n, qtd: respondeuApos[n] })),
+    respondeuApos: Object.keys(respondeuApos).map(Number).sort((a, b) => a - b).map(n => ({ n, rot: `Responderam após a tentativa ${n}`, qtd: respondeuApos[n] })),
   };
 
   // Lista de leads: chegada, tentativas e datas de cada follow-up
@@ -1868,7 +1931,11 @@ function calcularRelatorio(){
         nomeTela: nomeLimpo || formatarTelefone(l.telefone) || 'Sem nome',
         chegada: l.dataEntrada || '',
         origem: l.origem || '',
+        origemNome: l.origem || ORIGEM_VAZIA,
+        semana: l.dataEntrada ? inicioSemana(l.dataEntrada) : '',
         etapa: (TODAS_ETAPAS.find(e => e.id === l.etapa) || { nome: l.etapa }).nome,
+        grupo: grupoDoLead(l),
+        rank: rankDoLead(l),
         total: h.total,
         datas: Array.from({ length: FOLLOWUP_MAX }, (_, i) => h.slots[i + 1] || ''),
         situacao: situacaoDoLead(l),
@@ -1883,22 +1950,22 @@ function calcularRelatorio(){
   if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em vendas semi-aprovadas ainda não fechadas, considere confirmar esses com prioridade.`);
   const semOrigem = mapaOrigem[ORIGEM_VAZIA] ? mapaOrigem[ORIGEM_VAZIA].qtd : 0;
   if (semOrigem > 0 && semOrigem < totalLeads) sugestoes.push(`${semOrigem} lead${semOrigem > 1 ? 's' : ''} sem origem registrada, preencher o anel de origem deixa a leitura por criativo mais confiável.`);
-  if (encerradosSemQualificacao > 0) sugestoes.push(`${encerradosSemQualificacao} de ${totalLeads} leads (${pctSemQualificacao}%) ${encerradosSemQualificacao === 1 ? 'nunca respondeu' : 'nunca responderam'}, mesmo após as 7 tentativas de contato. Esse é o principal ponto de qualidade para levar ao tráfego pago.`);
+  if (naoDesenvolveu > 0) sugestoes.push(`A conversa não se desenvolveu em ${naoDesenvolveu} de ${totalLeads} leads (${qualidade.pctNaoDesenvolveu}%): ${qualidade.sem} ${pl(qualidade.sem, 'nunca respondeu', 'nunca responderam')} e ${qualidade.uma} ${pl(qualidade.uma, 'respondeu', 'responderam')} só uma vez. Esse é o principal ponto de qualidade para levar ao tráfego pago.`);
   const origensComDado = porOrigem.filter(o => o.nome !== ORIGEM_VAZIA && o.nome !== ORIGEM_NAO_IDENTIFICADO && o.qtd >= 3);
   if (origensComDado.length >= 2) {
     const melhorCot = [...origensComDado].sort((a, b) => (b.cotacao / b.qtd) - (a.cotacao / a.qtd))[0];
     sugestoes.push(`"${melhorCot.nome}" tem a melhor taxa de chegada à cotação (${porcento(melhorCot.cotacao, melhorCot.qtd)}%) entre os criativos com 3 leads ou mais.`);
-    const porResposta = [...origensComDado].sort((a, b) => (b.respondeu / b.qtd) - (a.respondeu / a.qtd));
-    const melhorResp = porResposta[0], piorResp = porResposta[porResposta.length - 1];
-    if (porcento(melhorResp.respondeu, melhorResp.qtd) !== porcento(piorResp.respondeu, piorResp.qtd)) {
-      sugestoes.push(`Taxa de resposta por criativo: "${melhorResp.nome}" é a maior (${porcento(melhorResp.respondeu, melhorResp.qtd)}%) e "${piorResp.nome}" é a menor (${porcento(piorResp.respondeu, piorResp.qtd)}%), entre os criativos com 3 leads ou mais.`);
+    const porDesenv = [...origensComDado].sort((a, b) => (b.g.desenvolveu / b.qtd) - (a.g.desenvolveu / a.qtd));
+    const melhorD = porDesenv[0], piorD = porDesenv[porDesenv.length - 1];
+    if (porcento(melhorD.g.desenvolveu, melhorD.qtd) !== porcento(piorD.g.desenvolveu, piorD.qtd)) {
+      sugestoes.push(`Conversas desenvolvidas por criativo: "${melhorD.nome}" tem a maior taxa (${porcento(melhorD.g.desenvolveu, melhorD.qtd)}%) e "${piorD.nome}" a menor (${porcento(piorD.g.desenvolveu, piorD.qtd)}%), entre os criativos com 3 leads ou mais.`);
     }
   }
   if (sugestoes.length === 0) sugestoes.push('Sem pontos de atenção fora do comum nesse período.');
 
   return {
-    total, totalLeads, porEtapa, travados, porOrigem, tabOrigem, tabSemanas, semanas, mediaSemana, semData,
-    qualidade, followups, linhasLeads, sugestoes,
+    total, totalLeads, porEtapa, travados, origens: porOrigem, semanas, mediaSemana, semData,
+    qualidade, kpis, followups, linhasLeads, sugestoes,
     valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
     encerradosTotal, encerradosSemQualificacao, pctSemQualificacao,
   };
@@ -1906,12 +1973,12 @@ function calcularRelatorio(){
 
 function linhasQualidade(r){
   const q = r.qualidade;
-  const s = q.semResposta;
-  const ainda = q.aindaTentando === 0 ? '' : q.aindaTentando === 1 ? ' Outro 1 ainda está em tentativa de contato.' : ` Outros ${q.aindaTentando} ainda estão em tentativa de contato.`;
-  return [
-    `Taxa de resposta: ${q.responderam} de ${r.totalLeads} leads responderam (${q.pctResponderam}%). Considerando só os leads com desfecho (responderam ou terminaram as 7 tentativas sem resposta), a taxa é ${q.pctResponderamDesfecho}%.`,
-    `Nunca responderam: ${s} lead${s === 1 ? '' : 's'} (${q.pctSemResposta}%) ${s === 1 ? 'foi encerrado' : 'foram encerrados'} após as 7 tentativas sem sair da Qualificação.${ainda}`,
+  const out = [
+    `Taxa de resposta: ${q.responderam} de ${r.totalLeads} leads responderam (${q.pctResponderam}%).`,
+    `Conversa não se desenvolveu: ${q.naoDesenvolveu} de ${r.totalLeads} leads (${q.pctNaoDesenvolveu}%), sendo ${q.sem} ${pl(q.sem, 'que nunca respondeu', 'que nunca responderam')} (Qualificação) e ${q.uma} ${pl(q.uma, 'que respondeu', 'que responderam')} só uma vez (Entendimento do projeto).`,
   ];
+  if (q.sem > 0) out.push(`Dos que nunca responderam, ${q.semEncerrados} ${pl(q.semEncerrados, 'já foi encerrado', 'já foram encerrados')} após as 7 tentativas de contato e ${q.aindaTentando} ainda ${pl(q.aindaTentando, 'está', 'estão')} em tentativa.`);
+  return out;
 }
 
 function linhasFollowups(r, paraPDF){
@@ -1920,59 +1987,166 @@ function linhasFollowups(r, paraPDF){
   const out = [];
   out.push(`${f.totalTentativas} tentativas de follow-up registradas, em ${f.comTentativa} leads (média de ${mediaBR(f.media)} por lead).`);
   if (f.latenciaMedia !== null) out.push(`O primeiro follow-up foi feito, em média, ${mediaBR(f.latenciaMedia)} dia(s) depois da chegada do lead (${f.nLat} leads com as duas datas registradas).`);
-  const dist = f.distribuicao.filter(d => d.qtd > 0).map(d => `${d.rot}: ${d.qtd}`).join('; ');
-  if (dist) out.push(`Leads por total de tentativas recebidas: ${dist}.`);
-  if (f.respondeuApos.length) {
-    out.push(`Leads que responderam depois de follow-up: ${f.respondeuApos.map(x => `após a tentativa ${x.n}: ${x.qtd}`).join('; ')}.`);
-  } else if (!paraPDF) {
+  if (!f.respondeuApos.length && !paraPDF) {
     out.push('Ainda não há leads com resposta registrada depois de follow-up. Esse dado aparece quando vc usa o botão "Cliente respondeu" ou move o lead para fora da Qualificação.');
   }
   return out;
 }
 
-function htmlTabela(cab, linhas, vazio){
-  if (!linhas.length) return `<div class="relatorio-linha">${vazio || 'Sem dados nesse período.'}</div>`;
-  const cel = (c, i) => `<td${i === 0 ? ' class="nome-col"' : ''}>${c === '' ? '·' : esc(c)}</td>`;
-  return `<div class="tabela-wrap"><table class="tabela-fu"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
-    linhas.map(l => `<tr>${l.map(cel).join('')}</tr>`).join('')
-  }</tbody></table></div>`;
+// ---------- Filtro interativo da lista de leads ----------
+function predicadoFiltro(f){
+  const i = f.indexOf(':');
+  const tipo = i < 0 ? f : f.slice(0, i);
+  const v = i < 0 ? '' : f.slice(i + 1);
+  if (tipo === 'grupo') return v === 'parou' ? (x => x.grupo === 'sem_resposta' || x.grupo === 'uma_resposta') : (x => x.grupo === v);
+  if (tipo === 'rank') return x => x.rank >= Number(v);
+  if (tipo === 'origem') return x => x.origemNome === v;
+  if (tipo === 'semana') return x => x.semana === v;
+  return () => true;
+}
+function nomeFiltro(f){
+  const i = f.indexOf(':');
+  const tipo = i < 0 ? f : f.slice(0, i);
+  const v = i < 0 ? '' : f.slice(i + 1);
+  if (tipo === 'grupo') return v === 'parou' ? 'Conversa não se desenvolveu (nunca responderam + responderam só uma vez)' : (GRUPOS.find(g => g.id === v) || { nome: v }).nome;
+  if (tipo === 'rank') return (DEGRAUS_FUNIL.find(d => d.min === Number(v)) || { nome: v }).nome;
+  if (tipo === 'origem') return `Origem: ${v}`;
+  if (tipo === 'semana') return `Semana de ${formatarDataCurta(v)} a ${formatarDataCurta(somarDias(v, 6))}`;
+  return '';
+}
+function aplicarFiltroRelatorio(f){
+  if (f === 'rank:0') f = 'todos';
+  filtroRelatorio = (f === filtroRelatorio && f !== 'todos') ? 'todos' : f;
+  renderizarListaRelatorio();
+  const alvo = document.getElementById('relatorio-lista-topo');
+  if (filtroRelatorio !== 'todos' && alvo && alvo.scrollIntoView) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderizarListaRelatorio(){
+  const r = ultimoRelatorio;
+  if (!r) return;
+  const linhas = r.linhasLeads.filter(predicadoFiltro(filtroRelatorio));
+  const filtrando = filtroRelatorio !== 'todos';
+
+  document.getElementById('relatorio-filtro-info').innerHTML = `
+    <div class="filtro-info">
+      <span>Mostrando ${linhas.length} de ${r.linhasLeads.length} lead${r.linhasLeads.length === 1 ? '' : 's'}${filtrando ? `. Filtro: <strong>${esc(nomeFiltro(filtroRelatorio))}</strong>` : ''}</span>
+      ${filtrando ? '<button type="button" class="btn-text" data-filtro="todos">✕ Mostrar todos</button>' : '<span class="relatorio-dica">Clique nos números, barras e linhas acima para filtrar esta lista.</span>'}
+    </div>`;
+
+  const cab = ['Lead', 'Chegada', 'Origem', 'Etapa atual', 'Tentativas', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Situação'];
+  const corpo = linhas.map(l => `<tr>
+    <td class="nome-col">${esc(l.nomeTela)}</td><td>${formatarDataCurta(l.chegada)}</td><td>${esc(l.origem || 'Sem origem')}</td><td>${esc(l.etapa)}</td><td>${l.total}</td>
+    ${l.datas.map(d => d ? `<td>${formatarDataCurta(d)}</td>` : '<td class="vazio-col">·</td>').join('')}
+    <td><span class="pill-sit" style="background:${l.situacao.cor};">${esc(l.situacao.texto)}</span></td>
+  </tr>`).join('');
+  document.getElementById('relatorio-tabela-leads').innerHTML = linhas.length
+    ? `<div class="tabela-wrap"><table class="tabela-fu"><thead><tr>${cab.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${corpo}</tbody></table></div>`
+    : '<div class="relatorio-linha">Nenhum lead nesse filtro.</div>';
+
+  document.querySelectorAll('#modal-relatorio-fundo [data-filtro]').forEach(el => {
+    el.classList.toggle('ativo-filtro', el.dataset.filtro === filtroRelatorio && filtroRelatorio !== 'todos');
+  });
+}
+
+// ---------- Peças visuais da tela ----------
+function barraEmpilhada(g, qtd, grande){
+  const segs = GRUPOS.filter(x => (g[x.id] || 0) > 0).map(x =>
+    `<span class="seg" style="width:${g[x.id] / qtd * 100}%;background:${x.cor};" title="${esc(x.curto)}: ${g[x.id]} (${porcento(g[x.id], qtd)}%)">${g[x.id]}</span>`).join('');
+  return `<span class="barra-emp${grande ? ' barra-grande' : ''}">${segs}</span>`;
+}
+
+function barraH(rot, qtd, max, cor){
+  return `<div class="linha-b"><span>${esc(rot)}</span><span class="trilho"><span style="width:${max ? qtd / max * 100 : 0}%;background:${cor};"></span></span><span>${qtd}</span></div>`;
+}
+
+// Tabela por origem ou por semana: uma coluna por grupo (cabeçalho colorido faz de legenda) e uma barra empilhada.
+function htmlTabelaGrupos(linhas, rotuloPrimeira, vazio){
+  if (!linhas.length) return `<div class="relatorio-linha">${vazio}</div>`;
+  const gruposCol = GRUPOS.slice(0, 3);
+  const cab = `<tr><th>${rotuloPrimeira}</th><th>Leads</th>${
+    gruposCol.map(g => `<th><span class="ponto-leg" style="background:${g.cor};"></span>${g.curto}</th>`).join('')
+  }<th>Chegaram à cotação</th>${linhas[0].vendas !== undefined ? '<th>Vendas</th>' : ''}<th>Distribuição</th></tr>`;
+  const corpo = linhas.map(l => `<tr class="clicavel" data-filtro="${esc(l.filtro)}" title="Clique para ver só esses leads na lista">
+    <td class="nome-col">${esc(l.rot)}</td><td>${l.qtd}</td>
+    ${gruposCol.map(g => `<td>${l.g[g.id]} (${porcento(l.g[g.id], l.qtd)}%)</td>`).join('')}
+    <td>${l.cot} (${porcento(l.cot, l.qtd)}%)</td>${l.vendas !== undefined ? `<td>${l.vendas}</td>` : ''}
+    <td style="min-width:110px;">${l.qtd ? barraEmpilhada(l.g, l.qtd, false) : '<span class="vazio-col">sem leads</span>'}</td>
+  </tr>`).join('');
+  return `<div class="tabela-wrap"><table class="tabela-fu tabela-grupos"><thead>${cab}</thead><tbody>${corpo}</tbody></table></div>`;
 }
 
 function renderizarRelatorioNaTela(r){
-  const total = r.total;
-  desenharPizza(r.porEtapa, total);
+  const q = r.qualidade;
+  filtroRelatorio = 'todos';
 
-  document.getElementById('relatorio-legenda').innerHTML = r.porEtapa
-    .filter(p => p.qtd > 0)
-    .map(p => `<div class="legenda-item"><span class="legenda-cor" style="background:var(--fase-${p.etapa.fase});"></span>${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, total)}%)</div>`)
-    .join('');
+  // Números principais
+  document.getElementById('relatorio-kpis').innerHTML = r.kpis.map(k => `
+    <button type="button" class="kpi" style="--cor:${k.cor};" data-filtro="${k.f}" title="Clique para ver esses leads na lista">
+      <div><span class="kpi-valor">${k.val}</span>${k.sub ? `<span class="kpi-sub">${k.sub}</span>` : ''}</div>
+      <div class="kpi-rot">${k.rot}</div>
+    </button>`).join('');
 
+  // Qualidade: funil + até onde a conversa foi
+  const chips = q.grupos.filter(g => g.id !== 'cancelado' || g.qtd > 0).map(g =>
+    `<button type="button" class="leg-chip" data-filtro="grupo:${g.id}" title="Clique para ver esses leads na lista"><span class="ponto-leg" style="background:${g.cor};"></span>${g.nome}: ${g.qtd} (${g.pct}%)</button>`).join('')
+    + `<button type="button" class="leg-chip" data-filtro="grupo:parou" title="Clique para ver esses leads na lista"><span class="ponto-leg" style="background:linear-gradient(90deg,${GRUPOS[0].cor} 50%,${GRUPOS[1].cor} 50%);"></span><strong>Conversa não se desenvolveu: ${q.naoDesenvolveu} (${q.pctNaoDesenvolveu}%)</strong></button>`;
   document.getElementById('relatorio-qualidade').innerHTML =
-    r.qualidade.degraus.map((d, i) => `
-      <div class="funil-linha">
-        <span>${d.nome}</span>
-        <span class="funil-barra"><span style="width:${d.pctTotal}%;"></span></span>
+    '<div class="relatorio-dica">Funil: de cada etapa para a próxima. Clique numa linha para ver esses leads na lista.</div>'
+    + q.degraus.map((d, i) => `
+      <div class="funil-linha clicavel" data-filtro="rank:${d.min}" title="Clique para ver esses leads na lista">
+        <span><span class="ponto-leg" style="background:${d.cor};"></span>${d.nome}</span>
+        <span class="funil-barra"><span style="width:${d.pctTotal}%;background:${d.cor};"></span></span>
         <span class="funil-num">${d.qtd} (${d.pctTotal}%)${i > 0 ? `, ${d.pctAnterior}% da etapa anterior` : ''}</span>
       </div>`).join('')
+    + '<div class="relatorio-dica" style="margin-top:14px;">Até onde a conversa foi</div>'
+    + (r.totalLeads ? barraEmpilhada(q.gTotal, r.totalLeads, true) : '')
+    + `<div class="leg-linha">${chips}</div>`
     + linhasQualidade(r).map(t => `<div class="relatorio-linha">${t}</div>`).join('')
     + `<div class="relatorio-nota">${NOTA_QUALIDADE}</div>`;
 
-  document.getElementById('relatorio-origens').innerHTML = htmlTabela(r.tabOrigem.cab, r.tabOrigem.linhas, 'Nenhum lead nesse período.');
+  // Por criativo
+  document.getElementById('relatorio-origens').innerHTML = htmlTabelaGrupos(
+    r.origens.map(o => ({ rot: o.nome, filtro: `origem:${o.nome}`, qtd: o.qtd, g: o.g, cot: o.cotacao, vendas: o.vendas })),
+    'Anel / criativo', 'Nenhum lead nesse período.');
 
+  // Por semana
   document.getElementById('relatorio-semanas').innerHTML =
-    htmlTabela(r.tabSemanas.cab, r.tabSemanas.linhas, 'Nenhum lead com data de entrada nesse período.')
+    htmlTabelaGrupos(
+      r.semanas.map(s => ({ rot: `${formatarDataCurta(s.ini)} a ${formatarDataCurta(somarDias(s.ini, 6))}`, filtro: `semana:${s.ini}`, qtd: s.qtd, g: s.g, cot: s.cot })),
+      'Semana de chegada', 'Nenhum lead com data de entrada nesse período.')
     + (r.semanas.length ? `<div class="relatorio-linha">Média de ${mediaBR(r.mediaSemana)} leads por semana${r.semData ? `. ${r.semData} lead${r.semData > 1 ? 's' : ''} sem data de entrada ficou${r.semData > 1 ? 'ram' : ''} de fora dessa tabela` : ''}.</div>` : '');
 
-  document.getElementById('relatorio-followups').innerHTML = linhasFollowups(r, false).map(t => `<div class="relatorio-linha">${t}</div>`).join('');
+  // Follow-ups
+  const f = r.followups;
+  let htmlFU = linhasFollowups(r, false).map(t => `<div class="relatorio-linha">${t}</div>`).join('');
+  if (f.comTentativa) {
+    const max = Math.max(1, ...f.distribuicao.map(d => d.qtd));
+    htmlFU += '<div class="relatorio-dica" style="margin-top:10px;">Leads por total de tentativas recebidas</div><div class="barras-h">'
+      + f.distribuicao.map((d, i) => barraH(d.rot, d.qtd, max, corFollowup(i + 1))).join('') + '</div>';
+    if (f.respondeuApos.length) {
+      const maxR = Math.max(1, ...f.respondeuApos.map(d => d.qtd));
+      htmlFU += '<div class="relatorio-dica" style="margin-top:10px;">Leads que responderam depois de follow-up</div><div class="barras-h">'
+        + f.respondeuApos.map(d => barraH(d.rot, d.qtd, maxR, '#4fae7c')).join('') + '</div>';
+    }
+  }
+  document.getElementById('relatorio-followups').innerHTML = htmlFU;
 
-  document.getElementById('relatorio-travados').innerHTML = r.travados.length
-    ? r.travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
-    : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
+  // Onde estão hoje
+  desenharPizza(r.porEtapa, r.total);
+  document.getElementById('relatorio-legenda').innerHTML = r.porEtapa
+    .filter(p => p.qtd > 0)
+    .map(p => `<div class="legenda-item"><span class="legenda-cor" style="background:var(--fase-${p.etapa.fase});"></span>${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, r.total)}%)</div>`)
+    .join('');
 
   document.getElementById('relatorio-encerrados').innerHTML = `
     <div class="relatorio-linha">Leads encerrados sem sair da Qualificação: ${r.encerradosSemQualificacao} (de ${r.encerradosTotal} encerrados no total)</div>
     <div class="relatorio-linha">Equivale a ${r.pctSemQualificacao}% dos ${r.totalLeads} leads do período. Base para conversar com o tráfego pago.</div>
   `;
+
+  document.getElementById('relatorio-travados').innerHTML = r.travados.length
+    ? r.travados.map(t => `<div class="relatorio-linha"><span class="ponto-leg" style="background:var(--fase-${t.etapa.fase});"></span>${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
+    : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
 
   document.getElementById('relatorio-valores').innerHTML = `
     <div class="relatorio-linha">Em cotação enviada: ${formatarReais(r.valorCotacao)}</div>
@@ -1983,12 +2157,7 @@ function renderizarRelatorioNaTela(r){
 
   document.getElementById('relatorio-sugestoes').innerHTML = r.sugestoes.map(s => `<div class="relatorio-linha">${s}</div>`).join('');
 
-  const cabLeads = ['Lead', 'Chegada', 'Origem', 'Etapa atual', 'Tentativas', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Situação'];
-  const linhasTabela = r.linhasLeads.map(l => [
-    l.nomeTela, formatarDataCurta(l.chegada), l.origem || 'Sem origem', l.etapa, String(l.total),
-    ...l.datas.map(formatarDataCurta), l.situacao.texto,
-  ]);
-  document.getElementById('relatorio-tabela-leads').innerHTML = htmlTabela(cabLeads, linhasTabela, 'Nenhum lead nesse período.');
+  renderizarListaRelatorio();
 }
 
 function abrirRelatorio(){
@@ -2034,11 +2203,17 @@ function desenharPizza(porEtapa, total){
 function baixarRelatorioPDF(){
   if (!ultimoRelatorio || !window.jspdf) return;
   const r = ultimoRelatorio;
+  const q = r.qualidade;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   doc.setLineHeightFactor(1.35);
   const margem = 40, largura = 515;
   let y = margem;
+
+  const rgb = hex => /^#[0-9a-f]{6}$/i.test(hex || '') ? [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)) : [153, 153, 153];
+  const claro = c => c.map(v => Math.round(v + (255 - v) * 0.55));
+  const preencher = hex => doc.setFillColor(...rgb(hex));
+  const corFase = fase => getComputedStyle(document.documentElement).getPropertyValue('--fase-' + fase).trim();
 
   const garantir = altura => { if (y + altura > 790) { doc.addPage('a4', 'portrait'); y = margem; } };
   const secao = txt => {
@@ -2059,6 +2234,64 @@ function baixarRelatorioPDF(){
     y += altura;
     doc.setTextColor(0);
   };
+
+  // Barra empilhada pelos grupos (nunca responderam, só uma vez, desenvolveu, cancelado)
+  const barraEmp = (x, yTop, w, h, g, tot, comNumeros) => {
+    doc.setFillColor(230, 226, 220);
+    doc.rect(x, yTop, w, h, 'F');
+    if (!tot) return;
+    let cx = x;
+    GRUPOS.forEach(gr => {
+      const n = g[gr.id] || 0;
+      if (!n) return;
+      const sw = w * n / tot;
+      preencher(gr.cor);
+      doc.rect(cx, yTop, sw, h, 'F');
+      if (comNumeros && sw > 14) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(30);
+        doc.text(String(n), cx + sw / 2, yTop + h / 2 + 2.8, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+      }
+      cx += sw;
+    });
+  };
+
+  // Legenda em linha: quadradinho colorido + texto
+  const legenda = itens => {
+    garantir(16);
+    doc.setFontSize(8); doc.setTextColor(60);
+    let x = margem;
+    itens.forEach(it => {
+      const w = doc.getTextWidth(it.texto) + 22;
+      if (x + w > margem + largura) { x = margem; y += 13; garantir(14); }
+      preencher(it.cor);
+      doc.rect(x, y - 7, 8, 8, 'F');
+      doc.text(it.texto, x + 12, y);
+      x += w;
+    });
+    doc.setTextColor(0);
+    y += 14;
+  };
+  const itensLegendaGrupos = comNumeros => GRUPOS
+    .filter(g => g.id !== 'cancelado' || q.cancelados > 0)
+    .map(g => ({ cor: g.cor, texto: comNumeros ? `${g.nome}: ${q.gTotal[g.id]} (${porcento(q.gTotal[g.id], r.totalLeads)}%)` : g.curto }));
+
+  // Barras horizontais simples (follow-ups)
+  const barrasH = (itens, max) => {
+    itens.forEach(it => {
+      garantir(15);
+      doc.setFontSize(8.5); doc.setTextColor(40);
+      doc.text(it.rot, margem, y);
+      doc.setFillColor(230, 226, 220); doc.rect(margem + 175, y - 7, 200, 8, 'F');
+      preencher(it.cor);
+      if (it.qtd > 0) doc.rect(margem + 175, y - 7, Math.max(2, 200 * it.qtd / max), 8, 'F');
+      doc.setTextColor(0);
+      doc.text(String(it.qtd), margem + 383, y);
+      y += 14;
+    });
+    y += 2;
+  };
+
   // Tabela com cabeçalho repetido a cada página. Sem a biblioteca de tabela, cai para linhas de texto.
   const tabela = (cab, linhas, extra = {}) => {
     if (!linhas.length) { par('Sem dados nesse período.'); return; }
@@ -2069,7 +2302,7 @@ function baixarRelatorioPDF(){
         head: [cab], body: corpo, startY: y,
         margin: { left: margem, right: margem, top: 40, bottom: 40 },
         styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', textColor: 30 },
-        headStyles: { fillColor: [43, 38, 33], textColor: 255, fontStyle: 'bold' },
+        headStyles: { fillColor: [43, 38, 33], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
         alternateRowStyles: { fillColor: [246, 244, 240] },
         ...extra,
       });
@@ -2080,59 +2313,136 @@ function baixarRelatorioPDF(){
     }
   };
 
-  // Cabeçalho
+  // Tabela por origem ou por semana, com cabeçalhos coloridos e barra empilhada na última coluna
+  const tabelaGrupos = (primeira, linhas, larguras, comVendas) => {
+    const nGrupos = 3;
+    const cab = [primeira, 'Leads', ...GRUPOS.slice(0, nGrupos).map(g => g.curto), 'Chegaram à cotação', ...(comVendas ? ['Vendas'] : []), 'Distribuição'];
+    const corpo = linhas.map(l => [
+      l.rot, String(l.qtd),
+      ...GRUPOS.slice(0, nGrupos).map(g => `${l.g[g.id]} (${porcento(l.g[g.id], l.qtd)}%)`),
+      `${l.cot} (${porcento(l.cot, l.qtd)}%)`,
+      ...(comVendas ? [String(l.vendas)] : []),
+      ' ',
+    ]);
+    const colBarra = cab.length - 1;
+    const estilos = {};
+    larguras.forEach((w, i) => { estilos[i] = { cellWidth: w }; });
+    tabela(cab, corpo, {
+      columnStyles: estilos,
+      didParseCell: d => {
+        if (d.section === 'head' && d.column.index >= 2 && d.column.index < 2 + nGrupos) {
+          d.cell.styles.fillColor = rgb(GRUPOS[d.column.index - 2].cor);
+          d.cell.styles.textColor = 30;
+        }
+      },
+      didDrawCell: d => {
+        if (d.section === 'body' && d.column.index === colBarra) {
+          const l = linhas[d.row.index];
+          if (l) barraEmp(d.cell.x + 3, d.cell.y + d.cell.height / 2 - 4, d.cell.width - 6, 8, l.g, l.qtd, false);
+        }
+      },
+    });
+  };
+
+  // ---------- Cabeçalho ----------
   const [aa, mm, dd] = hojeISO().split('-');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(0);
   doc.text('Relatório de Leads - Spielvogel Joias', margem, y); y += 18;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`${document.getElementById('relatorio-periodo').textContent}  |  Gerado em ${dd}/${mm}/${aa}`, margem, y); y += 20;
+  doc.text(`${document.getElementById('relatorio-periodo').textContent}  |  Gerado em ${dd}/${mm}/${aa}`, margem, y); y += 18;
 
-  // Onde estão hoje
-  const canvas = document.getElementById('relatorio-pizza');
-  doc.addImage(canvas.toDataURL('image/png'), 'PNG', margem, y, 130, 130);
-  let yLegenda = y;
+  // ---------- Números principais ----------
+  const wk = (largura - 4 * 6) / 5;
+  r.kpis.forEach((k, i) => {
+    const x = margem + i * (wk + 6);
+    doc.setFillColor(245, 242, 236); doc.rect(x, y, wk, 54, 'F');
+    preencher(k.cor); doc.rect(x, y, 4, 54, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(19); doc.setTextColor(30);
+    const val = String(k.val);
+    doc.text(val, x + 11, y + 24);
+    if (k.sub) { const tw = doc.getTextWidth(val); doc.setFontSize(9); doc.text(k.sub, x + 11 + tw + 4, y + 24); }
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(90);
+    doc.text(doc.splitTextToSize(k.rot, wk - 16), x + 11, y + 38);
+  });
+  doc.setTextColor(0);
+  y += 66;
+
+  // ---------- Qualidade ----------
+  secao('Qualidade dos leads');
   doc.setFontSize(9);
+  q.degraus.forEach((d, i) => {
+    garantir(16);
+    doc.setTextColor(0); doc.setFontSize(9);
+    preencher(d.cor); doc.rect(margem, y - 7, 8, 8, 'F');
+    doc.text(d.nome, margem + 13, y);
+    doc.setFillColor(230, 226, 220); doc.rect(margem + 225, y - 7, 120, 8, 'F');
+    preencher(d.cor); doc.rect(margem + 225, y - 7, Math.max(1, 120 * d.pctTotal / 100), 8, 'F');
+    doc.text(`${d.qtd} (${d.pctTotal}%)${i > 0 ? `, ${d.pctAnterior}% da etapa anterior` : ''}`, margem + 355, y);
+    y += 15;
+  });
+  y += 6;
+  garantir(60);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(0);
+  doc.text('Até onde a conversa foi', margem, y); y += 8;
+  doc.setFont('helvetica', 'normal');
+  barraEmp(margem, y, largura, 16, q.gTotal, r.totalLeads, true);
+  y += 28;
+  legenda(itensLegendaGrupos(true));
+  y += 2;
+  linhasQualidade(r).forEach(t => par(t));
+  par(NOTA_QUALIDADE, 8, true);
+
+  // ---------- Por criativo ----------
+  secao('Qualidade por anel / criativo de origem');
+  legenda(itensLegendaGrupos(false));
+  tabelaGrupos('Anel / criativo',
+    r.origens.map(o => ({ rot: o.nome, qtd: o.qtd, g: o.g, cot: o.cotacao, vendas: o.vendas })),
+    [76, 32, 64, 64, 64, 58, 34, 121], true);
+
+  // ---------- Por semana ----------
+  secao('Leads por semana de chegada');
+  tabelaGrupos('Semana de chegada',
+    r.semanas.map(s => ({ rot: `${formatarDataCurta(s.ini)} a ${formatarDataCurta(somarDias(s.ini, 6))}`, qtd: s.qtd, g: s.g, cot: s.cot })),
+    [92, 32, 64, 64, 64, 58, 139], false);
+  if (r.semanas.length) par(`Média de ${mediaBR(r.mediaSemana)} leads por semana.`);
+
+  // ---------- Follow-ups ----------
+  secao('Follow-ups realizados');
+  linhasFollowups(r, true).forEach(t => par(t));
+  const f = r.followups;
+  if (f.comTentativa) {
+    garantir(30);
+    doc.setFontSize(8.5); doc.setTextColor(110);
+    doc.text('Leads por total de tentativas recebidas', margem, y); y += 12;
+    barrasH(f.distribuicao.map((d, i) => ({ rot: d.rot, qtd: d.qtd, cor: CORES_FOLLOWUP[i % CORES_FOLLOWUP.length] })), Math.max(1, ...f.distribuicao.map(d => d.qtd)));
+    if (f.respondeuApos.length) {
+      garantir(30);
+      doc.setFontSize(8.5); doc.setTextColor(110);
+      doc.text('Leads que responderam depois de follow-up', margem, y); y += 12;
+      barrasH(f.respondeuApos.map(d => ({ rot: d.rot, qtd: d.qtd, cor: '#4fae7c' })), Math.max(1, ...f.respondeuApos.map(d => d.qtd)));
+    }
+    doc.setTextColor(0);
+  }
+
+  // ---------- Onde estão hoje ----------
+  secao('Onde os leads estão hoje');
+  garantir(150);
+  doc.addImage(document.getElementById('relatorio-pizza').toDataURL('image/png'), 'PNG', margem, y, 130, 130);
+  let yLegenda = y;
+  doc.setFontSize(9); doc.setTextColor(0);
   r.porEtapa.filter(p => p.qtd > 0).forEach(p => {
-    doc.text(`${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, r.total)}%)`, margem + 150, yLegenda + 10);
+    preencher(corFase(p.etapa.fase)); doc.rect(margem + 150, yLegenda + 2, 8, 8, 'F');
+    doc.text(`${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, r.total)}%)`, margem + 164, yLegenda + 10);
     yLegenda += 14;
   });
   y += Math.max(140, yLegenda - y + 6);
 
-  // Qualidade
-  secao('Qualidade dos leads');
-  doc.setFontSize(9);
-  r.qualidade.degraus.forEach((d, i) => {
-    garantir(16);
-    doc.setTextColor(0);
-    doc.text(d.nome, margem, y);
-    doc.setFillColor(230, 226, 220); doc.rect(margem + 220, y - 7, 120, 8, 'F');
-    doc.setFillColor(176, 138, 58); doc.rect(margem + 220, y - 7, Math.max(1, 120 * d.pctTotal / 100), 8, 'F');
-    doc.text(`${d.qtd} (${d.pctTotal}%)${i > 0 ? `, ${d.pctAnterior}% da etapa anterior` : ''}`, margem + 350, y);
-    y += 15;
-  });
-  y += 4;
-  linhasQualidade(r).forEach(t => par(t));
-  par(NOTA_QUALIDADE, 8, true);
-
-  // Origem
-  secao('Qualidade por anel / criativo de origem');
-  tabela(r.tabOrigem.cab, r.tabOrigem.linhas);
-
-  // Semanas
-  secao('Leads por semana de chegada');
-  tabela(r.tabSemanas.cab, r.tabSemanas.linhas);
-  if (r.semanas.length) par(`Média de ${mediaBR(r.mediaSemana)} leads por semana.`);
-
-  // Follow-ups
-  secao('Follow-ups realizados');
-  linhasFollowups(r, true).forEach(t => par(t));
-
-  // Encerradas sem resposta (sempre entra: é a base da conversa com o tráfego pago)
+  // ---------- Encerradas sem resposta (sempre entra: é a base da conversa com o tráfego pago) ----------
   secao('Encerradas sem resposta');
   par(`Leads encerrados sem sair da Qualificação: ${r.encerradosSemQualificacao} (de ${r.encerradosTotal} encerrados no total)`);
   par(`Equivale a ${r.pctSemQualificacao}% dos ${r.totalLeads} leads do período`);
 
-  // Parte de uso interno: só entra se a caixa estiver marcada
+  // ---------- Parte de uso interno: só entra se a caixa estiver marcada ----------
   if (document.getElementById('relatorio-incluir-interno').checked) {
     secao('Onde os leads estão travando');
     if (r.travados.length === 0) par('Nada acumulado fora do comum nesse período.');
@@ -2148,7 +2458,7 @@ function baixarRelatorioPDF(){
     r.sugestoes.forEach(s => par(s));
   }
 
-  // Lista de leads em página deitada (telefone não entra no relatório)
+  // ---------- Lista de leads em página deitada (telefone não entra no relatório) ----------
   doc.addPage('a4', 'landscape');
   y = 40;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0);
@@ -2157,8 +2467,7 @@ function baixarRelatorioPDF(){
   y += 12;
   const cabLeads = ['Lead', 'Chegada', 'Origem', 'Etapa atual', 'Tent.', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Situação'];
   const linhasLeads = r.linhasLeads.map(l => [
-    l.nome,
-    formatarDataCurta(l.chegada), l.origem || 'Sem origem', l.etapa, String(l.total),
+    l.nome, formatarDataCurta(l.chegada), l.origem || 'Sem origem', l.etapa, String(l.total),
     ...l.datas.map(formatarDataCurta), l.situacao.texto,
   ]);
   const colSituacao = cabLeads.length - 1;
@@ -2168,13 +2477,12 @@ function baixarRelatorioPDF(){
     columnStyles: { 0: { cellWidth: 110 }, 1: { cellWidth: 46 }, 2: { cellWidth: 66 }, 3: { cellWidth: 100 }, 4: { cellWidth: 30, halign: 'center' } },
     didParseCell: d => {
       if (d.section !== 'body' || d.column.index !== colSituacao) return;
-      const t = String(d.cell.raw);
-      if (t.startsWith('Sem resposta')) d.cell.styles.textColor = [176, 60, 50];
-      else if (t === 'Venda fechada') d.cell.styles.textColor = [40, 130, 85];
+      const l = r.linhasLeads[d.row.index];
+      if (l) d.cell.styles.fillColor = claro(rgb(l.situacao.cor));
     },
   });
 
-  // Rodapé com número de página
+  // ---------- Rodapé com número de página ----------
   const paginas = doc.getNumberOfPages();
   for (let i = 1; i <= paginas; i++) {
     doc.setPage(i);
@@ -2330,6 +2638,10 @@ document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
   atualizarRotuloFiltro();
 });
 document.getElementById('btn-gerar-relatorio').addEventListener('click', abrirRelatorio);
+document.getElementById('modal-relatorio-fundo').addEventListener('click', (e) => {
+  const alvo = e.target.closest('[data-filtro]');
+  if (alvo) aplicarFiltroRelatorio(alvo.dataset.filtro);
+});
 
 iniciarLeads();
 iniciarConfigFollowup();
