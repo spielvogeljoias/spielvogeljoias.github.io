@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
   :root {
@@ -153,7 +154,7 @@
   .secao-cards .card { width: 210px; }
 
   /* ---------- Modal de relatório ---------- */
-  .modal-relatorio { max-width: 580px; }
+  .modal-relatorio { max-width: 860px; }
   .relatorio-periodo { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
   .relatorio-grid { display: flex; gap: 20px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
   .relatorio-legenda { display: flex; flex-direction: column; gap: 5px; font-size: 12px; flex: 1; min-width: 170px; }
@@ -162,6 +163,16 @@
   .relatorio-bloco { margin-bottom: 16px; }
   .relatorio-bloco h3 { font-size: 20px; color: var(--text); margin: 0 0 8px; font-family: var(--font-display); font-weight: 700; }
   .relatorio-linha { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.5; }
+
+  .funil-linha { display: grid; grid-template-columns: 230px 1fr 230px; gap: 12px; align-items: center; margin-bottom: 7px; font-size: 12.5px; color: var(--text-secondary); }
+  .funil-barra { height: 10px; background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .funil-barra span { display: block; height: 100%; background: var(--gold); }
+  .funil-num { text-align: right; }
+  .relatorio-nota { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin-top: 8px; }
+  .relatorio-bloco .tabela-wrap { max-height: none; }
+  #relatorio-tabela-leads-wrap .tabela-wrap { max-height: 46vh; }
+  .chk-linha { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 12px; }
+  .chk-linha input { width: auto; }
 
   /* ---------- Modo teste ---------- */
   #banner-teste {
@@ -233,6 +244,8 @@
     main { padding: 14px; }
     .timeline { grid-template-columns: 1fr; }
     .coluna { flex-basis: 178px; }
+    .funil-linha { grid-template-columns: 1fr; gap: 4px; }
+    .funil-num { text-align: left; }
     .page-title { font-size: 32px; }
     .resumo { gap: 18px 26px; }
     .resumo .item .valor { font-size: 26px; }
@@ -388,13 +401,28 @@
     </div>
 
     <div class="relatorio-bloco">
-      <h3>Onde os leads estão travando</h3>
-      <div id="relatorio-travados"></div>
+      <h3>Qualidade dos leads</h3>
+      <div id="relatorio-qualidade"></div>
     </div>
 
     <div class="relatorio-bloco">
-      <h3>Leads por anel / criativo de origem</h3>
+      <h3>Qualidade por anel / criativo de origem</h3>
       <div id="relatorio-origens"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Leads por semana de chegada</h3>
+      <div id="relatorio-semanas"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Follow-ups realizados</h3>
+      <div id="relatorio-followups"></div>
+    </div>
+
+    <div class="relatorio-bloco">
+      <h3>Onde os leads estão travando</h3>
+      <div id="relatorio-travados"></div>
     </div>
 
     <div class="relatorio-bloco">
@@ -411,6 +439,13 @@
       <h3>Sugestões</h3>
       <div id="relatorio-sugestoes"></div>
     </div>
+
+    <div class="relatorio-bloco" id="relatorio-tabela-leads-wrap">
+      <h3>Lista de leads: chegada e tentativas de follow-up</h3>
+      <div id="relatorio-tabela-leads"></div>
+    </div>
+
+    <label class="chk-linha"><input type="checkbox" id="relatorio-incluir-interno" checked> Incluir no PDF onde os leads estão travando, valores em R$ e sugestões (uso interno, desmarque para o tráfego pago)</label>
 
     <div class="modal-actions">
       <div style="flex:1;"></div>
@@ -1614,17 +1649,79 @@ function excluirLeadAtual(){
   fecharModal();
 }
 
-function abrirRelatorio(){
-  const base = leadsNoPeriodo(leads);
-  const total = base.length || 1;
+// ============================================================
+// RELATÓRIO DE LEADS
+// Pensado para ser mostrado ao tráfego pago: foco na qualidade dos leads.
+// ============================================================
 
+// Até onde o lead chegou no funil. Desenho 3D conta como "inspirações" (etapa opcional).
+// Cancelado conta só como "respondeu", porque não dá para saber até onde ele chegou.
+const RANK_ETAPA = { qualificacao: 0, entendimento: 1, inspiracoes: 2, desenho_3d: 2, cotacao_enviada: 3, venda_semi: 4, em_producao: 5, finalizadas: 5, cancelado: 1 };
+const DEGRAUS_FUNIL = [
+  { nome: 'Leads recebidos',                      min: 0 },
+  { nome: 'Responderam (saíram da Qualificação)', min: 1 },
+  { nome: 'Chegaram às inspirações',              min: 2 },
+  { nome: 'Chegaram à cotação',                   min: 3 },
+  { nome: 'Chegaram à venda semi-aprovada',       min: 4 },
+  { nome: 'Fecharam (produção ou entregue)',      min: 5 },
+];
+const NOTA_QUALIDADE = 'Como ler: "responderam" são os leads que saíram da etapa Qualificação. "Nunca responderam" são os que foram encerrados após as 7 tentativas de contato sem sair da Qualificação. Quem ainda está dentro das tentativas não entra nessa conta.';
+
+function respondeu(l){ return l.etapa !== 'qualificacao'; }
+function rankDoLead(l){ return RANK_ETAPA[l.etapa] || 0; }
+function porcento(a, b){ return b ? Math.round(a / b * 100) : 0; }
+function mediaBR(n){ return n.toFixed(1).replace('.', ','); }
+function formatarDataCurta(iso){
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a.slice(2)}`;
+}
+// Segunda-feira da semana em que cai a data.
+function inicioSemana(iso){
+  const [y, m, d] = iso.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return somarDias(iso, -((dow + 6) % 7));
+}
+
+// Todas as tentativas de follow-up que o lead já recebeu, incluindo as de ciclos anteriores
+// (quando ele mudou de etapa ou respondeu, o histórico vai para followUpsArquivo).
+// "slots" guarda a data de cada tentativa pela posição: 1 = primeira tentativa de todas, 2 = segunda, e assim por diante.
+function historicoTentativas(l){
+  const slots = {};
+  let base = 0;
+  (l.followUpsArquivo || []).forEach(a => {
+    const itens = a.itens || [];
+    const topo = itens.reduce((m, e) => Math.max(m, Number(e.n) || 0), 0);
+    itens.forEach(e => { if (e.data) slots[base + Number(e.n)] = e.data; });
+    base += topo;
+  });
+  const atual = Number(l.followUp) || 0;
+  (l.followUps || []).forEach(e => { if (e.n <= atual && e.data) slots[base + Number(e.n)] = e.data; });
+  return { total: base + atual, slots };
+}
+
+// Em que pé o lead está, do ponto de vista da qualidade.
+function situacaoDoLead(l){
+  if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) return { id: 'venda', texto: 'Venda fechada' };
+  if (ehEncerradoSemSairDaQualificacao(l)) return { id: 'sem_resposta', texto: 'Sem resposta, encerrado' };
+  if (l.etapa === 'qualificacao') return { id: 'tentando', texto: (Number(l.followUp) || 0) > 0 ? 'Sem resposta, em follow-up' : 'Aguardando 1ª resposta' };
+  if (ehEncerrado(l)) return { id: 'encerrado', texto: l.etapa === 'cancelado' ? 'Cancelado pelo cliente' : 'Encerrado após conversa' };
+  return { id: 'ativo', texto: 'Respondeu, em andamento' };
+}
+
+function calcularRelatorio(){
+  const base = leadsNoPeriodo(leads);
+  const totalLeads = base.length;
+  const total = totalLeads || 1;
+
+  // Onde os leads estão hoje
   const porEtapa = COLUNAS_FUNIL.map(etapa => ({
     etapa,
     qtd: base.filter(l => colunaDoFunil(l) === etapa.id).length
   }));
 
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  const hojeData = new Date();
+  hojeData.setHours(0, 0, 0, 0);
   const travados = porEtapa
     .filter(p => p.qtd > 0 && p.etapa.id !== 'finalizadas' && p.etapa.id !== COLUNA_ENCERRADAS.id && p.etapa.id !== COLUNA_ENCERRADAS_QUALIFICACAO.id)
     .map(p => {
@@ -1633,87 +1730,273 @@ function abrirRelatorio(){
         if (!l.dataEntrada) return antigo;
         return (!antigo || l.dataEntrada < antigo) ? l.dataEntrada : antigo;
       }, null);
-      const diasParado = maisAntigo ? Math.floor((hoje - new Date(maisAntigo + 'T00:00:00')) / 86400000) : null;
+      const diasParado = maisAntigo ? Math.floor((hojeData - new Date(maisAntigo + 'T00:00:00')) / 86400000) : null;
       return { ...p, diasParado };
     })
     .sort((a, b) => b.qtd - a.qtd)
     .slice(0, 5);
 
+  // Valores
   const valorCotacao = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
   const valorPedido = base.filter(l => colunaDoFunil(l) === 'venda_semi').reduce((s, l) => s + parseReais(l.valorEstimado), 0);
   const valorEsfriado = base.filter(l => colunaDoFunil(l) === 'cotacao_enviada' && Number(l.followUp) > 0).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
   const valorEncerrado = base.filter(l => ehEncerrado(l) && (l.etapa === 'cotacao_enviada' || l.etapa === 'venda_semi')).reduce((s, l) => s + parseReais(l.valorEstimado), 0);
 
+  // Encerrados
   const encerradosTotal = base.filter(ehEncerrado).length;
   const encerradosSemQualificacao = base.filter(ehEncerradoSemSairDaQualificacao).length;
-  const pctSemQualificacao = base.length ? Math.round(encerradosSemQualificacao / base.length * 100) : 0;
+  const pctSemQualificacao = porcento(encerradosSemQualificacao, totalLeads);
 
+  // Qualidade: funil acumulado e taxa de resposta
+  const degraus = DEGRAUS_FUNIL.map(d => ({ nome: d.nome, qtd: base.filter(l => rankDoLead(l) >= d.min).length }));
+  degraus.forEach((d, i) => {
+    d.pctTotal = porcento(d.qtd, totalLeads);
+    d.pctAnterior = i === 0 ? 100 : porcento(d.qtd, degraus[i - 1].qtd);
+  });
+  const responderam = degraus[1].qtd;
+  const aindaTentando = base.filter(l => l.etapa === 'qualificacao' && !ehEncerradoSemSairDaQualificacao(l)).length;
+  const comDesfecho = responderam + encerradosSemQualificacao;
+  const qualidade = {
+    degraus,
+    responderam,
+    pctResponderam: porcento(responderam, totalLeads),
+    semResposta: encerradosSemQualificacao,
+    pctSemResposta: pctSemQualificacao,
+    aindaTentando,
+    comDesfecho,
+    pctResponderamDesfecho: porcento(responderam, comDesfecho),
+  };
+
+  // Por anel / criativo de origem
   const mapaOrigem = {};
   base.forEach(l => {
     const nome = l.origem || ORIGEM_VAZIA;
-    if (!mapaOrigem[nome]) mapaOrigem[nome] = { nome, qtd: 0, cotacao: 0, vendas: 0 };
-    mapaOrigem[nome].qtd++;
-    if (ETAPAS_CHEGARAM_COTACAO.includes(l.etapa)) mapaOrigem[nome].cotacao++;
-    if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) mapaOrigem[nome].vendas++;
+    const o = mapaOrigem[nome] || (mapaOrigem[nome] = { nome, qtd: 0, respondeu: 0, semResposta: 0, cotacao: 0, vendas: 0 });
+    o.qtd++;
+    if (respondeu(l)) o.respondeu++;
+    if (ehEncerradoSemSairDaQualificacao(l)) o.semResposta++;
+    if (ETAPAS_CHEGARAM_COTACAO.includes(l.etapa)) o.cotacao++;
+    if (ETAPAS_VENDA_FECHADA.includes(l.etapa)) o.vendas++;
   });
   const porOrigem = Object.values(mapaOrigem).sort((a, b) => b.qtd - a.qtd);
-
-  ultimoRelatorio = {
-    porEtapa, total, travados, porOrigem, valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
-    encerradosTotal, encerradosSemQualificacao, pctSemQualificacao, totalLeads: base.length
+  const tabOrigem = {
+    cab: ['Anel / criativo', 'Leads', 'Responderam', 'Sem resposta (encerrados)', 'Chegaram à cotação', 'Vendas'],
+    linhas: porOrigem.map(o => [
+      o.nome,
+      `${o.qtd} (${porcento(o.qtd, total)}%)`,
+      `${o.respondeu} (${porcento(o.respondeu, o.qtd)}%)`,
+      `${o.semResposta} (${porcento(o.semResposta, o.qtd)}%)`,
+      `${o.cotacao} (${porcento(o.cotacao, o.qtd)}%)`,
+      String(o.vendas),
+    ]),
   };
 
-  const textoPeriodo = (filtroDe || filtroAte)
-    ? `Período: ${filtroDe ? formatarData(filtroDe) : '...'} até ${filtroAte ? formatarData(filtroAte) : '...'}`
-    : 'Período: todos os leads cadastrados';
-  document.getElementById('relatorio-periodo').textContent = textoPeriodo;
+  // Por semana de chegada (semana começa na segunda)
+  const mapaSem = {};
+  let semData = 0;
+  base.forEach(l => {
+    if (!l.dataEntrada) { semData++; return; }
+    const ini = inicioSemana(l.dataEntrada);
+    const s = mapaSem[ini] || (mapaSem[ini] = { ini, qtd: 0, resp: 0, cot: 0 });
+    s.qtd++;
+    if (respondeu(l)) s.resp++;
+    if (rankDoLead(l) >= 3) s.cot++;
+  });
+  const semanas = [];
+  const chavesSem = Object.keys(mapaSem).sort();
+  if (chavesSem.length) {
+    for (let s = chavesSem[0]; s <= chavesSem[chavesSem.length - 1]; s = somarDias(s, 7)) {
+      semanas.push(mapaSem[s] || { ini: s, qtd: 0, resp: 0, cot: 0 });
+    }
+  }
+  const mediaSemana = semanas.length ? (totalLeads - semData) / semanas.length : 0;
+  const tabSemanas = {
+    cab: ['Semana de chegada', 'Leads', 'Responderam', '% que respondeu', 'Chegaram à cotação'],
+    linhas: semanas.map(s => [
+      `${formatarDataCurta(s.ini)} a ${formatarDataCurta(somarDias(s.ini, 6))}`,
+      String(s.qtd), String(s.resp), `${porcento(s.resp, s.qtd)}%`, String(s.cot),
+    ]),
+  };
 
-  desenharPizza(porEtapa, total);
+  // Follow-ups realizados
+  let totalTent = 0, comTent = 0, somaLat = 0, nLat = 0;
+  const distTent = {};
+  const respondeuApos = {};
+  base.forEach(l => {
+    const h = historicoTentativas(l);
+    if (h.total > 0) {
+      totalTent += h.total;
+      comTent++;
+      const chave = h.total >= 7 ? '7' : String(h.total);
+      distTent[chave] = (distTent[chave] || 0) + 1;
+      const datas = Object.values(h.slots).sort();
+      if (datas.length && l.dataEntrada) {
+        const dd = diasEntre(l.dataEntrada, datas[0]);
+        if (dd >= 0) { somaLat += dd; nLat++; }
+      }
+    }
+    // Resposta depois de follow-up: o lead clicou em "Cliente respondeu", ou saiu da Qualificação depois de receber tentativas.
+    (l.followUpsArquivo || []).forEach(a => {
+      const topo = (a.itens || []).reduce((m, e) => Math.max(m, Number(e.n) || 0), 0);
+      const saiuDaQualificacao = a.etapa === 'qualificacao' && a.motivo === 'mudou de etapa' && l.etapa !== 'qualificacao' && l.etapa !== 'cancelado';
+      if (topo > 0 && (a.motivo === 'cliente respondeu' || saiuDaQualificacao)) {
+        respondeuApos[topo] = (respondeuApos[topo] || 0) + 1;
+      }
+    });
+  });
+  const followups = {
+    comTentativa: comTent,
+    totalTentativas: totalTent,
+    media: comTent ? totalTent / comTent : 0,
+    latenciaMedia: nLat ? somaLat / nLat : null,
+    nLat,
+    distribuicao: ['1', '2', '3', '4', '5', '6', '7'].map(k => ({
+      rot: k === '1' ? '1 tentativa' : k === '7' ? '7 ou mais' : `${k} tentativas`,
+      qtd: distTent[k] || 0,
+    })),
+    respondeuApos: Object.keys(respondeuApos).map(Number).sort((a, b) => a - b).map(n => ({ n, qtd: respondeuApos[n] })),
+  };
 
-  document.getElementById('relatorio-legenda').innerHTML = porEtapa
-    .filter(p => p.qtd > 0)
-    .map(p => `<div class="legenda-item"><span class="legenda-cor" style="background:var(--fase-${p.etapa.fase});"></span>${p.etapa.nome}: ${p.qtd} (${Math.round(p.qtd / total * 100)}%)</div>`)
-    .join('');
+  // Lista de leads: chegada, tentativas e datas de cada follow-up
+  const linhasLeads = [...base]
+    .sort((a, b) => (a.dataEntrada || '9999').localeCompare(b.dataEntrada || '9999') || (a.nome || '').localeCompare(b.nome || ''))
+    .map(l => {
+      const h = historicoTentativas(l);
+      const nomeLimpo = (l.nome && l.nome.trim()) || '';
+      return {
+        nome: nomeLimpo || 'Sem nome',
+        nomeTela: nomeLimpo || formatarTelefone(l.telefone) || 'Sem nome',
+        chegada: l.dataEntrada || '',
+        origem: l.origem || '',
+        etapa: (TODAS_ETAPAS.find(e => e.id === l.etapa) || { nome: l.etapa }).nome,
+        total: h.total,
+        datas: Array.from({ length: FOLLOWUP_MAX }, (_, i) => h.slots[i + 1] || ''),
+        situacao: situacaoDoLead(l),
+      };
+    });
 
-  document.getElementById('relatorio-travados').innerHTML = travados.length
-    ? travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
-    : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
-
-  document.getElementById('relatorio-origens').innerHTML = porOrigem.length
-    ? porOrigem.map(o => {
-        const pct = Math.round(o.qtd / total * 100);
-        const pctCot = o.qtd ? Math.round(o.cotacao / o.qtd * 100) : 0;
-        return `<div class="relatorio-linha">${o.nome}: ${o.qtd} lead${o.qtd > 1 ? 's' : ''} (${pct}%), ${o.cotacao} chegaram à cotação (${pctCot}%), ${o.vendas} venda${o.vendas === 1 ? '' : 's'}</div>`;
-      }).join('')
-    : '<div class="relatorio-linha">Nenhum lead nesse período.</div>';
-
-  document.getElementById('relatorio-encerrados').innerHTML = `
-    <div class="relatorio-linha">Leads encerrados sem sair da Qualificação: ${encerradosSemQualificacao} (de ${encerradosTotal} encerrados no total)</div>
-    <div class="relatorio-linha">Equivale a ${pctSemQualificacao}% dos ${base.length} leads do período. Base para conversar com o tráfego pago.</div>
-  `;
-
-  document.getElementById('relatorio-valores').innerHTML = `
-    <div class="relatorio-linha">Em cotação enviada: ${formatarReais(valorCotacao)}</div>
-    <div class="relatorio-linha">Em venda semi-aprovada (ainda não fechada): ${formatarReais(valorPedido)}</div>
-    <div class="relatorio-linha">Cotações já em follow-up, esfriando: ${formatarReais(valorEsfriado)}</div>
-    <div class="relatorio-linha">Cotações e pedidos já encerrados (fora do funil): ${formatarReais(valorEncerrado)}</div>
-  `;
-
+  // Sugestões
   const sugestoes = [];
   const maiorTravado = travados[0];
   if (maiorTravado && maiorTravado.qtd >= 3) sugestoes.push(`"${maiorTravado.etapa.nome}" concentra o maior número de leads parados, vale priorizar esse grupo.`);
   if (valorEsfriado > 0) sugestoes.push(`${formatarReais(valorEsfriado)} em cotações já entraram em follow-up sem fechar, esse é o valor mais urgente de retomar.`);
   if (valorPedido > 0) sugestoes.push(`${formatarReais(valorPedido)} em vendas semi-aprovadas ainda não fechadas, considere confirmar esses com prioridade.`);
   const semOrigem = mapaOrigem[ORIGEM_VAZIA] ? mapaOrigem[ORIGEM_VAZIA].qtd : 0;
-  if (semOrigem > 0 && semOrigem < base.length) sugestoes.push(`${semOrigem} lead${semOrigem > 1 ? 's' : ''} sem origem registrada, preencher o anel de origem deixa a leitura por criativo mais confiável.`);
+  if (semOrigem > 0 && semOrigem < totalLeads) sugestoes.push(`${semOrigem} lead${semOrigem > 1 ? 's' : ''} sem origem registrada, preencher o anel de origem deixa a leitura por criativo mais confiável.`);
+  if (encerradosSemQualificacao > 0) sugestoes.push(`${encerradosSemQualificacao} de ${totalLeads} leads (${pctSemQualificacao}%) ${encerradosSemQualificacao === 1 ? 'nunca respondeu' : 'nunca responderam'}, mesmo após as 7 tentativas de contato. Esse é o principal ponto de qualidade para levar ao tráfego pago.`);
   const origensComDado = porOrigem.filter(o => o.nome !== ORIGEM_VAZIA && o.nome !== ORIGEM_NAO_IDENTIFICADO && o.qtd >= 3);
   if (origensComDado.length >= 2) {
-    const melhor = [...origensComDado].sort((a, b) => (b.cotacao / b.qtd) - (a.cotacao / a.qtd))[0];
-    sugestoes.push(`"${melhor.nome}" tem a melhor taxa de chegada à cotação (${Math.round(melhor.cotacao / melhor.qtd * 100)}%) entre os criativos com 3 leads ou mais.`);
+    const melhorCot = [...origensComDado].sort((a, b) => (b.cotacao / b.qtd) - (a.cotacao / a.qtd))[0];
+    sugestoes.push(`"${melhorCot.nome}" tem a melhor taxa de chegada à cotação (${porcento(melhorCot.cotacao, melhorCot.qtd)}%) entre os criativos com 3 leads ou mais.`);
+    const porResposta = [...origensComDado].sort((a, b) => (b.respondeu / b.qtd) - (a.respondeu / a.qtd));
+    const melhorResp = porResposta[0], piorResp = porResposta[porResposta.length - 1];
+    if (porcento(melhorResp.respondeu, melhorResp.qtd) !== porcento(piorResp.respondeu, piorResp.qtd)) {
+      sugestoes.push(`Taxa de resposta por criativo: "${melhorResp.nome}" é a maior (${porcento(melhorResp.respondeu, melhorResp.qtd)}%) e "${piorResp.nome}" é a menor (${porcento(piorResp.respondeu, piorResp.qtd)}%), entre os criativos com 3 leads ou mais.`);
+    }
   }
   if (sugestoes.length === 0) sugestoes.push('Sem pontos de atenção fora do comum nesse período.');
-  document.getElementById('relatorio-sugestoes').innerHTML = sugestoes.map(s => `<div class="relatorio-linha">${s}</div>`).join('');
 
+  return {
+    total, totalLeads, porEtapa, travados, porOrigem, tabOrigem, tabSemanas, semanas, mediaSemana, semData,
+    qualidade, followups, linhasLeads, sugestoes,
+    valorCotacao, valorPedido, valorEsfriado, valorEncerrado,
+    encerradosTotal, encerradosSemQualificacao, pctSemQualificacao,
+  };
+}
+
+function linhasQualidade(r){
+  const q = r.qualidade;
+  const s = q.semResposta;
+  const ainda = q.aindaTentando === 0 ? '' : q.aindaTentando === 1 ? ' Outro 1 ainda está em tentativa de contato.' : ` Outros ${q.aindaTentando} ainda estão em tentativa de contato.`;
+  return [
+    `Taxa de resposta: ${q.responderam} de ${r.totalLeads} leads responderam (${q.pctResponderam}%). Considerando só os leads com desfecho (responderam ou terminaram as 7 tentativas sem resposta), a taxa é ${q.pctResponderamDesfecho}%.`,
+    `Nunca responderam: ${s} lead${s === 1 ? '' : 's'} (${q.pctSemResposta}%) ${s === 1 ? 'foi encerrado' : 'foram encerrados'} após as 7 tentativas sem sair da Qualificação.${ainda}`,
+  ];
+}
+
+function linhasFollowups(r, paraPDF){
+  const f = r.followups;
+  if (!f.comTentativa) return ['Nenhum follow-up registrado nesse período.'];
+  const out = [];
+  out.push(`${f.totalTentativas} tentativas de follow-up registradas, em ${f.comTentativa} leads (média de ${mediaBR(f.media)} por lead).`);
+  if (f.latenciaMedia !== null) out.push(`O primeiro follow-up foi feito, em média, ${mediaBR(f.latenciaMedia)} dia(s) depois da chegada do lead (${f.nLat} leads com as duas datas registradas).`);
+  const dist = f.distribuicao.filter(d => d.qtd > 0).map(d => `${d.rot}: ${d.qtd}`).join('; ');
+  if (dist) out.push(`Leads por total de tentativas recebidas: ${dist}.`);
+  if (f.respondeuApos.length) {
+    out.push(`Leads que responderam depois de follow-up: ${f.respondeuApos.map(x => `após a tentativa ${x.n}: ${x.qtd}`).join('; ')}.`);
+  } else if (!paraPDF) {
+    out.push('Ainda não há leads com resposta registrada depois de follow-up. Esse dado aparece quando vc usa o botão "Cliente respondeu" ou move o lead para fora da Qualificação.');
+  }
+  return out;
+}
+
+function htmlTabela(cab, linhas, vazio){
+  if (!linhas.length) return `<div class="relatorio-linha">${vazio || 'Sem dados nesse período.'}</div>`;
+  const cel = (c, i) => `<td${i === 0 ? ' class="nome-col"' : ''}>${c === '' ? '·' : esc(c)}</td>`;
+  return `<div class="tabela-wrap"><table class="tabela-fu"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
+    linhas.map(l => `<tr>${l.map(cel).join('')}</tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+function renderizarRelatorioNaTela(r){
+  const total = r.total;
+  desenharPizza(r.porEtapa, total);
+
+  document.getElementById('relatorio-legenda').innerHTML = r.porEtapa
+    .filter(p => p.qtd > 0)
+    .map(p => `<div class="legenda-item"><span class="legenda-cor" style="background:var(--fase-${p.etapa.fase});"></span>${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, total)}%)</div>`)
+    .join('');
+
+  document.getElementById('relatorio-qualidade').innerHTML =
+    r.qualidade.degraus.map((d, i) => `
+      <div class="funil-linha">
+        <span>${d.nome}</span>
+        <span class="funil-barra"><span style="width:${d.pctTotal}%;"></span></span>
+        <span class="funil-num">${d.qtd} (${d.pctTotal}%)${i > 0 ? `, ${d.pctAnterior}% da etapa anterior` : ''}</span>
+      </div>`).join('')
+    + linhasQualidade(r).map(t => `<div class="relatorio-linha">${t}</div>`).join('')
+    + `<div class="relatorio-nota">${NOTA_QUALIDADE}</div>`;
+
+  document.getElementById('relatorio-origens').innerHTML = htmlTabela(r.tabOrigem.cab, r.tabOrigem.linhas, 'Nenhum lead nesse período.');
+
+  document.getElementById('relatorio-semanas').innerHTML =
+    htmlTabela(r.tabSemanas.cab, r.tabSemanas.linhas, 'Nenhum lead com data de entrada nesse período.')
+    + (r.semanas.length ? `<div class="relatorio-linha">Média de ${mediaBR(r.mediaSemana)} leads por semana${r.semData ? `. ${r.semData} lead${r.semData > 1 ? 's' : ''} sem data de entrada ficou${r.semData > 1 ? 'ram' : ''} de fora dessa tabela` : ''}.</div>` : '');
+
+  document.getElementById('relatorio-followups').innerHTML = linhasFollowups(r, false).map(t => `<div class="relatorio-linha">${t}</div>`).join('');
+
+  document.getElementById('relatorio-travados').innerHTML = r.travados.length
+    ? r.travados.map(t => `<div class="relatorio-linha">${t.etapa.nome}: ${t.qtd} lead${t.qtd > 1 ? 's' : ''}${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia${t.diasParado === 1 ? '' : 's'}` : ''}</div>`).join('')
+    : '<div class="relatorio-linha">Nada acumulado fora do comum nesse período.</div>';
+
+  document.getElementById('relatorio-encerrados').innerHTML = `
+    <div class="relatorio-linha">Leads encerrados sem sair da Qualificação: ${r.encerradosSemQualificacao} (de ${r.encerradosTotal} encerrados no total)</div>
+    <div class="relatorio-linha">Equivale a ${r.pctSemQualificacao}% dos ${r.totalLeads} leads do período. Base para conversar com o tráfego pago.</div>
+  `;
+
+  document.getElementById('relatorio-valores').innerHTML = `
+    <div class="relatorio-linha">Em cotação enviada: ${formatarReais(r.valorCotacao)}</div>
+    <div class="relatorio-linha">Em venda semi-aprovada (ainda não fechada): ${formatarReais(r.valorPedido)}</div>
+    <div class="relatorio-linha">Cotações já em follow-up, esfriando: ${formatarReais(r.valorEsfriado)}</div>
+    <div class="relatorio-linha">Cotações e pedidos já encerrados (fora do funil): ${formatarReais(r.valorEncerrado)}</div>
+  `;
+
+  document.getElementById('relatorio-sugestoes').innerHTML = r.sugestoes.map(s => `<div class="relatorio-linha">${s}</div>`).join('');
+
+  const cabLeads = ['Lead', 'Chegada', 'Origem', 'Etapa atual', 'Tentativas', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Situação'];
+  const linhasTabela = r.linhasLeads.map(l => [
+    l.nomeTela, formatarDataCurta(l.chegada), l.origem || 'Sem origem', l.etapa, String(l.total),
+    ...l.datas.map(formatarDataCurta), l.situacao.texto,
+  ]);
+  document.getElementById('relatorio-tabela-leads').innerHTML = htmlTabela(cabLeads, linhasTabela, 'Nenhum lead nesse período.');
+}
+
+function abrirRelatorio(){
+  ultimoRelatorio = calcularRelatorio();
+  document.getElementById('relatorio-periodo').textContent = (filtroDe || filtroAte)
+    ? `Período: ${filtroDe ? formatarData(filtroDe) : '...'} até ${filtroAte ? formatarData(filtroAte) : '...'}`
+    : 'Período: todos os leads cadastrados';
+  renderizarRelatorioNaTela(ultimoRelatorio);
   document.getElementById('modal-relatorio-fundo').classList.remove('hidden');
 }
 
@@ -1750,82 +2033,155 @@ function desenharPizza(porEtapa, total){
 
 function baixarRelatorioPDF(){
   if (!ultimoRelatorio || !window.jspdf) return;
+  const r = ultimoRelatorio;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const margem = 40;
+  doc.setLineHeightFactor(1.35);
+  const margem = 40, largura = 515;
   let y = margem;
-  const quebra = () => { if (y > 770) { doc.addPage(); y = margem; } };
 
-  doc.setFontSize(16);
-  doc.text('Relatorio de Leads - Spielvogel Joias', margem, y); y += 20;
-  doc.setFontSize(10);
-  doc.text(document.getElementById('relatorio-periodo').textContent, margem, y); y += 24;
+  const garantir = altura => { if (y + altura > 790) { doc.addPage('a4', 'portrait'); y = margem; } };
+  const secao = txt => {
+    garantir(50);
+    y += 8;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0);
+    doc.text(txt, margem, y);
+    doc.setFont('helvetica', 'normal');
+    y += 16;
+  };
+  const par = (txt, tam = 9, cinza = false) => {
+    doc.setFontSize(tam);
+    doc.setTextColor(cinza ? 110 : 0);
+    const ls = doc.splitTextToSize(txt, largura);
+    const altura = ls.length * tam * 1.35 + 4;
+    garantir(altura);
+    doc.text(ls, margem, y);
+    y += altura;
+    doc.setTextColor(0);
+  };
+  // Tabela com cabeçalho repetido a cada página. Sem a biblioteca de tabela, cai para linhas de texto.
+  const tabela = (cab, linhas, extra = {}) => {
+    if (!linhas.length) { par('Sem dados nesse período.'); return; }
+    const corpo = linhas.map(l => l.map(c => c === '' ? '-' : String(c)));
+    if (typeof doc.autoTable === 'function') {
+      garantir(60);
+      doc.autoTable({
+        head: [cab], body: corpo, startY: y,
+        margin: { left: margem, right: margem, top: 40, bottom: 40 },
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', textColor: 30 },
+        headStyles: { fillColor: [43, 38, 33], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [246, 244, 240] },
+        ...extra,
+      });
+      y = doc.lastAutoTable.finalY + 12;
+    } else {
+      par(cab.join(' | '));
+      corpo.forEach(l => par(l.join(' | ')));
+    }
+  };
 
+  // Cabeçalho
+  const [aa, mm, dd] = hojeISO().split('-');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  doc.text('Relatório de Leads - Spielvogel Joias', margem, y); y += 18;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  doc.text(`${document.getElementById('relatorio-periodo').textContent}  |  Gerado em ${dd}/${mm}/${aa}`, margem, y); y += 20;
+
+  // Onde estão hoje
   const canvas = document.getElementById('relatorio-pizza');
-  const imgData = canvas.toDataURL('image/png');
-  doc.addImage(imgData, 'PNG', margem, y, 130, 130);
-
+  doc.addImage(canvas.toDataURL('image/png'), 'PNG', margem, y, 130, 130);
   let yLegenda = y;
   doc.setFontSize(9);
-  ultimoRelatorio.porEtapa.filter(p => p.qtd > 0).forEach(p => {
-    doc.text(`${p.etapa.nome}: ${p.qtd} (${Math.round(p.qtd / ultimoRelatorio.total * 100)}%)`, margem + 150, yLegenda + 10);
+  r.porEtapa.filter(p => p.qtd > 0).forEach(p => {
+    doc.text(`${p.etapa.nome}: ${p.qtd} (${porcento(p.qtd, r.total)}%)`, margem + 150, yLegenda + 10);
     yLegenda += 14;
   });
-  y += 150;
+  y += Math.max(140, yLegenda - y + 6);
 
-  doc.setFontSize(12);
-  doc.text('Onde os leads estao travando', margem, y); y += 16;
+  // Qualidade
+  secao('Qualidade dos leads');
   doc.setFontSize(9);
-  if (ultimoRelatorio.travados.length === 0) {
-    doc.text('Nada acumulado fora do comum nesse periodo.', margem, y); y += 14;
-  } else {
-    ultimoRelatorio.travados.forEach(t => {
-      doc.text(`${t.etapa.nome}: ${t.qtd} lead(s)${t.diasParado !== null ? `, o mais antigo ha ${t.diasParado} dia(s)` : ''}`, margem, y);
-      y += 14;
-    });
-  }
-  y += 8;
-
-  doc.setFontSize(12);
-  doc.text('Leads por anel / criativo de origem', margem, y); y += 16;
-  doc.setFontSize(9);
-  if (ultimoRelatorio.porOrigem.length === 0) {
-    doc.text('Nenhum lead nesse periodo.', margem, y); y += 14;
-  } else {
-    ultimoRelatorio.porOrigem.forEach(o => {
-      quebra();
-      const pct = Math.round(o.qtd / ultimoRelatorio.total * 100);
-      const pctCot = o.qtd ? Math.round(o.cotacao / o.qtd * 100) : 0;
-      doc.text(`${o.nome}: ${o.qtd} lead(s) (${pct}%), ${o.cotacao} chegaram a cotacao (${pctCot}%), ${o.vendas} venda(s)`, margem, y);
-      y += 14;
-    });
-  }
-  y += 8;
-
-  quebra();
-  doc.setFontSize(12);
-  doc.text('Encerradas sem resposta', margem, y); y += 16;
-  doc.setFontSize(9);
-  doc.text(`Leads encerrados sem sair da qualificacao: ${ultimoRelatorio.encerradosSemQualificacao} (de ${ultimoRelatorio.encerradosTotal} encerrados no total)`, margem, y); y += 14;
-  doc.text(`Equivale a ${ultimoRelatorio.pctSemQualificacao}% dos ${ultimoRelatorio.totalLeads} leads do periodo`, margem, y); y += 22;
-
-  doc.setFontSize(12);
-  doc.text('Valor parado (R$)', margem, y); y += 16;
-  doc.setFontSize(9);
-  doc.text(`Em cotacao enviada: ${formatarReais(ultimoRelatorio.valorCotacao)}`, margem, y); y += 14;
-  doc.text(`Em venda semi-aprovada: ${formatarReais(ultimoRelatorio.valorPedido)}`, margem, y); y += 14;
-  doc.text(`Cotacoes esfriando em follow-up: ${formatarReais(ultimoRelatorio.valorEsfriado)}`, margem, y); y += 14;
-  doc.text(`Cotacoes e pedidos ja encerrados (fora do funil): ${formatarReais(ultimoRelatorio.valorEncerrado)}`, margem, y); y += 20;
-
-  doc.setFontSize(12);
-  doc.text('Sugestoes', margem, y); y += 16;
-  doc.setFontSize(9);
-  document.querySelectorAll('#relatorio-sugestoes .relatorio-linha').forEach(el => {
-    quebra();
-    const linhas = doc.splitTextToSize(el.textContent, 500);
-    doc.text(linhas, margem, y);
-    y += 14 * linhas.length;
+  r.qualidade.degraus.forEach((d, i) => {
+    garantir(16);
+    doc.setTextColor(0);
+    doc.text(d.nome, margem, y);
+    doc.setFillColor(230, 226, 220); doc.rect(margem + 220, y - 7, 120, 8, 'F');
+    doc.setFillColor(176, 138, 58); doc.rect(margem + 220, y - 7, Math.max(1, 120 * d.pctTotal / 100), 8, 'F');
+    doc.text(`${d.qtd} (${d.pctTotal}%)${i > 0 ? `, ${d.pctAnterior}% da etapa anterior` : ''}`, margem + 350, y);
+    y += 15;
   });
+  y += 4;
+  linhasQualidade(r).forEach(t => par(t));
+  par(NOTA_QUALIDADE, 8, true);
+
+  // Origem
+  secao('Qualidade por anel / criativo de origem');
+  tabela(r.tabOrigem.cab, r.tabOrigem.linhas);
+
+  // Semanas
+  secao('Leads por semana de chegada');
+  tabela(r.tabSemanas.cab, r.tabSemanas.linhas);
+  if (r.semanas.length) par(`Média de ${mediaBR(r.mediaSemana)} leads por semana.`);
+
+  // Follow-ups
+  secao('Follow-ups realizados');
+  linhasFollowups(r, true).forEach(t => par(t));
+
+  // Encerradas sem resposta (sempre entra: é a base da conversa com o tráfego pago)
+  secao('Encerradas sem resposta');
+  par(`Leads encerrados sem sair da Qualificação: ${r.encerradosSemQualificacao} (de ${r.encerradosTotal} encerrados no total)`);
+  par(`Equivale a ${r.pctSemQualificacao}% dos ${r.totalLeads} leads do período`);
+
+  // Parte de uso interno: só entra se a caixa estiver marcada
+  if (document.getElementById('relatorio-incluir-interno').checked) {
+    secao('Onde os leads estão travando');
+    if (r.travados.length === 0) par('Nada acumulado fora do comum nesse período.');
+    else r.travados.forEach(t => par(`${t.etapa.nome}: ${t.qtd} lead(s)${t.diasParado !== null ? `, o mais antigo há ${t.diasParado} dia(s)` : ''}`));
+
+    secao('Valor parado (R$)');
+    par(`Em cotação enviada: ${formatarReais(r.valorCotacao)}`);
+    par(`Em venda semi-aprovada: ${formatarReais(r.valorPedido)}`);
+    par(`Cotações esfriando em follow-up: ${formatarReais(r.valorEsfriado)}`);
+    par(`Cotações e pedidos já encerrados (fora do funil): ${formatarReais(r.valorEncerrado)}`);
+
+    secao('Sugestões');
+    r.sugestoes.forEach(s => par(s));
+  }
+
+  // Lista de leads em página deitada (telefone não entra no relatório)
+  doc.addPage('a4', 'landscape');
+  y = 40;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0);
+  doc.text('Lista de leads: chegada e tentativas de follow-up', 30, y);
+  doc.setFont('helvetica', 'normal');
+  y += 12;
+  const cabLeads = ['Lead', 'Chegada', 'Origem', 'Etapa atual', 'Tent.', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Situação'];
+  const linhasLeads = r.linhasLeads.map(l => [
+    l.nome,
+    formatarDataCurta(l.chegada), l.origem || 'Sem origem', l.etapa, String(l.total),
+    ...l.datas.map(formatarDataCurta), l.situacao.texto,
+  ]);
+  const colSituacao = cabLeads.length - 1;
+  tabela(cabLeads, linhasLeads, {
+    margin: { left: 30, right: 30, top: 40, bottom: 40 },
+    styles: { fontSize: 7.5, cellPadding: 2.5, overflow: 'linebreak', textColor: 30, valign: 'middle' },
+    columnStyles: { 0: { cellWidth: 110 }, 1: { cellWidth: 46 }, 2: { cellWidth: 66 }, 3: { cellWidth: 100 }, 4: { cellWidth: 30, halign: 'center' } },
+    didParseCell: d => {
+      if (d.section !== 'body' || d.column.index !== colSituacao) return;
+      const t = String(d.cell.raw);
+      if (t.startsWith('Sem resposta')) d.cell.styles.textColor = [176, 60, 50];
+      else if (t === 'Venda fechada') d.cell.styles.textColor = [40, 130, 85];
+    },
+  });
+
+  // Rodapé com número de página
+  const paginas = doc.getNumberOfPages();
+  for (let i = 1; i <= paginas; i++) {
+    doc.setPage(i);
+    const w = doc.internal.pageSize.getWidth(), h = doc.internal.pageSize.getHeight();
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(`Spielvogel Joias | Relatório de leads | página ${i} de ${paginas}`, w / 2, h - 18, { align: 'center' });
+  }
 
   doc.save(`relatorio-leads-${new Date().toISOString().slice(0,10)}.pdf`);
 }
@@ -1868,6 +2224,9 @@ function desenharRelatorioFU(){
     return {
       nome: (l.nome && l.nome.trim()) || formatarTelefone(l.telefone) || 'Sem nome',
       telefone: l.telefone || '',
+      chegada: l.dataEntrada || '',
+      origem: l.origem || '',
+      tentativas: historicoTentativas(l).total,
       etapa: nomesEtapa[l.etapa] || l.etapa,
       fu: Number(l.followUp) || 0,
       fus,
@@ -1900,12 +2259,12 @@ function desenharRelatorioFU(){
     <div class="item"><span class="valor">${semData}</span><span class="rotulo">Sem data registrada</span></div>
   `;
 
-  const cab = ['Lead', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Último contato', 'Dias sem contato', 'Próximo previsto', 'Situação'];
+  const cab = ['Lead', 'Chegada', 'Origem', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Tentativas', 'Último contato', 'Dias sem contato', 'Próximo previsto', 'Situação'];
   const dm = iso => iso ? formatarData(iso) : '';
   const corpoHTML = linhas.map(r => `<tr>
-    <td class="nome-col">${esc(r.nome)}</td><td>${esc(r.etapa)}</td>
+    <td class="nome-col">${esc(r.nome)}</td><td>${formatarDataCurta(r.chegada)}</td><td>${esc(r.origem)}</td><td>${esc(r.etapa)}</td>
     ${r.fus.map(d => d ? `<td>${dm(d)}</td>` : '<td class="vazio-col">·</td>').join('')}
-    <td>${dm(r.ultima)}</td><td>${r.diasSem === '' ? '' : r.diasSem}</td><td>${r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo)}</td><td>${r.situacao}</td>
+    <td>${r.tentativas}</td><td>${dm(r.ultima)}</td><td>${r.diasSem === '' ? '' : r.diasSem}</td><td>${r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo)}</td><td>${r.situacao}</td>
   </tr>`).join('');
   document.getElementById('fu-tabela').innerHTML = `<thead><tr>${cab.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${corpoHTML || `<tr><td colspan="${cab.length}" class="vazio-col">Nenhum lead com follow-up nesse filtro.</td></tr>`}</tbody>`;
 
@@ -1917,11 +2276,11 @@ function desenharRelatorioFU(){
 }
 
 function baixarCSVFollowups(){
-  const cab = ['Lead', 'Telefone', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Ultimo contato', 'Dias sem contato', 'Proximo previsto', 'Situacao'];
+  const cab = ['Lead', 'Telefone', 'Chegada', 'Origem', 'Etapa', ...Array.from({ length: FOLLOWUP_MAX }, (_, i) => 'FU' + (i + 1)), 'Tentativas', 'Ultimo contato', 'Dias sem contato', 'Proximo previsto', 'Situacao'];
   const dm = iso => { if (!iso) return ''; const [a, m, d] = iso.split('-'); return `${d}/${m}/${a}`; };
   const aspas = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   const linhas = ultimaTabelaFU.map(r => [
-    r.nome, r.telefone, r.etapa, ...r.fus.map(dm), dm(r.ultima), r.diasSem, r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo), r.situacao,
+    r.nome, r.telefone, dm(r.chegada), r.origem, r.etapa, ...r.fus.map(dm), r.tentativas, dm(r.ultima), r.diasSem, r.proximo === 'Encerrado' ? 'Encerrado' : dm(r.proximo), r.situacao,
   ].map(aspas).join(';'));
   const csv = '﻿' + [cab.map(aspas).join(';'), ...linhas].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
