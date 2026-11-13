@@ -108,6 +108,39 @@
   .aviso-linha.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
   .aviso-linha.ok { background: var(--ok-bg); color: var(--ok-tx); }
   .aviso-linha.neutro { background: var(--neutro-bg); color: var(--text-secondary); font-weight: 500; }
+  .aviso-linha.mini { font-size: 10.5px; padding: 1px 6px; border-radius: 5px; }
+  .aviso-linha.revisar { display: inline-flex; align-items: center; gap: 5px; background: transparent; border: 1px dashed var(--gold-soft); color: var(--gold); font-weight: 600; }
+
+  /* Materiais com nome, direto no cartão */
+  .mat-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .mat-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; min-height: 26px; padding: 2px 8px 2px 4px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .mat-chip:hover { border-color: var(--gold-soft); color: var(--text); }
+  .mat-chip:focus-visible { outline: 2px solid var(--gold); }
+  .mat-chip .bol { width: 14px; height: 14px; }
+  .mat-chip .bol svg { width: 9px; height: 9px; }
+  .mat-chip .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+  .mat-chip.st-comprar { color: var(--alerta-vermelho-tx); }
+
+  /* Etapas em miniatura, direto no cartão */
+  .mini-et { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+  .mini-et li { display: flex; flex-direction: column; gap: 2px; font-size: 9.5px; font-weight: 600; color: var(--text-muted); text-align: center; letter-spacing: .01em; }
+  .mini-et li::before { content: ""; height: 4px; border-radius: 2px; background: var(--border); }
+  .mini-et li.ok { color: var(--ok-tx); }
+  .mini-et li.ok::before { background: var(--m-recebido); }
+  .mini-et li.agora { color: var(--gold); }
+  .mini-et li.agora::before { background: var(--gold); }
+  .mini-et li.falta { color: var(--alerta-vermelho-tx); }
+  .mini-et li.falta::before { background: repeating-linear-gradient(90deg, var(--m-comprar) 0 3px, transparent 3px 5px); }
+  .card-meta { font-size: 11px; color: var(--text-muted); }
+
+  /* Finalizados em verde */
+  .coluna-fim .coluna-qtd { background: var(--ok-bg); color: var(--ok-tx); }
+  .coluna-fim .pasta { border-color: var(--m-recebido); background: var(--ok-bg); }
+  .coluna-fim .pasta svg { color: var(--m-recebido) !important; }
+  .coluna-fim .pasta-txt b { color: var(--ok-tx); }
+  .coluna-fim .lista-fim { border-color: color-mix(in srgb, var(--m-recebido) 45%, var(--border)); }
+  .coluna-fim .lista-fim button { border-left: 3px solid var(--m-recebido); }
+  .coluna-fim .lista-fim .dt { color: var(--ok-tx); font-weight: 600; }
 
   /* Pasta Finalizados */
   .pasta { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-elevated-2); color: var(--text); text-align: left; cursor: pointer; }
@@ -312,6 +345,9 @@
     .card-foto { width: 52px; height: 52px; }
     .card-nome { font-size: 15px; }
     .bol-btn { width: 40px; height: 40px; }
+    .mat-chip { min-height: 34px; font-size: 12px; padding: 4px 10px 4px 6px; }
+    .mat-chip .nm { max-width: 200px; }
+    .mini-et li { font-size: 10.5px; }
     .bol { width: 20px; height: 20px; }
     .duas { grid-template-columns: 1fr; }
     .trilhas, .grade2 { grid-template-columns: 1fr; }
@@ -849,7 +885,8 @@ function htmlAtencao(k) {
 function htmlLegenda() {
   return '<section class="legenda" aria-label="Legenda dos materiais"><b>Materiais:</b>' +
     ["tenho", "comprar", "comprado", "recebido"].map(s => "<span>" + bolinha(s) + MAT[s].rot + "</span>").join("") +
-    "<span>Toque na bolinha para avançar: comprar, comprado, recebido.</span></section>";
+    "<span>Toque no material para avançar: comprar, comprado, recebido.</span>" +
+    '<span><b>Etapas:</b> 3D · Mat. · Pré · Prod. · Envio, em verde o que já foi feito e em dourado a etapa atual.</span></section>';
 }
 function htmlCard(c) {
   const i = info(c);
@@ -866,24 +903,40 @@ function htmlCard(c) {
 
   let mats = "";
   if (i.mats.length) {
-    mats = '<div class="card-mats">' + i.mats.map((m, idx) =>
-      '<button type="button" class="bol-btn" data-acao="bol" data-id="' + c.id + '" data-i="' + idx + '" aria-label="' + esc(m.nome) + ": " + MAT[m.status].rot + '. Toque para avançar." title="' + esc(m.nome) + ": " + MAT[m.status].rot + '">' + bolinha(m.status) + "</button>").join("") +
-      '<span class="resumo">' + (i.semana && i.st !== PRONTA ? "Sem. " + i.semana + " · " : "") + i.prontos + " de " + i.mats.length + " prontos</span></div>";
+    mats = '<div class="mat-chips">' + i.mats.map((m, idx) =>
+      '<button type="button" class="mat-chip st-' + m.status + '" data-acao="bol" data-id="' + c.id + '" data-i="' + idx + '" aria-label="' + esc(m.nome) + ": " + MAT[m.status].rot + '. Toque para avançar." title="' + esc(m.nome) + ": " + MAT[m.status].rot + '">' + bolinha(m.status) + '<span class="nm">' + esc(m.nome) + "</span></button>").join("") + "</div>";
   }
+  const etapas = i.ativo ? miniEtapas(c, i) : "";
+  const meta = i.ativo && (i.semana || i.mats.length) ? '<div class="card-meta">' + [i.semana && i.st !== PRONTA ? "Semana " + Math.min(i.semana, 5) : "", i.mats.length ? i.prontos + " de " + i.mats.length + " materiais prontos" : ""].filter(Boolean).join(" · ") + "</div>" : "";
   let linha = "";
+  if (i.vencida) linha += '<div class="aviso-linha vermelho mini">Venceu há ' + (-i.diasRest) + (i.diasRest === -1 ? " dia" : " dias") + "</div>";
+  if ((i.st === AFAZER || i.st === PRE) && !i.mats.length) linha += '<div class="aviso-linha revisar mini" title="Abra o cartão e cadastre os materiais na aba Materiais">' + ICONE_LAPIS.replace('width="16" height="16"', 'width="12" height="12"') + "Revise a matéria-prima desta joia</div>";
   if (i.st === APROV) linha = '<div class="aviso-linha neutro">Aguardando pagamento. Sem contagem de prazo.</div>';
-  else if (i.vencida) linha = '<div class="aviso-linha vermelho">Venceu há ' + (-i.diasRest) + (i.diasRest === -1 ? " dia" : " dias") + "</div>";
-  else if (i.compraAtrasada) linha = '<div class="aviso-linha vermelho">Compra atrasada desde ' + dm(i.limiteCompra) + "</div>";
-  else if (i.apertando) linha = '<div class="aviso-linha ambar">Prazo apertando. Falta: ' + esc(i.falta.join(", ")) + "</div>";
-  else if (i.ativo && i.aComprar.length && i.limiteCompra) linha = '<div class="aviso-linha vermelho">Comprar até ' + dm(i.limiteCompra) + "</div>";
-  else if (i.st === PRONTA && i.esperandoDesde) { const n = dias(i.esperandoDesde, hoje()); linha = '<div class="aviso-linha ok">' + (n <= 0 ? "Pronta desde hoje" : "Esperando há " + n + (n === 1 ? " dia" : " dias")) + "</div>"; }
-  else if (i.st === AFAZER && !i.mats.length && c.inicio) linha = '<div class="aviso-linha neutro">Cadastrar os materiais</div>';
-  else if (i.st === AFAZER && !i.proj && i.matsOk) linha = '<div class="aviso-linha neutro">Falta o projeto 3D</div>';
+  else if (i.compraAtrasada) linha += '<div class="aviso-linha vermelho">Compra atrasada desde ' + dm(i.limiteCompra) + "</div>";
+  else if (i.apertando) linha += '<div class="aviso-linha ambar">Prazo apertando. Falta: ' + esc(i.falta.join(", ")) + "</div>";
+  else if (i.ativo && i.aComprar.length && i.limiteCompra) linha += '<div class="aviso-linha vermelho">Comprar até ' + dm(i.limiteCompra) + "</div>";
+  else if (i.st === PRONTA) linha += '<div class="aviso-linha ok">Tudo pronto para iniciar</div>';
 
   return '<article class="' + classes.join(" ") + '" draggable="true" tabindex="0" data-id="' + c.id + '" aria-label="Abrir ' + esc(c.client || "encomenda") + '">' +
     '<div class="card-top">' + fotoMini(c, "card-foto") +
     '<div class="card-txt"><span class="card-nome">' + esc(c.client || "Sem nome") + '</span><span class="card-sub">' + esc(c.model || "Sem modelo") + "</span>" + (c.investment ? '<span class="card-sub">' + valorTxt(c) + "</span>" : "") + "</div>" +
-    (prazo ? '<span class="prazo ' + prazoCls + '">' + prazo + "</span>" : "") + "</div>" + mats + linha + "</article>";
+    (prazo ? '<span class="prazo ' + prazoCls + '">' + prazo + "</span>" : "") + "</div>" + etapas + mats + meta + linha + "</article>";
+}
+function miniEtapas(c, i) {
+  const et = etapasDe(c);
+  const ordem = [APROV, AFAZER, PRONTA, PRE, EXEC, FIM];
+  const pos = ordem.indexOf(i.st);
+  const segs = [
+    { t: "3D", nome: "Projeto 3D", ok: i.proj, agora: !i.proj },
+    { t: "Mat.", nome: "Materiais", ok: i.matsOk, agora: !i.matsOk && i.mats.length > 0, falta: !i.mats.length && pos <= 3 },
+    { t: "Pré", nome: "Pré-produção", ok: !!et.preFim || pos >= 4, agora: i.st === PRE },
+    { t: "Prod.", nome: "Produção", ok: !!et.prodFim || pos >= 5, agora: i.st === EXEC && !et.prodFim },
+    { t: "Envio", nome: "Envio", ok: !!et.enviada || pos >= 5, agora: i.st === EXEC && !!et.prodFim }
+  ];
+  const estado = sg => sg.ok ? "ok" : sg.falta ? "falta" : sg.agora ? "agora" : "";
+  const fala = { ok: "feito", agora: "em andamento", falta: "sem lista", "": "a fazer" };
+  return '<ol class="mini-et" aria-label="Etapas: ' + segs.map(sg => sg.nome + " " + fala[estado(sg)]).join(", ") + '">' +
+    segs.map(sg => '<li class="' + estado(sg) + '">' + sg.t + "</li>").join("") + "</ol>";
 }
 function ordenar(lista) {
   return lista.sort((a, b) => {
