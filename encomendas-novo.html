@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spielvogel Joias · Painel de Encomendas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="estilo.css">
+<script src="tema.js"></script>
+<style>
+  /* ============================================================
+     PAINEL DE ENCOMENDAS · cores próprias dos materiais e alertas
+     ============================================================ */
+  :root {
+    --m-tenho: #5b9be0; --m-comprar: #e0786b; --m-comprado: #e0a33c; --m-recebido: #4fb37c;
+    --alerta-vermelho-bg: rgba(224,120,107,0.14); --alerta-vermelho-tx: #f0a397;
+    --alerta-ambar-bg: rgba(224,163,60,0.15); --alerta-ambar-tx: #f0c27a;
+    --ok-bg: rgba(79,179,124,0.15); --ok-tx: #8fd6ac;
+    --neutro-bg: rgba(255,255,255,0.06);
+  }
+  :root[data-theme="light"] {
+    --m-tenho: #2f6fb0; --m-comprar: #c63a2f; --m-comprado: #b8770f; --m-recebido: #2e8b57;
+    --alerta-vermelho-bg: #fde3df; --alerta-vermelho-tx: #8f2018;
+    --alerta-ambar-bg: #fbebcb; --alerta-ambar-tx: #6b4300;
+    --ok-bg: #ddf1e5; --ok-tx: #1f6b42;
+    --neutro-bg: #eeeeea;
+  }
+
+  main { max-width: 1680px; margin: 0 auto; padding: 22px 24px 90px; }
+  button { font-family: inherit; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Topo da página */
+  .topo { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px 20px; flex-wrap: wrap; margin-bottom: 14px; }
+  .topo .page-head { margin: 0; }
+  .topo-acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .visoes { display: flex; gap: 4px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .visoes button { border: 0; background: none; color: var(--text-secondary); font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 9px; cursor: pointer; min-height: 38px; }
+  .visoes button[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); }
+  .visoes .qtd { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; font-size: 11px; line-height: 18px; background: var(--danger); color: #fff; }
+  .busca { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elevated); min-width: 220px; }
+  .busca input { border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 14px; flex: 1; min-width: 0; }
+  .busca svg { flex: none; color: var(--text-muted); }
+  .btn-icone { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; }
+
+  /* Barra de atenção */
+  .atencao { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 4px 0 10px; }
+  .atencao-titulo { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-right: 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 13px; border-radius: 999px; font-size: 13.5px; font-weight: 600; border: 2px solid transparent; cursor: pointer; background: var(--neutro-bg); color: var(--text); }
+  .chip .ponto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .chip.vermelho { background: var(--alerta-vermelho-bg); color: var(--alerta-vermelho-tx); }
+  .chip.vermelho .ponto { background: var(--m-comprar); }
+  .chip.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
+  .chip.ambar .ponto { background: var(--m-comprado); }
+  .chip.forte { background: var(--danger); color: #fff; }
+  .chip.ok { background: var(--ok-bg); color: var(--ok-tx); cursor: default; }
+  .chip.ouro { background: transparent; border-color: var(--gold-soft); color: var(--gold); }
+  .chip[aria-pressed="true"] { border-color: var(--text); }
+  .atencao-dica { font-size: 12px; color: var(--text-muted); }
+
+  .legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; }
+  .legenda b { font-weight: 600; }
+  .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Bolinhas de material (cor + forma, para não depender só da cor) */
+  .bol { width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; display: inline-grid; place-items: center; flex: none; color: #fff; }
+  .bol svg { width: 10px; height: 10px; display: block; }
+  .bol-tenho { background: var(--m-tenho); }
+  .bol-comprar { background: var(--m-comprar); }
+  .bol-comprado { background: transparent; border: 3px solid var(--m-comprado); }
+  .bol-recebido { background: var(--m-recebido); }
+  .bol-btn { width: 30px; height: 30px; border: 0; background: none; padding: 0; display: grid; place-items: center; border-radius: 8px; cursor: pointer; }
+  .bol-btn:hover { background: var(--neutro-bg); }
+  .bol-btn:focus-visible { outline: 2px solid var(--gold); }
+
+  /* Quadro */
+  .quadro { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)) minmax(190px, 0.85fr); gap: 12px; align-items: start; overflow-x: auto; padding-bottom: 6px; }
+  .coluna { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 14px; padding: 12px 10px 10px; min-height: 120px; }
+  .coluna.sobre { border-color: var(--gold); }
+  .coluna-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 2px; }
+  .coluna-titulo { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.1; color: var(--text); }
+  .coluna-qtd { font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--neutro-bg); border-radius: 999px; padding: 1px 9px; }
+  .coluna-dica { font-size: 11.5px; color: var(--text-muted); padding: 0 4px; margin-top: -4px; }
+  .vazio { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 14px 4px; }
+
+  .card { background: var(--bg-elevated-2); border: 1px solid var(--border); border-radius: 12px; padding: 9px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: opacity .15s, border-color .15s; }
+  .card:hover { border-color: var(--gold-soft); }
+  .card.vermelho { border-color: var(--m-comprar); }
+  .card.ambar { border-color: var(--m-comprado); }
+  .card.apagado { opacity: 0.28; }
+  .card.destaque { box-shadow: 0 0 0 2px var(--gold); }
+  .card-top { display: flex; align-items: center; gap: 9px; }
+  .card-foto { width: 44px; height: 44px; flex: none; border-radius: 9px; overflow: hidden; border: 0; padding: 0; background: var(--neutro-bg); display: grid; place-items: center; color: var(--text-muted); cursor: zoom-in; }
+  .card-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-foto.sem { cursor: pointer; }
+  .card-txt { flex: 1; min-width: 0; }
+  .card-nome { display: block; font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-sub { display: block; font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prazo { flex: none; font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 3px 7px; background: var(--neutro-bg); color: var(--text-secondary); white-space: nowrap; }
+  .prazo.vermelho { background: var(--danger); color: #fff; }
+  .prazo.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
+  .card-mats { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: -2px 0 -2px -6px; }
+  .card-mats .resumo { font-size: 11.5px; color: var(--text-secondary); margin-left: 4px; }
+  .aviso-linha { font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 3px 8px; align-self: flex-start; }
+  .aviso-linha.vermelho { background: var(--alerta-vermelho-bg); color: var(--alerta-vermelho-tx); }
+  .aviso-linha.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
+  .aviso-linha.ok { background: var(--ok-bg); color: var(--ok-tx); }
+  .aviso-linha.neutro { background: var(--neutro-bg); color: var(--text-secondary); font-weight: 500; }
+
+  /* Pasta Finalizados */
+  .pasta { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-elevated-2); color: var(--text); text-align: left; cursor: pointer; }
+  .pasta:hover { border-color: var(--gold-soft); }
+  .pasta svg { flex: none; }
+  .pasta-txt { flex: 1; min-width: 0; }
+  .pasta-txt b { display: block; font-size: 14px; }
+  .pasta-txt span { display: block; font-size: 12px; color: var(--text-secondary); }
+  .mes { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-secondary); padding: 8px 4px 2px; }
+  button.mes { width: 100%; border: 0; background: none; cursor: pointer; font-family: inherit; }
+  button.mes:hover { color: var(--gold); }
+  .lista-fim { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elevated-2); }
+  .lista-fim button { display: flex; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--text); padding: 8px 10px; cursor: pointer; font-size: 13px; }
+  .lista-fim button:last-child { border-bottom: 0; }
+  .lista-fim button:hover { color: var(--gold); }
+  .lista-fim img, .lista-fim .mini-sem { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; flex: none; background: var(--neutro-bg); }
+  .lista-fim .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lista-fim .nm small { display: block; color: var(--text-secondary); font-size: 11.5px; }
+  .lista-fim .dt { font-size: 11.5px; color: var(--text-muted); flex: none; }
+  .busca.pequena { height: 36px; min-width: 0; }
+
+  /* Seletor de coluna no celular */
+  .seletor-col { display: none; }
+
+  /* ============================================================
+     CARTÃO ABERTO
+     ============================================================ */
+  .modal.cartao { max-width: 900px; padding: 0; display: flex; flex-direction: column; max-height: 92vh; min-height: min(640px, 92vh); overflow: hidden; }
+  .modal.cartao.novo { min-height: 0; }
+  .modal.cartao.novo { max-width: 620px; }
+  .c-cabeca { display: flex; gap: 16px; align-items: center; padding: 22px 60px 14px 24px; border-bottom: 1px solid var(--border); }
+  .c-foto { width: 76px; height: 76px; flex: none; border-radius: 12px; overflow: hidden; border: 0; padding: 0; background: var(--neutro-bg); color: var(--text-muted); display: grid; place-items: center; cursor: zoom-in; }
+  .c-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .c-tit { flex: 1; min-width: 0; }
+  .c-tit h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.05; color: var(--text); }
+  .c-tit p { margin: 4px 0 0; font-size: 14px; color: var(--text-secondary); }
+  .c-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+  .c-semana { font-size: 13px; font-weight: 700; background: var(--neutro-bg); border-radius: 8px; padding: 5px 10px; color: var(--text); }
+  .c-semana.vermelho { background: var(--danger); color: #fff; }
+  .c-semana.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
+  .mover { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .mover select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; min-height: 34px; }
+  .fechar { position: absolute; top: 10px; right: 12px; width: 40px; height: 40px; border: 0; background: none; color: var(--text-muted); font-size: 20px; cursor: pointer; border-radius: 8px; }
+  .fechar:hover { color: var(--gold); }
+  .abas { display: flex; gap: 2px; padding: 0 16px; border-bottom: 1px solid var(--border); overflow-x: auto; flex: none; }
+  .abas button { border: 0; background: none; padding: 0 12px; height: 46px; font-size: 14px; font-weight: 600; color: var(--text-secondary); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  .abas button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--gold); }
+  .abas .qtd { display: inline-block; min-width: 18px; margin-left: 4px; border-radius: 999px; font-size: 11px; line-height: 18px; background: var(--danger); color: #fff; }
+  .c-corpo { padding: 18px 24px 24px; overflow-y: auto; flex: 1; min-height: 0; }
+
+  .faixa { border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
+  .faixa.vermelho { background: var(--alerta-vermelho-bg); color: var(--alerta-vermelho-tx); }
+  .faixa.ambar { background: var(--alerta-ambar-bg); color: var(--alerta-ambar-tx); }
+  .faixa.ok { background: var(--ok-bg); color: var(--ok-tx); }
+  .faixa.neutro { background: var(--neutro-bg); color: var(--text-secondary); font-weight: 500; }
+
+  /* Materiais */
+  .mat { position: relative; border: 1px solid var(--border); border-radius: 12px; padding: 12px 50px 12px 14px; margin-bottom: 10px; background: var(--bg-elevated-2); }
+  .mat-topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mat-nome { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 8px; }
+  .mat-nome input { flex: 1; min-width: 0; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 8px; color: var(--text); font: inherit; font-size: 15px; font-weight: 600; }
+  .mat-nome input:hover, .mat-nome input:focus { border-color: var(--border); outline: none; background: var(--bg); }
+  .mat-tipo { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+  .estados { display: flex; gap: 6px; flex-wrap: wrap; }
+  .estados button { min-height: 42px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+  .estados button:hover { border-color: var(--gold-soft); color: var(--text); }
+  .estados button[aria-pressed="true"].e-tenho { background: var(--m-tenho); border-color: var(--m-tenho); color: #fff; }
+  .estados button[aria-pressed="true"].e-comprar { background: var(--m-comprar); border-color: var(--m-comprar); color: #fff; }
+  .estados button[aria-pressed="true"].e-comprado { background: transparent; border: 2px solid var(--m-comprado); color: var(--m-comprado); }
+  .estados button[aria-pressed="true"].e-recebido { background: var(--m-recebido); border-color: var(--m-recebido); color: #fff; }
+  .estados button[aria-pressed="true"] .bol { display: none; }
+  .mat-datas { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+  .mat-remover { position: absolute; top: 8px; right: 8px; border: 0; background: none; color: var(--text-muted); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+  .mat-remover:hover { color: var(--danger); }
+  .novo-mat { border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .novo-mat .linha { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .novo-mat input[type="text"] { flex: 1; min-width: 180px; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 10px; font: inherit; font-size: 14px; }
+  .pilulas { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pilulas button { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .pilulas button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+  .nota { font-size: 12.5px; color: var(--text-muted); margin-top: 10px; }
+
+  /* Etapas */
+  .trilhas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .trilha { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-elevated-2); }
+  .rotulo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .trilha .val { font-size: 15px; font-weight: 600; }
+  .trilha .linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .etapa { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .etapa.feita { background: var(--ok-bg); border-color: transparent; }
+  .etapa .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; border: 2px solid var(--border); flex: none; }
+  .etapa.feita .num { background: var(--m-recebido); border-color: var(--m-recebido); color: #fff; }
+  .etapa.agora .num { border-color: var(--gold); color: var(--gold); }
+  .etapa .txt { flex: 1; min-width: 180px; }
+  .etapa .txt b { display: block; font-size: 15px; }
+  .etapa .txt span { display: block; font-size: 12.5px; color: var(--text-secondary); }
+  .etapa .feito-em { font-size: 13px; font-weight: 600; color: var(--ok-tx); }
+  .etapa input[type="text"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 10px; font: inherit; font-size: 14px; min-width: 170px; }
+  .btn-grande { min-height: 44px; }
+
+  /* Histórico */
+  .hist-resumo { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .hist-resumo span { font-size: 12.5px; background: var(--neutro-bg); border-radius: 8px; padding: 5px 10px; color: var(--text-secondary); }
+  .hist-resumo span b { color: var(--text); }
+  .hist { display: flex; flex-direction: column; gap: 6px; }
+  .hist-item { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; }
+  .hist-item .dt { width: 62px; flex: none; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+  .hist-item .tx { flex: 1; font-size: 14px; }
+  .hist-item .editado { font-size: 11px; font-weight: 700; color: var(--alerta-ambar-tx); background: var(--alerta-ambar-bg); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+  .lapis { border: 0; background: none; color: var(--text-muted); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; flex: none; display: grid; place-items: center; }
+  .lapis:hover { color: var(--gold); }
+  .hist-item input[type="date"] { background: var(--bg); border: 1px solid var(--gold); color: var(--text); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 13px; }
+
+  /* Detalhes */
+  .det-rapido { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .det-rapido a, .det-rapido button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elevated-2); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .det-rapido a:hover, .det-rapido button:hover { border-color: var(--gold); color: var(--gold); }
+  .grade2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+  .grade2 .inteiro { grid-column: 1 / -1; }
+  .escolha { display: flex; gap: 6px; }
+  .escolha label { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 40px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-secondary); background: var(--bg); margin: 0; }
+  .escolha input { position: absolute; opacity: 0; pointer-events: none; }
+  .escolha input:checked + span { color: var(--gold); }
+  .escolha label:has(input:checked) { border-color: var(--gold); }
+  .escolha input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 4px; }
+  .photos-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .pdf-thumb { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: var(--border); color: var(--gold); padding: 4px; text-align: center; cursor: pointer; }
+  .pdf-thumb .pdf-label { font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .pdf-thumb .pdf-name { color: var(--text-muted); font-size: 9px; margin-top: 3px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-rodape { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); flex: none; }
+
+  /* ============================================================
+     COMPRAS E PÓS-VENDA
+     ============================================================ */
+  .duas { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .bloco-tit { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+  .bloco-tit h2 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+  .caixa { border: 1px solid var(--border); border-radius: 14px; background: var(--bg-elevated); padding: 14px; margin-bottom: 12px; }
+  .caixa-topo { display: flex; align-items: center; gap: 12px; }
+  .caixa-topo .card-foto { width: 46px; height: 46px; }
+  .caixa-topo .tt { flex: 1; min-width: 0; }
+  .caixa-topo .tt b { display: block; font-size: 15.5px; }
+  .caixa-topo .tt span { display: block; font-size: 12.5px; color: var(--text-secondary); }
+  .item-compra { display: flex; align-items: center; gap: 10px; padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--border); }
+  .item-compra .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; }
+  .item-compra .nm small { display: block; color: var(--text-secondary); font-size: 12px; }
+  .btn-acao { min-height: 48px; padding: 0 18px; border-radius: 10px; font-size: 14.5px; font-weight: 700; border: 2px solid var(--gold); background: var(--gold); color: var(--on-gold); cursor: pointer; white-space: nowrap; }
+  .btn-acao:hover { background: var(--gold-hover); border-color: var(--gold-hover); }
+  .btn-acao.claro { background: transparent; color: var(--gold); }
+  .tabela-media { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tabela-media th, .tabela-media td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  .tabela-media th { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+  .calc { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; font-size: 14px; }
+  .calc input { width: 80px; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 10px; font: inherit; font-size: 15px; }
+  .res { font-size: 13.5px; padding: 8px 10px; border-radius: 8px; margin-top: 6px; }
+  .res.ok { background: var(--ok-bg); color: var(--ok-tx); }
+  .res.nao { background: var(--alerta-vermelho-bg); color: var(--alerta-vermelho-tx); }
+  .res.neutro { background: var(--neutro-bg); color: var(--text-secondary); }
+
+  .pv-msg { font-size: 14px; line-height: 1.5; margin: 10px 0; }
+  .pv-msg b { color: var(--gold); }
+  .pv-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .link-mini { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600; background: none; cursor: pointer; }
+  .link-mini:hover { border-color: var(--gold); color: var(--gold); }
+  .barra4 { list-style: none; margin: 10px 0 4px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .barra4 li { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .barra4 li::before { content: ""; height: 6px; border-radius: 3px; background: var(--border); }
+  .barra4 li.feito { color: var(--ok-tx); }
+  .barra4 li.feito::before { background: var(--m-recebido); }
+  .barra4 li.agora { color: var(--text); }
+  .barra4 li.agora::before { background: var(--gold); }
+  .pv-ultimo { font-size: 12.5px; color: var(--text-secondary); }
+  .pv-contatos { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Navegação inferior (celular) */
+  .nav-baixo { display: none; }
+
+  /* Aviso rápido com "Desfazer" */
+  .toast { display: flex; align-items: center; gap: 12px; pointer-events: none; max-width: calc(100vw - 32px); }
+  .toast.show { pointer-events: auto; }
+  .toast button { background: rgba(0,0,0,0.18); border: 0; color: inherit; font: inherit; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+
+  @media (max-width: 1100px) {
+    .quadro { grid-template-columns: repeat(6, 230px); }
+  }
+  @media (max-width: 760px) {
+    main { padding: 16px 12px 96px; }
+    .page-title { font-size: 30px; }
+    .topo { align-items: stretch; }
+    .topo-acoes { width: 100%; }
+    .visoes { display: none; }
+    .busca { flex: 1 1 100%; min-width: 0; }
+    .topo-acoes .btn-solid { flex: 1; }
+    .atencao-dica { display: none; }
+    .legenda { display: none; }
+    .seletor-col { display: flex; gap: 6px; overflow-x: auto; margin: 0 -12px 12px; padding: 2px 12px 4px; }
+    .seletor-col button { flex: none; min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .seletor-col button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+    .quadro { display: block; overflow: visible; }
+    .quadro .coluna { display: none; }
+    .quadro .coluna.visivel { display: flex; }
+    .card-foto { width: 52px; height: 52px; }
+    .card-nome { font-size: 15px; }
+    .bol-btn { width: 40px; height: 40px; }
+    .bol { width: 20px; height: 20px; }
+    .duas { grid-template-columns: 1fr; }
+    .trilhas, .grade2 { grid-template-columns: 1fr; }
+    .modal-overlay { padding: 0; }
+    .modal.cartao { max-height: 100vh; height: 100%; border-radius: 0; }
+    .c-cabeca { padding: 14px 52px 12px 14px; flex-wrap: wrap; gap: 12px; }
+    .c-foto { width: 60px; height: 60px; }
+    .c-tit h2 { font-size: 25px; }
+    .c-lado { align-items: flex-start; width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .c-corpo { padding: 14px; }
+    .abas { padding: 0 6px; }
+    .c-rodape { padding: 12px 14px; }
+    .nav-baixo { display: grid; grid-template-columns: repeat(3, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: var(--bg-elevated); border-top: 1px solid var(--border); }
+    .nav-baixo button { border: 0; background: none; min-height: 60px; color: var(--text-secondary); font-size: 14px; font-weight: 600; border-top: 3px solid transparent; cursor: pointer; }
+    .nav-baixo button[aria-pressed="true"] { color: var(--gold); border-top-color: var(--gold); }
+    .nav-baixo .qtd { display: inline-block; min-width: 18px; margin-left: 4px; border-radius: 999px; font-size: 11px; line-height: 18px; background: var(--danger); color: #fff; }
+    .toast { bottom: 76px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="sv-nav">
+  <a class="sv-nav-brand" href="entrada.html"><img src="logo.png" alt="Spielvogel Joias"></a>
+  <div class="sv-nav-links">
+    <a href="index.html" class="ativo">Painel de Encomendas</a>
+    <a href="tabela-precos.html">Tabela de Preços</a>
+    <a href="leads.html">Leads</a>
+    <a href="simulador.html">Simulador</a>
+  </div>
+</nav>
+
+<main>
+  <div class="topo">
+    <header class="page-head">
+      <p class="page-eyebrow">Spielvogel Joias</p>
+      <h1 class="page-title" id="tituloPagina">Painel de encomendas</h1>
+    </header>
+    <div class="topo-acoes">
+      <div class="visoes" role="group" aria-label="Visões do painel" id="visoes"></div>
+      <label class="busca"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="busca" placeholder="Buscar cliente ou joia" aria-label="Buscar cliente ou joia"></label>
+      <button class="btn btn-icone" id="ajustesBtn" aria-label="Ajustes dos alertas" title="Ajustes dos alertas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button class="btn btn-solid" id="addBtn">+ Nova encomenda</button>
+    </div>
+  </div>
+
+  <div id="conteudo"></div>
+</main>
+
+<nav class="nav-baixo" aria-label="Visões do painel" id="navBaixo"></nav>
+
+<!-- Cartão aberto / nova encomenda -->
+<div class="modal-overlay hidden" id="cartaoOverlay">
+  <div class="modal cartao" role="dialog" aria-modal="true" aria-labelledby="cNome" id="cartaoModal"></div>
+</div>
+
+<!-- Ajustes -->
+<div class="modal-overlay hidden" id="ajustesOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ajTit">
+    <button class="modal-fechar" data-fechar-ajustes aria-label="Fechar">✕</button>
+    <h2 id="ajTit">Ajustes dos alertas</h2>
+    <div class="field"><label for="ajCompra">Prazo para comprar os materiais (dias depois de sair da Aprovação)</label><input type="number" min="1" max="30" id="ajCompra"></div>
+    <div class="field"><label for="ajLimite">Prazo curto é quando a joia tem menos de (dias)</label><input type="number" min="1" max="60" id="ajLimite"></div>
+    <div class="field"><label for="ajLongo">Aviso de prazo apertando, joias de prazo normal (dias antes da entrega)</label><input type="number" min="1" max="30" id="ajLongo"></div>
+    <div class="field"><label for="ajCurto">Aviso de prazo apertando, joias de prazo curto (dias antes da entrega)</label><input type="number" min="1" max="30" id="ajCurto"></div>
+    <div class="field"><label for="ajConfeccao">Dias de confecção (para calcular prazo curto)</label><input type="number" min="1" max="30" id="ajConfeccao"></div>
+    <p class="nota">Os ajustes valem para você e para o Tiago.</p>
+    <div class="modal-actions">
+      <button class="btn-text" data-fechar-ajustes>Cancelar</button>
+      <button class="btn btn-solid" id="ajSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="fecharLightbox()">
+  <button class="lightbox-fechar" onclick="fecharLightbox()" aria-label="Fechar">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- Confirmação -->
+<div class="modal-overlay hidden" id="confirmaOverlay" style="z-index:250">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmaTxt" style="max-width:400px">
+    <p id="confirmaTxt" style="margin:0 0 6px;font-size:15px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn-text" id="confirmaNao">Cancelar</button>
+      <button class="btn btn-solid" id="confirmaSim">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!--FIREBASE-INICIO-->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!--FIREBASE-FIM-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DO FIREBASE (a mesma de antes, não mexer)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBY2aOX2FSTdjdOH9Nqyi4lAVkfsLws9ek",
+  authDomain: "spielvogel-painel.firebaseapp.com",
+  projectId: "spielvogel-painel",
+  storageBucket: "spielvogel-painel.firebasestorage.app",
+  messagingSenderId: "368754911719",
+  appId: "1:368754911719:web:c452ad8cca48410de33542"
+};
+const COLLECTION = "encomendas";
+const CONFIG_COLLECTION = "encomendas_config";
+
+/* Modo demonstração: dados de exemplo, nada é salvo. Abra o painel com ?demo no fim do endereço. */
+const DEMO = !!window.SV_DEMO || new URLSearchParams(location.search).has("demo");
+
+/* ============================================================
+   NOMES DAS COLUNAS
+   Os valores guardados no banco são os mesmos de antes, para os cartões antigos continuarem no lugar.
+   ============================================================ */
+const APROV = "Em Aprovação", AFAZER = "A Fazer", PRONTA = "Pronta p/ Pré-Produção", PRE = "Pré-Produção", EXEC = "Em Execução", FIM = "Finalizados";
+const COLUNAS = [
+  { v: APROV, t: "Aprovação", curto: "Aprovação" },
+  { v: AFAZER, t: "A fazer", curto: "A fazer" },
+  { v: PRONTA, t: "Pronta para pré-produção", curto: "Pronta" },
+  { v: PRE, t: "Pré-produção", curto: "Pré-produção" },
+  { v: EXEC, t: "Em execução", curto: "Execução" }
+];
+const NOME_COLUNA = { [APROV]: "Aprovação", [AFAZER]: "A fazer", [PRONTA]: "Pronta para pré-produção", [PRE]: "Pré-produção", [EXEC]: "Em execução", [FIM]: "Finalizados" };
+
+const MAT = {
+  tenho: { rot: "Já tenho", curto: "Já tenho" },
+  comprar: { rot: "Preciso comprar", curto: "Comprar" },
+  comprado: { rot: "Comprado", curto: "Comprado" },
+  recebido: { rot: "Recebido", curto: "Recebido" }
+};
+const TIPOS_MAT = { pedra: "Pedra", ouro: "Ouro", outro: "Outro" };
+
+const CONFIG_PADRAO = { diasCompra: 12, limiteCurto: 20, avisoLongo: 6, avisoCurto: 4, diasConfeccao: 4 };
+let cfg = { ...CONFIG_PADRAO };
+
+/* ============================================================
+   DATAS (sempre no formato 2026-11-13)
+   ============================================================ */
+function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function hoje() { return iso(new Date()); }
+function lerData(s) { const p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function addDias(s, n) { const d = lerData(s); d.setDate(d.getDate() + n); return iso(d); }
+function dias(a, b) { return Math.round((lerData(b) - lerData(a)) / 86400000); } /* b menos a */
+function dm(s) { if (!s) return ""; const p = s.split("-"); return p[2] + "/" + p[1]; }
+function dma(s) { if (!s) return ""; const p = s.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+function deTimestamp(ts) {
+  if (!ts) return null;
+  if (typeof ts.toDate === "function") return iso(ts.toDate());
+  if (ts instanceof Date) return iso(ts);
+  if (typeof ts === "string") return ts.slice(0, 10);
+  if (ts.seconds) return iso(new Date(ts.seconds * 1000));
+  return null;
+}
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function sem(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
+function limpo(v) { return v === undefined ? null : JSON.parse(JSON.stringify(v)); }
+function novoId() { return Math.random().toString(36).slice(2, 9); }
+
+/* ============================================================
+   BANCO DE DADOS (Firebase, ou memória no modo demonstração)
+   ============================================================ */
+const APAGAR = "__apagar__";
+let store;
+
+if (!DEMO) {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const FV = firebase.firestore.FieldValue;
+  const preparar = (patch) => {
+    const p = {};
+    Object.keys(patch).forEach(k => { p[k] = patch[k] === APAGAR ? FV.delete() : limpo(patch[k]); });
+    p.updatedAt = FV.serverTimestamp();
+    return p;
+  };
+  store = {
+    ouvir(cb, erro) { db.collection(COLLECTION).onSnapshot(s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))), erro); },
+    criar(dados) { const p = preparar(dados); p.createdAt = FV.serverTimestamp(); return db.collection(COLLECTION).add(p); },
+    atualizar(id, patch) { return db.collection(COLLECTION).doc(id).update(preparar(patch)); },
+    excluir(id) { return db.collection(COLLECTION).doc(id).delete(); },
+    ouvirConfig(cb) { db.collection(CONFIG_COLLECTION).doc("alertas").onSnapshot(d => cb(d.exists ? d.data() : {}), () => cb({})); },
+    salvarConfig(c) { return db.collection(CONFIG_COLLECTION).doc("alertas").set(c, { merge: true }); }
+  };
+} else {
+  let mem = (window.SV_DADOS_DEMO || []).map(c => JSON.parse(JSON.stringify(c)));
+  let ouvinte = null, ouvinteCfg = null, memCfg = {};
+  const avisar = () => setTimeout(() => ouvinte && ouvinte(mem.map(c => JSON.parse(JSON.stringify(c)))), 0);
+  store = {
+    ouvir(cb) { ouvinte = cb; avisar(); },
+    criar(dados) { const c = limpo(dados); c.id = "d" + novoId(); c.createdAt = new Date().toISOString(); mem.push(c); avisar(); return Promise.resolve(); },
+    atualizar(id, patch) {
+      const c = mem.find(x => x.id === id); if (!c) return Promise.resolve();
+      Object.keys(patch).forEach(k => { if (patch[k] === APAGAR) delete c[k]; else c[k] = limpo(patch[k]); });
+      avisar(); return Promise.resolve();
+    },
+    excluir(id) { mem = mem.filter(x => x.id !== id); avisar(); return Promise.resolve(); },
+    ouvirConfig(cb) { ouvinteCfg = cb; cb(memCfg); },
+    salvarConfig(c) { memCfg = { ...memCfg, ...c }; ouvinteCfg && ouvinteCfg(memCfg); return Promise.resolve(); }
+  };
+}
+
+/* ============================================================
+   ESTADO DA TELA
+   ============================================================ */
+let cards = [];
+let carregou = false;
+const ui = {
+  visao: "quadro", filtro: "", busca: "", pastaAberta: false, buscaFim: "",
+  colCelular: AFAZER, abertoId: null, aba: "mat", novo: false, editandoData: null,
+  rascunho: null, mesesAbertos: {}, arquivos: [], detSujo: false, novoMatTipo: "pedra", diasCliente: ""
+};
+
+/* ============================================================
+   LEITURA DE CADA ENCOMENDA (cálculos)
+   ============================================================ */
+function statusDe(c) { return [APROV, AFAZER, PRONTA, PRE, EXEC, FIM].includes(c.status) ? c.status : APROV; }
+function arquivosDe(c) {
+  return c.files
+    || (c.photos ? c.photos.map(p => ({ name: "foto.jpg", type: "image", data: p })) : null)
+    || (c.photoUrl ? [{ name: "foto.jpg", type: "image", data: c.photoUrl }] : []);
+}
+function fotoDe(c) { const f = arquivosDe(c).find(x => x.type === "image"); return f ? f.data : null; }
+function contratoDe(c) { return arquivosDe(c).find(x => x.type === "pdf") || null; }
+function projetoFeito(c) { return c.projeto3d ? !!c.projeto3d.feito : c.tipo !== "personalizado"; }
+function etapasDe(c) { return c.etapas || {}; }
+function pronto(m) { return m.status === "tenho" || m.status === "recebido"; }
+
+function info(c) {
+  const t = hoje();
+  const st = statusDe(c);
+  const mats = c.materiais || [];
+  const inicioReal = c.inicio && c.inicio.d ? c.inicio.d : null;
+  const inicio = inicioReal || (c.dueDate ? addDias(c.dueDate, -30) : null);
+  const ativo = st !== APROV && st !== FIM;
+  const diasRest = c.dueDate ? dias(t, c.dueDate) : null;
+  const prazoTotal = c.dueDate && inicio ? dias(inicio, c.dueDate) : null;
+  const curto = prazoTotal != null && prazoTotal < cfg.limiteCurto;
+  const avisoDias = curto ? cfg.avisoCurto : cfg.avisoLongo;
+  const proj = projetoFeito(c);
+  const prontos = mats.filter(pronto).length;
+  const matsOk = mats.length > 0 && prontos === mats.length;
+  const tudoPronto = proj && matsOk;
+  const aComprar = mats.filter(m => m.status === "comprar");
+  const aCaminho = mats.filter(m => m.status === "comprado");
+  const limiteCompra = inicioReal ? addDias(inicioReal, cfg.diasCompra) : null;
+  const compraAtrasada = ativo && !!limiteCompra && aComprar.length > 0 && t > limiteCompra;
+  const vencida = ativo && diasRest != null && diasRest < 0;
+  const apertando = ativo && !!inicioReal && st === AFAZER && !tudoPronto && diasRest != null && diasRest >= 0 && diasRest <= avisoDias;
+  let semana = null;
+  if (inicio && ativo) semana = Math.max(1, Math.floor(dias(inicio, t) / 7) + 1);
+  const falta = [];
+  if (!proj) falta.push("projeto 3D");
+  if (mats.length === 0) falta.push("lista de materiais");
+  else if (prontos < mats.length) falta.push((mats.length - prontos) + (mats.length - prontos === 1 ? " material" : " materiais"));
+  const esperandoDesde = st === PRONTA ? ((c.prontaEm && c.prontaEm.d) || deTimestamp(c.updatedAt)) : null;
+  return { st, mats, inicio, inicioReal, ativo, diasRest, prazoTotal, curto, avisoDias, proj, prontos, matsOk, tudoPronto, aComprar, aCaminho, limiteCompra, compraAtrasada, vencida, apertando, semana, falta, esperandoDesde };
+}
+
+/* Média de dias de chegada por tipo de material (da compra até a chegada) */
+function mediasChegada() {
+  const g = {};
+  cards.forEach(c => (c.materiais || []).forEach(m => {
+    const dc = m.datas && m.datas.comprado && m.datas.comprado.d;
+    const dr = m.datas && m.datas.recebido && m.datas.recebido.d;
+    if (!dc || !dr) return;
+    const n = dias(dc, dr); if (n < 0) return;
+    const k = m.tipo || "outro";
+    (g[k] = g[k] || []).push(n);
+  }));
+  const r = {};
+  Object.keys(g).forEach(k => { const l = g[k]; r[k] = { media: l.reduce((a, b) => a + b, 0) / l.length, n: l.length, max: Math.max(...l) }; });
+  return r;
+}
+
+/* ============================================================
+   PÓS-VENDA: marcos e o que avisar ao cliente
+   ============================================================ */
+const MENSAGEM = {
+  tenho: "Já tem material no atelier. Pode contar ao cliente e mostrar a pedra em vídeo.",
+  comprados: "Semana 1: os materiais foram comprados. Avise que a compra foi feita.",
+  recebidos: "Semana 2: materiais recebidos e conferidos. Mande um vídeo mostrando a pedra e o ouro.",
+  pronta: "Semana 3: tudo pronto para a produção. Tranquilize o cliente: os 30 dias servem para a organização do atelier e a confecção leva de 3 a 4 dias.",
+  producao: "Semana 4: a joia está em produção. Mande uma foto do processo.",
+  finalizada: "A joia está pronta. Mande uma foto e avise que o envio sai em seguida.",
+  enviada: "Joia enviada. Mande o código de rastreio ao cliente."
+};
+const ROTULO_MARCO = {
+  inicio: "Pagamento confirmado", tenho: "Material já no atelier", comprados: "Materiais comprados", recebidos: "Materiais recebidos",
+  pronta: "Pronta para produção", producao: "Joia em produção", finalizada: "Joia finalizada", enviada: "Joia enviada", semanal: "Contato da semana"
+};
+const SEMANAL = {
+  1: "Contato da semana 1: os materiais estão sendo providenciados.",
+  2: "Contato da semana 2: atualize sobre a chegada dos materiais.",
+  3: "Contato da semana 3: explique que os 30 dias servem para a organização e que a confecção leva de 3 a 4 dias.",
+  4: "Contato da semana 4: atualize sobre a produção e o envio."
+};
+function maxData(lista) { const l = lista.filter(Boolean).sort(); return l.length ? l[l.length - 1] : null; }
+function marcos(c) {
+  const r = [];
+  const mats = c.materiais || [];
+  const dt = (m, k) => m.datas && m.datas[k] && m.datas[k].d;
+  const et = etapasDe(c);
+  if (c.inicio && c.inicio.d) r.push({ k: "inicio", d: c.inicio.d });
+  const tenho = mats.filter(m => m.status === "tenho");
+  if (tenho.length) r.push({ k: "tenho", d: maxData(tenho.map(m => dt(m, "tenho"))) || (c.inicio && c.inicio.d) });
+  if (mats.length && mats.every(m => m.status !== "comprar") && mats.some(m => m.status !== "tenho"))
+    r.push({ k: "comprados", d: maxData(mats.map(m => dt(m, "comprado") || dt(m, "recebido") || dt(m, "tenho"))) });
+  if (mats.length && mats.every(pronto) && mats.some(m => m.status === "recebido"))
+    r.push({ k: "recebidos", d: maxData(mats.map(m => dt(m, "recebido") || dt(m, "tenho"))) });
+  if (c.prontaEm && c.prontaEm.d) r.push({ k: "pronta", d: c.prontaEm.d });
+  if (et.preInicio) r.push({ k: "producao", d: et.preInicio.d });
+  if (et.prodFim) r.push({ k: "finalizada", d: et.prodFim.d });
+  if (et.enviada) r.push({ k: "enviada", d: et.enviada.d });
+  return r;
+}
+function avisoPendente(c) {
+  const i = info(c);
+  const st = i.st;
+  const et = etapasDe(c);
+  if (st === APROV) return null;
+  if (st === FIM && !et.enviada) return null;
+  const avisos = c.avisos || [];
+  const feitos = new Set(avisos.map(a => a.k));
+  const ms = marcos(c).filter(m => m.k !== "inicio");
+  if (ms.length) {
+    const ultimo = ms[ms.length - 1];
+    if (!feitos.has(ultimo.k)) {
+      let txt = MENSAGEM[ultimo.k];
+      if (ultimo.k === "enviada" && c.rastreio) txt = "Joia enviada. Mande o código de rastreio: " + c.rastreio;
+      return { k: ultimo.k, d: ultimo.d, txt };
+    }
+  }
+  if (st === FIM || !i.inicioReal) return null;
+  const ultimoContato = maxData(avisos.map(a => a.d)) || i.inicioReal;
+  const semContato = dias(ultimoContato, hoje());
+  if (semContato >= 7) {
+    const s = Math.min(4, i.semana || 1);
+    return { k: "semanal", d: hoje(), txt: SEMANAL[s] + " Faz " + semContato + " dias sem contato.", semanal: true };
+  }
+  return null;
+}
+function etapaCliente(c) {
+  /* 0 materiais comprados · 1 recebidos · 2 pronta · 3 produção e envio */
+  const ks = new Set(marcos(c).map(m => m.k));
+  const feitos = [ks.has("comprados") || ks.has("recebidos"), ks.has("recebidos"), ks.has("pronta") || ks.has("producao"), ks.has("enviada")];
+  return feitos;
+}
+
+/* ============================================================
+   AÇÕES QUE GRAVAM NO BANCO
+   ============================================================ */
+let ultimoDesfazer = null;
+function gravar(c, patch, msg, podeDesfazer = true) {
+  const antes = {};
+  Object.keys(patch).forEach(k => { antes[k] = c[k] === undefined ? APAGAR : limpo(c[k]); });
+  return store.atualizar(c.id, patch).then(() => {
+    if (msg) toast(msg, podeDesfazer ? () => store.atualizar(c.id, antes).then(() => toast("Desfeito")) : null);
+  }).catch(err => { console.error(err); toast("Não consegui salvar, tente de novo"); });
+}
+
+/* Monta o que muda quando o cartão troca de coluna (datas automáticas) */
+function patchMover(c, novo, base) {
+  const p = base || {};
+  const de = statusDe(c);
+  if (de === novo) return p;
+  const t = hoje();
+  p.status = novo;
+  p.movimentos = [...(c.movimentos || []), { d: t, de, para: novo }];
+  if (de === APROV && novo !== APROV && !(c.inicio && c.inicio.d)) {
+    p.inicio = { d: t };
+    if (!c.dueDate) p.dueDate = addDias(t, 30);
+  }
+  const et = { ...etapasDe(c), ...(p.etapas || {}) };
+  let mudouEt = false;
+  if (novo === PRONTA && !(c.prontaEm && c.prontaEm.d) && !p.prontaEm) p.prontaEm = { d: t };
+  if ((novo === PRE || novo === EXEC) && !et.preInicio) { et.preInicio = { d: t }; mudouEt = true; }
+  if (novo === EXEC && !et.preFim) { et.preFim = { d: t }; mudouEt = true; }
+  if (mudouEt) p.etapas = et;
+  if (novo === FIM && !(c.finalizadoEm && c.finalizadoEm.d)) p.finalizadoEm = { d: t };
+  return p;
+}
+function moverCard(c, novo) {
+  if (statusDe(c) === novo) return;
+  const p = patchMover(c, novo);
+  let msg = "Movido para " + NOME_COLUNA[novo];
+  if (p.dueDate) msg += ". Entrega em " + dm(p.dueDate) + " (30 dias)";
+  if (novo === AFAZER) { const extra = verificarPronta(c, p); if (extra) msg = extra; }
+  gravar(c, p, msg);
+}
+
+/* Depois de mexer em material ou projeto: o cartão vai sozinho para "Pronta" (ou volta para "A fazer") */
+function verificarPronta(c, p) {
+  const sim = { ...c };
+  Object.keys(p).forEach(k => { if (p[k] === APAGAR) delete sim[k]; else sim[k] = p[k]; });
+  const i = info(sim);
+  if (i.st === AFAZER && i.tudoPronto) { patchMover(sim, PRONTA, p); return "Tudo pronto! A joia foi para Pronta para pré-produção"; }
+  if (i.st === PRONTA && !i.tudoPronto) { patchMover(sim, AFAZER, p); return "A joia voltou para A fazer"; }
+  return null;
+}
+
+function datasParaStatus(m, novo) {
+  const t = hoje();
+  const d = m.datas || {};
+  if (novo === "tenho") return { tenho: d.tenho || { d: t } };
+  const r = { comprar: d.comprar || { d: t } };
+  if (novo === "comprado") r.comprado = d.comprado || { d: t };
+  if (novo === "recebido") { if (d.comprado) r.comprado = d.comprado; r.recebido = d.recebido || { d: t }; }
+  return r;
+}
+function mudarMaterial(c, idx, novo, viaBolinha) {
+  const mats = limpo(c.materiais || []);
+  const m = mats[idx]; if (!m || m.status === novo) return;
+  m.datas = datasParaStatus(m, novo);
+  m.status = novo;
+  const p = { materiais: mats };
+  const extra = verificarPronta(c, p);
+  let msg = m.nome + ": " + MAT[novo].rot.toLowerCase() + " em " + dm(hoje());
+  if (extra) msg = extra;
+  gravar(c, p, msg);
+}
+function avancarBolinha(c, idx) {
+  const m = (c.materiais || [])[idx]; if (!m) return;
+  const prox = { comprar: "comprado", comprado: "recebido" }[m.status];
+  if (!prox) { toast(m.nome + ": " + MAT[m.status].rot + ". Para mudar, abra o cartão."); return; }
+  mudarMaterial(c, idx, prox, true);
+}
+
+/* ============================================================
+   AVISO RÁPIDO
+   ============================================================ */
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+function toast(msg, desfazer) {
+  toastEl.innerHTML = "<span>" + esc(msg) + "</span>" + (desfazer ? '<button type="button">Desfazer</button>' : "");
+  if (desfazer) toastEl.querySelector("button").onclick = () => { toastEl.classList.remove("show"); desfazer(); };
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), desfazer ? 6000 : 2600);
+}
+function confirmar(msg, sim) {
+  return new Promise(resolve => {
+    const ov = document.getElementById("confirmaOverlay");
+    document.getElementById("confirmaTxt").textContent = msg;
+    const bSim = document.getElementById("confirmaSim"), bNao = document.getElementById("confirmaNao");
+    bSim.textContent = sim || "Confirmar";
+    const fim = v => { ov.classList.add("hidden"); bSim.onclick = bNao.onclick = ov.onclick = null; resolve(v); };
+    bSim.onclick = () => fim(true);
+    bNao.onclick = () => fim(false);
+    ov.onclick = e => { if (e.target === ov) fim(false); };
+    ov.classList.remove("hidden");
+    bSim.focus();
+  });
+}
+function abrirLightbox(src) { document.getElementById("lightbox-img").src = src; document.getElementById("lightbox").classList.add("aberto"); }
+function fecharLightbox() { document.getElementById("lightbox").classList.remove("aberto"); }
+function abrirPdf(dataUri) {
+  try {
+    const bin = atob(dataUri.split(",")[1]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { console.error(e); toast("Não consegui abrir esse PDF."); }
+}
+
+/* ============================================================
+   DESENHO: pedaços reutilizados
+   ============================================================ */
+const ICONE_ANEL = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l3 3.5H9z"/><circle cx="12" cy="15" r="5.5"/></svg>';
+const ICONE_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg>';
+const ICONE_EXCL = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 2.6v4.2M6 9.3v.1"/></svg>';
+const ICONE_CASA = '<svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="2.2"/></svg>';
+const ICONE_LAPIS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>';
+function bolinha(status) {
+  const dentro = status === "recebido" ? ICONE_CHECK : status === "comprar" ? ICONE_EXCL : status === "tenho" ? ICONE_CASA : "";
+  return '<span class="bol bol-' + status + '" aria-hidden="true">' + dentro + "</span>";
+}
+function fotoMini(c, cls) {
+  const f = fotoDe(c);
+  if (f) return '<button type="button" class="' + cls + '" data-acao="zoom" data-id="' + c.id + '" aria-label="Ampliar foto de ' + esc(c.client) + '"><img src="' + f + '" alt=""></button>';
+  return '<span class="' + cls + ' sem" aria-hidden="true">' + ICONE_ANEL + "</span>";
+}
+function valorTxt(c) { return c.investment ? esc(c.investment) : ""; }
+function bate(c) {
+  if (!ui.busca) return true;
+  const q = sem(ui.busca);
+  return sem(c.client).includes(q) || sem(c.model).includes(q);
+}
+
+/* ============================================================
+   VISÃO 1: QUADRO
+   ============================================================ */
+function contagens() {
+  let comprar = 0, atrasadas = 0, apertando = 0, vencidas = 0, prontas = 0, avisar = 0;
+  cards.forEach(c => {
+    const i = info(c);
+    if (i.ativo) { comprar += i.aComprar.length; if (i.compraAtrasada) atrasadas++; }
+    if (i.apertando) apertando++;
+    if (i.vencida) vencidas++;
+    if (i.st === PRONTA) prontas++;
+    if (avisoPendente(c)) avisar++;
+  });
+  return { comprar, atrasadas, apertando, vencidas, prontas, avisar };
+}
+function bateFiltro(c, i) {
+  switch (ui.filtro) {
+    case "compras": return i.ativo && i.aComprar.length > 0;
+    case "apertando": return i.apertando;
+    case "vencidas": return i.vencida;
+    case "prontas": return i.st === PRONTA;
+    default: return true;
+  }
+}
+function htmlAtencao(k) {
+  const chips = [];
+  const ch = (id, cls, txt, ponto) => '<button type="button" class="chip ' + cls + '" data-filtro="' + id + '" aria-pressed="' + (ui.filtro === id) + '">' + (ponto ? '<span class="ponto"></span>' : "") + txt + "</button>";
+  if (k.comprar) chips.push(ch("compras", "vermelho", k.comprar + (k.comprar === 1 ? " item para comprar" : " itens para comprar") + (k.atrasadas ? " · " + k.atrasadas + (k.atrasadas === 1 ? " joia atrasada" : " joias atrasadas") : ""), true));
+  if (k.apertando) chips.push(ch("apertando", "ambar", k.apertando + (k.apertando === 1 ? " prazo apertando" : " prazos apertando"), true));
+  if (k.vencidas) chips.push(ch("vencidas", "forte", k.vencidas + (k.vencidas === 1 ? " vencida" : " vencidas")));
+  if (k.prontas) chips.push(ch("prontas", "", k.prontas + (k.prontas === 1 ? " pronta para pré-produção" : " prontas para pré-produção")));
+  if (k.avisar) chips.push('<button type="button" class="chip ouro" data-ir="posvenda">' + k.avisar + (k.avisar === 1 ? " cliente para avisar" : " clientes para avisar") + "</button>");
+  if (!chips.length) chips.push('<span class="chip ok">Tudo em dia</span>');
+  return '<section class="atencao" aria-label="Precisa de atenção hoje"><span class="atencao-titulo">Precisa de atenção hoje</span>' + chips.join("") +
+    (k.comprar || k.apertando || k.vencidas || k.prontas ? '<span class="atencao-dica">Toque para destacar no quadro</span>' : "") + "</section>";
+}
+function htmlLegenda() {
+  return '<section class="legenda" aria-label="Legenda dos materiais"><b>Materiais:</b>' +
+    ["tenho", "comprar", "comprado", "recebido"].map(s => "<span>" + bolinha(s) + MAT[s].rot + "</span>").join("") +
+    "<span>Toque na bolinha para avançar: comprar, comprado, recebido.</span></section>";
+}
+function htmlCard(c) {
+  const i = info(c);
+  const classes = ["card"];
+  let prazo = "", prazoCls = "";
+  if (c.dueDate) {
+    if (i.st === APROV) { prazo = dm(c.dueDate); }
+    else if (i.vencida) { prazo = dm(c.dueDate); prazoCls = "vermelho"; }
+    else if (i.diasRest === 0 && i.ativo) { prazo = "Hoje"; prazoCls = "vermelho"; }
+    else { prazo = dm(c.dueDate); if (i.apertando) prazoCls = "ambar"; }
+  } else prazo = i.st === APROV ? "" : "Sem data";
+  if (i.vencida || i.compraAtrasada) classes.push("vermelho"); else if (i.apertando) classes.push("ambar");
+  if (ui.filtro && !bateFiltro(c, i)) classes.push("apagado");
+
+  let mats = "";
+  if (i.mats.length) {
+    mats = '<div class="card-mats">' + i.mats.map((m, idx) =>
+      '<button type="button" class="bol-btn" data-acao="bol" data-id="' + c.id + '" data-i="' + idx + '" aria-label="' + esc(m.nome) + ": " + MAT[m.status].rot + '. Toque para avançar." title="' + esc(m.nome) + ": " + MAT[m.status].rot + '">' + bolinha(m.status) + "</button>").join("") +
+      '<span class="resumo">' + (i.semana && i.st !== PRONTA ? "Sem. " + i.semana + " · " : "") + i.prontos + " de " + i.mats.length + " prontos</span></div>";
+  }
+  let linha = "";
+  if (i.st === APROV) linha = '<div class="aviso-linha neutro">Aguardando pagamento. Sem contagem de prazo.</div>';
+  else if (i.vencida) linha = '<div class="aviso-linha vermelho">Venceu há ' + (-i.diasRest) + (i.diasRest === -1 ? " dia" : " dias") + "</div>";
+  else if (i.compraAtrasada) linha = '<div class="aviso-linha vermelho">Compra atrasada desde ' + dm(i.limiteCompra) + "</div>";
+  else if (i.apertando) linha = '<div class="aviso-linha ambar">Prazo apertando. Falta: ' + esc(i.falta.join(", ")) + "</div>";
+  else if (i.ativo && i.aComprar.length && i.limiteCompra) linha = '<div class="aviso-linha vermelho">Comprar até ' + dm(i.limiteCompra) + "</div>";
+  else if (i.st === PRONTA && i.esperandoDesde) { const n = dias(i.esperandoDesde, hoje()); linha = '<div class="aviso-linha ok">' + (n <= 0 ? "Pronta desde hoje" : "Esperando há " + n + (n === 1 ? " dia" : " dias")) + "</div>"; }
+  else if (i.st === AFAZER && !i.mats.length && c.inicio) linha = '<div class="aviso-linha neutro">Cadastrar os materiais</div>';
+  else if (i.st === AFAZER && !i.proj && i.matsOk) linha = '<div class="aviso-linha neutro">Falta o projeto 3D</div>';
+
+  return '<article class="' + classes.join(" ") + '" draggable="true" tabindex="0" data-id="' + c.id + '" aria-label="Abrir ' + esc(c.client || "encomenda") + '">' +
+    '<div class="card-top">' + fotoMini(c, "card-foto") +
+    '<div class="card-txt"><span class="card-nome">' + esc(c.client || "Sem nome") + '</span><span class="card-sub">' + esc(c.model || "Sem modelo") + "</span>" + (c.investment ? '<span class="card-sub">' + valorTxt(c) + "</span>" : "") + "</div>" +
+    (prazo ? '<span class="prazo ' + prazoCls + '">' + prazo + "</span>" : "") + "</div>" + mats + linha + "</article>";
+}
+function ordenar(lista) {
+  return lista.sort((a, b) => {
+    if (a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+    if (a.dueDate) return -1; if (b.dueDate) return 1; return 0;
+  });
+}
+function dataFinal(c) { const et = etapasDe(c); return (et.enviada && et.enviada.d) || (c.finalizadoEm && c.finalizadoEm.d) || c.dueDate || deTimestamp(c.updatedAt) || deTimestamp(c.createdAt) || ""; }
+function htmlPasta() {
+  const fins = cards.filter(c => statusDe(c) === FIM);
+  const q = sem(ui.buscaFim || ui.busca);
+  const lista = fins.filter(c => !q || sem(c.client).includes(q) || sem(c.model).includes(q)).sort((a, b) => dataFinal(b).localeCompare(dataFinal(a)));
+  const aberta = ui.pastaAberta || (!!ui.busca && lista.length > 0);
+  let h = '<section class="coluna coluna-fim' + (ui.colCelular === FIM ? " visivel" : "") + '" data-col="' + FIM + '" aria-label="Finalizados">' +
+    '<div class="coluna-topo"><h2 class="coluna-titulo">Finalizados</h2><span class="coluna-qtd">' + fins.length + "</span></div>" +
+    '<button type="button" class="pasta" data-acao="pasta" aria-expanded="' + aberta + '">' +
+    '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true" style="color:var(--gold)"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+    '<span class="pasta-txt"><b>' + fins.length + (fins.length === 1 ? " finalizada" : " finalizadas") + "</b><span>" + (aberta ? "Toque para fechar" : "Agrupadas por mês") + "</span></span></button>";
+  if (aberta) {
+    h += '<label class="busca pequena"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="buscaFim" placeholder="Buscar nas finalizadas" aria-label="Buscar nas finalizadas" value="' + esc(ui.buscaFim) + '"></label>';
+    const grupos = [];
+    lista.forEach(c => {
+      const d = dataFinal(c);
+      const chave = d ? MESES[Number(d.slice(5, 7)) - 1] + " " + d.slice(0, 4) : "Sem data";
+      let g = grupos.find(x => x.k === chave); if (!g) { g = { k: chave, l: [] }; grupos.push(g); }
+      g.l.push(c);
+    });
+    if (!grupos.length) h += '<div class="vazio">Nada encontrado</div>';
+    grupos.forEach((g, gi) => {
+      const abertoMes = !!q || (ui.mesesAbertos[g.k] !== undefined ? ui.mesesAbertos[g.k] : gi < 2);
+      h += '<button type="button" class="mes" data-acao="mes" data-mes="' + esc(g.k) + '" aria-expanded="' + abertoMes + '"><span>' + (abertoMes ? "▾ " : "▸ ") + g.k + "</span><span>" + g.l.length + "</span></button>";
+      if (!abertoMes) return;
+      h += '<div class="lista-fim">' +
+        g.l.map(c => { const f = fotoDe(c); return '<button type="button" data-acao="abrir" data-id="' + c.id + '">' + (f ? '<img src="' + f + '" alt="">' : '<span class="mini-sem"></span>') + '<span class="nm">' + esc(c.client || "Sem nome") + "<small>" + esc(c.model || "") + '</small></span><span class="dt">' + dm(dataFinal(c)) + "</span></button>"; }).join("") + "</div>";
+    });
+  }
+  return h + "</section>";
+}
+function htmlQuadro() {
+  const k = contagens();
+  let h = htmlAtencao(k) + htmlLegenda();
+  const qtd = {};
+  COLUNAS.forEach(col => qtd[col.v] = cards.filter(c => statusDe(c) === col.v && bate(c)).length);
+  qtd[FIM] = cards.filter(c => statusDe(c) === FIM).length;
+  h += '<div class="seletor-col" role="group" aria-label="Escolher coluna">' +
+    [...COLUNAS, { v: FIM, curto: "Finalizados" }].map(col => '<button type="button" data-colcel="' + col.v + '" aria-pressed="' + (ui.colCelular === col.v) + '">' + col.curto + " · " + qtd[col.v] + "</button>").join("") + "</div>";
+  h += '<div class="quadro" id="quadro">';
+  COLUNAS.forEach(col => {
+    const lista = ordenar(cards.filter(c => statusDe(c) === col.v && bate(c)));
+    let dica = "";
+    if (col.v === APROV) dica = "Termo, contrato e pagamento. Sem contagem de prazo.";
+    if (col.v === PRONTA) dica = "Materiais e 3D prontos. Mova quando começar.";
+    h += '<section class="coluna' + (ui.colCelular === col.v ? " visivel" : "") + '" data-col="' + col.v + '" aria-label="' + col.t + '">' +
+      '<div class="coluna-topo"><h2 class="coluna-titulo">' + col.t + '</h2><span class="coluna-qtd">' + lista.length + "</span></div>" +
+      (dica ? '<div class="coluna-dica">' + dica + "</div>" : "") +
+      (lista.length ? lista.map(htmlCard).join("") : '<div class="vazio">Nenhuma encomenda aqui</div>') + "</section>";
+  });
+  h += htmlPasta() + "</div>";
+  return h;
+}
+
+/* ============================================================
+   VISÃO 2: COMPRAS DA SEMANA
+   ============================================================ */
+function htmlCompras() {
+  const t = hoje();
+  const ativos = ordenar(cards.filter(c => info(c).ativo));
+  const comprar = ativos.filter(c => info(c).aComprar.length).sort((a, b) => (info(a).limiteCompra || "9999").localeCompare(info(b).limiteCompra || "9999"));
+  const caminho = ativos.filter(c => info(c).aCaminho.length);
+  let total = 0, atrasados = 0;
+  comprar.forEach(c => { const i = info(c); total += i.aComprar.length; if (i.compraAtrasada) atrasados += i.aComprar.length; });
+
+  let esq = '<div class="bloco-tit"><h2>Para comprar</h2></div>';
+  esq += '<div class="faixa ' + (total ? (atrasados ? "vermelho" : "ambar") : "ok") + '">' +
+    (total ? total + (total === 1 ? " item para comprar" : " itens para comprar") + (atrasados ? ", " + atrasados + (atrasados === 1 ? " atrasado" : " atrasados") : "") + "." : "Nada para comprar. Tudo comprado.") + "</div>";
+  comprar.forEach(c => {
+    const i = info(c);
+    let chip = "", chipCls = "";
+    if (!i.limiteCompra) { chip = "Sem prazo de compra"; }
+    else if (i.compraAtrasada) { chip = "Atrasada desde " + dm(i.limiteCompra); chipCls = "vermelho"; }
+    else { const n = dias(t, i.limiteCompra); chip = n === 0 ? "Comprar hoje" : "Até " + dm(i.limiteCompra) + " (" + n + (n === 1 ? " dia)" : " dias)"); chipCls = n <= 2 ? "ambar" : ""; }
+    esq += '<div class="caixa"><div class="caixa-topo">' + fotoMini(c, "card-foto") + '<div class="tt"><b>' + esc(c.client) + "</b><span>" + esc(c.model || "") + (c.dueDate ? " · entrega " + dm(c.dueDate) : "") + '</span></div><span class="prazo ' + chipCls + '">' + chip + "</span></div>" +
+      i.mats.map((m, idx) => m.status !== "comprar" ? "" : '<div class="item-compra"><span class="nm">' + esc(m.nome) + "<small>" + TIPOS_MAT[m.tipo || "outro"] + '</small></span><button type="button" class="btn-acao" data-acao="mat" data-id="' + c.id + '" data-i="' + idx + '" data-st="comprado">Comprei</button></div>').join("") + "</div>";
+  });
+
+  let dir = '<div class="bloco-tit"><h2>A caminho</h2></div>';
+  if (!caminho.length) dir += '<div class="faixa neutro">Nenhum material a caminho.</div>';
+  const medias = mediasChegada();
+  caminho.forEach(c => {
+    const i = info(c);
+    dir += '<div class="caixa"><div class="caixa-topo">' + fotoMini(c, "card-foto") + '<div class="tt"><b>' + esc(c.client) + "</b><span>" + esc(c.model || "") + (c.dueDate ? " · entrega " + dm(c.dueDate) : "") + "</span></div></div>" +
+      i.mats.map((m, idx) => {
+        if (m.status !== "comprado") return "";
+        const dc = m.datas && m.datas.comprado && m.datas.comprado.d;
+        const n = dc ? dias(dc, t) : null;
+        const med = medias[m.tipo || "outro"];
+        const atraso = med && n != null && n > Math.ceil(med.media) + 2;
+        return '<div class="item-compra"><span class="nm">' + esc(m.nome) + "<small>" + (dc ? (n === 0 ? "Comprado hoje" : "Comprado em " + dm(dc) + " · há " + n + (n === 1 ? " dia" : " dias")) : "Comprado") + (atraso ? " · demorando mais que a média" : "") + '</small></span><button type="button" class="btn-acao claro" data-acao="mat" data-id="' + c.id + '" data-i="' + idx + '" data-st="recebido">Chegou</button></div>';
+      }).join("") + "</div>";
+  });
+
+  dir += '<div class="bloco-tit" style="margin-top:20px"><h2>Tempo de chegada</h2></div><div class="caixa">';
+  const tipos = Object.keys(TIPOS_MAT).filter(k => medias[k]);
+  if (!tipos.length) dir += '<p class="nota" style="margin:0">A média aparece depois das primeiras compras marcadas como Comprado e depois Recebido.</p>';
+  else dir += '<table class="tabela-media"><thead><tr><th>Material</th><th>Média</th><th>Mais demorado</th><th>Compras</th></tr></thead><tbody>' +
+    tipos.map(k => "<tr><td>" + TIPOS_MAT[k] + "</td><td>" + medias[k].media.toFixed(1).replace(".", ",") + " dias</td><td>" + medias[k].max + " dias</td><td>" + medias[k].n + "</td></tr>").join("") + "</tbody></table>";
+  dir += "</div>";
+
+  /* Prazo curto: dá tempo? */
+  const conf = cfg.diasConfeccao;
+  dir += '<div class="bloco-tit" style="margin-top:20px"><h2>Prazo curto: dá tempo?</h2></div><div class="caixa">' +
+    '<div class="calc"><label for="diasCliente">Dias até a data do cliente</label><input type="number" min="1" id="diasCliente" value="' + esc(ui.diasCliente) + '" inputmode="numeric"></div><div id="resCalc">' + htmlCalc() + "</div>" +
+    '<p class="nota">Conta a confecção de ' + conf + " dias mais o tempo médio de chegada de cada material. Use o mais demorado para ter margem.</p></div>";
+
+  return '<div class="duas"><div>' + esq + "</div><div>" + dir + "</div></div>";
+}
+function htmlCalc() {
+  const n = Number(ui.diasCliente);
+  const conf = cfg.diasConfeccao;
+  const medias = mediasChegada();
+  if (!n) return '<div class="res neutro">Digite quantos dias faltam para a data que o cliente precisa.</div>';
+  let h = '<div class="res ' + (n >= conf ? "ok" : "nao") + '">Material já no atelier: precisa de ' + conf + " dias. " + (n >= conf ? "Dá tempo." : "Não dá tempo.") + "</div>";
+  Object.keys(TIPOS_MAT).forEach(k => {
+    if (!medias[k]) return;
+    const precisa = Math.ceil(medias[k].max) + conf;
+    h += '<div class="res ' + (n >= precisa ? "ok" : "nao") + '">' + TIPOS_MAT[k] + " a comprar: até " + medias[k].max + " dias de chegada + " + conf + " de confecção = " + precisa + " dias. " + (n >= precisa ? "Dá tempo." : "Não dá tempo.") + "</div>";
+  });
+  return h;
+}
+
+/* ============================================================
+   VISÃO 3: PÓS-VENDA (da Lohana)
+   ============================================================ */
+function htmlPosVenda() {
+  const lista = cards.filter(c => { const s = statusDe(c); return s !== APROV && (s !== FIM || (avisoPendente(c) && etapasDe(c).enviada)); }).filter(bate);
+  const pend = lista.map(c => ({ c, a: avisoPendente(c) })).filter(x => x.a).sort((x, y) => (x.a.semanal ? 1 : 0) - (y.a.semanal ? 1 : 0) || (x.c.dueDate || "9").localeCompare(y.c.dueDate || "9"));
+  const atalhos = (c) => {
+    const pdf = contratoDe(c);
+    return (c.linkConversa ? '<a class="link-mini" href="' + esc(c.linkConversa) + '" target="_blank" rel="noopener">Abrir conversa</a>' : "") +
+      (pdf ? '<button type="button" class="link-mini" data-acao="pdf" data-id="' + c.id + '">Contrato</button>' : "") +
+      '<button type="button" class="link-mini" data-acao="abrir" data-id="' + c.id + '" data-aba="hist">Ver cartão</button>';
+  };
+  let esq = '<div class="bloco-tit"><h2>Avisar agora</h2><span class="coluna-qtd">' + pend.length + "</span></div>";
+  if (!pend.length) esq += '<div class="faixa ok">Nenhum aviso pendente. Todos os clientes estão em dia.</div>';
+  pend.forEach(({ c, a }) => {
+    const i = info(c);
+    esq += '<div class="caixa"><div class="caixa-topo">' + fotoMini(c, "card-foto") + '<div class="tt"><b>' + esc(c.client) + "</b><span>" + esc(c.model || "") + (i.semana ? " · semana " + i.semana : "") + (c.dueDate ? " · entrega " + dm(c.dueDate) : "") + "</span></div></div>" +
+      '<p class="pv-msg"><b>' + ROTULO_MARCO[a.k] + (a.semanal ? "" : " em " + dm(a.d)) + ".</b> " + esc(a.txt) + "</p>" +
+      '<div class="pv-acoes"><button type="button" class="btn-acao" data-acao="avisado" data-id="' + c.id + '" data-k="' + a.k + '">Marcar como avisado</button>' + atalhos(c) + "</div></div>";
+  });
+
+  let dir = '<div class="bloco-tit"><h2>Acompanhamento</h2></div>';
+  const ativos = ordenar(lista.filter(c => statusDe(c) !== FIM));
+  if (!ativos.length) dir += '<div class="faixa neutro">Nenhuma joia em produção agora.</div>';
+  const nomes = ["Materiais comprados", "Materiais recebidos", "Pronta p/ produção", "Produção e envio"];
+  ativos.forEach(c => {
+    const i = info(c);
+    const f = etapaCliente(c);
+    const atual = f.indexOf(false);
+    const ms = marcos(c);
+    const ult = ms.length ? ms[ms.length - 1] : null;
+    const contatos = c.avisos || [];
+    const ultContato = maxData(contatos.map(x => x.d));
+    let semanaTxt = i.semana ? "Semana " + Math.min(i.semana, 5) : "";
+    if (i.semana > 4) semanaTxt = "Passou de 4 semanas";
+    if (i.vencida) semanaTxt = "Atrasada";
+    dir += '<div class="caixa"><div class="caixa-topo">' + fotoMini(c, "card-foto") + '<div class="tt"><b>' + esc(c.client) + "</b><span>" + esc(c.model || "") + (c.investment ? " · pago " + valorTxt(c) : "") + (c.dueDate ? " · entrega " + dm(c.dueDate) : "") + "</span></div>" +
+      (semanaTxt ? '<span class="prazo ' + (i.vencida ? "vermelho" : i.apertando ? "ambar" : "") + '">' + semanaTxt + (i.inicioReal ? "" : " (estimada)") + "</span>" : "") + "</div>" +
+      '<ol class="barra4">' + nomes.map((n, x) => '<li class="' + (f[x] ? "feito" : x === atual ? "agora" : "") + '">' + n + "</li>").join("") + "</ol>" +
+      '<div class="pv-ultimo">' + (ult ? "Último marco: " + ROTULO_MARCO[ult.k].toLowerCase() + " em " + dm(ult.d) : "Nenhum marco registrado ainda") + " · " + NOME_COLUNA[i.st] + "</div>" +
+      (i.compraAtrasada ? '<div class="aviso-linha vermelho" style="margin-top:6px">Compra ainda não marcada pelo Tiago. Evite prometer data de materiais.</div>' : "") +
+      (i.apertando ? '<div class="aviso-linha ambar" style="margin-top:6px">Prazo apertando. Falta: ' + esc(i.falta.join(", ")) + "</div>" : "") +
+      '<div class="pv-contatos">' + (contatos.length ? contatos.length + (contatos.length === 1 ? " contato registrado" : " contatos registrados") + ", o último em " + dm(ultContato) : "Nenhum contato registrado") + "</div>" +
+      '<div class="pv-acoes" style="margin-top:8px">' + atalhos(c) + "</div></div>";
+  });
+  return '<p class="nota" style="margin:-4px 0 14px">Esta visão só mostra o que você precisa para falar com o cliente. Ela atualiza sozinha quando o Tiago marca algo no quadro.</p><div class="duas"><div>' + esq + "</div><div>" + dir + "</div></div>";
+}
+
+/* ============================================================
+   DESENHAR A PÁGINA
+   ============================================================ */
+const conteudo = document.getElementById("conteudo");
+function desenharVisoes(k) {
+  const ops = [["quadro", "Quadro", 0], ["compras", "Compras", k.comprar], ["posvenda", "Pós-venda", k.avisar]];
+  const html = ops.map(([v, t, n]) => '<button type="button" data-visao="' + v + '" aria-pressed="' + (ui.visao === v) + '">' + t + (n ? '<span class="qtd">' + n + "</span>" : "") + "</button>").join("");
+  document.getElementById("visoes").innerHTML = html;
+  document.getElementById("navBaixo").innerHTML = html;
+}
+function desenhar() {
+  if (!carregou) { conteudo.innerHTML = '<div class="vazio">Carregando encomendas...</div>'; return; }
+  const k = contagens();
+  desenharVisoes(k);
+  const foco = document.activeElement && document.activeElement.id;
+  const pos = foco && document.activeElement.selectionStart;
+  if (ui.visao === "quadro") conteudo.innerHTML = htmlQuadro();
+  else if (ui.visao === "compras") conteudo.innerHTML = htmlCompras();
+  else conteudo.innerHTML = htmlPosVenda();
+  if (foco === "buscaFim" || foco === "diasCliente") { const el = document.getElementById(foco); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) { } } }
+}
+
+/* ============================================================
+   CARTÃO ABERTO
+   ============================================================ */
+const overlay = document.getElementById("cartaoOverlay");
+const modal = document.getElementById("cartaoModal");
+function cardAberto() { return cards.find(c => c.id === ui.abertoId); }
+
+function abrirCartao(id, aba) {
+  ui.abertoId = id; ui.novo = false; ui.aba = aba || "mat"; ui.editandoData = null; ui.detSujo = false;
+  const c = cardAberto(); if (!c) return;
+  ui.arquivos = [...arquivosDe(c)];
+  if (!aba && statusDe(c) === APROV) ui.aba = "det";
+  overlay.classList.remove("hidden");
+  desenharCartao(true);
+}
+function abrirNovo() {
+  ui.abertoId = null; ui.novo = true; ui.aba = "det"; ui.arquivos = []; ui.detSujo = false;
+  overlay.classList.remove("hidden");
+  desenharCartao(true);
+}
+async function fecharCartao(forcar) {
+  if (!forcar && ui.detSujo && !(await confirmar("Fechar sem salvar as alterações dos detalhes?", "Fechar sem salvar"))) return;
+  overlay.classList.add("hidden"); ui.abertoId = null; ui.novo = false; ui.detSujo = false; modal.innerHTML = "";
+}
+
+function htmlCabeca(c) {
+  const i = info(c);
+  let sem = "", semCls = "";
+  if (i.st === APROV) sem = "Em aprovação · sem contagem";
+  else if (i.st === FIM) sem = "Finalizada" + (dataFinal(c) ? " em " + dm(dataFinal(c)) : "");
+  else {
+    sem = (i.semana ? "Semana " + Math.min(i.semana, 5) + " · " : "") + (c.dueDate ? "entrega " + dm(c.dueDate) : "sem data de entrega");
+    if (i.vencida) { sem = "Atrasada · venceu " + dm(c.dueDate); semCls = "vermelho"; }
+    else if (i.apertando) semCls = "ambar";
+  }
+  const opcoes = [...COLUNAS, { v: FIM, t: "Finalizados" }].map(col => '<option value="' + col.v + '"' + (col.v === i.st ? " selected" : "") + ">" + col.t + "</option>").join("");
+  const sub = [c.model, c.ouro, c.investment ? "pago " + c.investment : ""].filter(Boolean).map(esc).join(" · ");
+  return '<button type="button" class="fechar" data-acao="fechar" aria-label="Fechar">✕</button>' +
+    '<div class="c-cabeca">' + fotoMini(c, "c-foto") +
+    '<div class="c-tit"><h2 id="cNome">' + esc(c.client || "Sem nome") + "</h2><p>" + (sub || "Sem detalhes") + "</p></div>" +
+    '<div class="c-lado"><span class="c-semana ' + semCls + '">' + sem + "</span>" +
+    (i.inicioReal ? '<span class="nota" style="margin:0">Saiu de Aprovação em ' + dm(i.inicioReal) + "</span>" : "") +
+    '<label class="mover">Mover para <select id="moverPara">' + opcoes + "</select></label></div></div>";
+}
+function htmlAbas(c) {
+  const i = info(c);
+  const n = i.ativo ? i.aComprar.length : 0;
+  const abas = [["det", "Detalhes e contrato"], ["mat", "Materiais"], ["et", "Etapas da joia"], ["hist", "Histórico"]];
+  return '<div class="abas" role="tablist" aria-label="Seções do cartão">' + abas.map(([id, t]) =>
+    '<button type="button" role="tab" data-aba="' + id + '" aria-selected="' + (ui.aba === id) + '">' + t + (id === "mat" && n ? '<span class="qtd">' + n + "</span>" : "") + "</button>").join("") + "</div>";
+}
+
+function desenharCartao(tudo) {
+  if (ui.novo) {
+    modal.classList.add("novo");
+    modal.innerHTML = '<button type="button" class="fechar" data-acao="fechar" aria-label="Fechar">✕</button>' +
+      '<div class="c-cabeca"><div class="c-tit"><h2 id="cNome">Nova encomenda</h2><p>Ela entra em Aprovação. A contagem dos 30 dias começa quando sair de lá.</p></div></div>' +
+      '<div class="c-corpo">' + htmlDetalhes(null) + "</div>" +
+      '<div class="c-rodape"><div style="flex:1"></div><button class="btn-text" data-acao="fechar">Cancelar</button><button class="btn btn-solid" data-acao="salvarDet">Criar encomenda</button></div>';
+    ligarDetalhes();
+    return;
+  }
+  modal.classList.remove("novo");
+  const c = cardAberto();
+  if (!c) { overlay.classList.add("hidden"); return; }
+  if (!tudo && ui.aba === "det" && ui.detSujo) {
+    const cab = modal.querySelector(".c-cabeca"); if (cab) { const tmp = document.createElement("div"); tmp.innerHTML = htmlCabeca(c); cab.replaceWith(tmp.querySelector(".c-cabeca")); }
+    return;
+  }
+  const scroll = modal.querySelector(".c-corpo") ? modal.querySelector(".c-corpo").scrollTop : 0;
+  let corpo = "";
+  if (ui.aba === "det") corpo = htmlDetalhes(c);
+  else if (ui.aba === "mat") corpo = htmlMateriais(c);
+  else if (ui.aba === "et") corpo = htmlEtapas(c);
+  else corpo = htmlHistorico(c);
+  const rodape = ui.aba === "det" ? '<div class="c-rodape"><button class="btn-text btn-danger" data-acao="excluir">Excluir</button><div style="flex:1"></div><button class="btn btn-solid" data-acao="salvarDet">Salvar alterações</button></div>' : "";
+  modal.innerHTML = htmlCabeca(c) + htmlAbas(c) + '<div class="c-corpo">' + corpo + "</div>" + rodape;
+  if (!tudo) modal.querySelector(".c-corpo").scrollTop = scroll;
+  document.getElementById("moverPara").addEventListener("change", async e => {
+    const novo = e.target.value;
+    if (novo === APROV && statusDe(c) !== APROV && !(await confirmar("Voltar para Aprovação? A contagem do prazo continua guardada.", "Voltar"))) { e.target.value = statusDe(c); return; }
+    moverCard(c, novo);
+  });
+  if (ui.aba === "det") ligarDetalhes();
+  if (ui.aba === "hist" && ui.editandoData) { const el = modal.querySelector("#editData"); if (el) el.focus(); }
+}
+
+/* ---------- Aba: Detalhes e contrato ---------- */
+function htmlDetalhes(c) {
+  const v = c || {};
+  const tipo = v.tipo || "catalogo";
+  const pdf = c && contratoDe(c);
+  const foto = c && fotoDe(c);
+  let rapido = "";
+  if (c) {
+    rapido = '<div class="det-rapido">' +
+      (pdf ? '<button type="button" data-acao="pdf" data-id="' + c.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>Abrir contrato</button>' : "") +
+      (foto ? '<button type="button" data-acao="zoom" data-id="' + c.id + '">Ver foto da joia</button>' : "") +
+      (v.linkConversa ? '<a href="' + esc(v.linkConversa) + '" target="_blank" rel="noopener">Abrir conversa do cliente</a>' : "") + "</div>";
+    if (rapido === '<div class="det-rapido"></div>') rapido = "";
+  }
+  const hojeIso = hoje();
+  return rapido + '<div class="grade2">' +
+    '<div class="field"><label for="fCliente">Nome do cliente</label><input type="text" id="fCliente" value="' + esc(v.client) + '" placeholder="Ex: Caio Fernandes"></div>' +
+    '<div class="field"><label for="fModelo">Modelo da joia</label><input type="text" id="fModelo" value="' + esc(v.model) + '" placeholder="Ex: Anel Ziel"></div>' +
+    '<div class="field"><label id="lTipo">Tipo</label><div class="escolha" role="radiogroup" aria-labelledby="lTipo">' +
+    '<label><input type="radio" name="fTipo" value="catalogo"' + (tipo === "catalogo" ? " checked" : "") + "><span>Catálogo</span></label>" +
+    '<label><input type="radio" name="fTipo" value="personalizado"' + (tipo === "personalizado" ? " checked" : "") + "><span>Personalizado</span></label></div></div>" +
+    '<div class="field"><label for="fOuro">Tipo de ouro</label><input type="text" id="fOuro" list="listaOuro" value="' + esc(v.ouro) + '" placeholder="Ex: Amarelo 18k"><datalist id="listaOuro"><option value="Amarelo 18k"><option value="Branco 18k"><option value="Rosé 18k"><option value="Amarelo 10k"><option value="Branco 10k"></datalist></div>' +
+    '<div class="field"><label for="fValor">Valor pago</label><input type="text" id="fValor" value="' + esc(v.investment) + '" placeholder="Ex: R$ 4.800,00"></div>' +
+    '<div class="field"><label for="fVenda">Data da venda</label><input type="date" id="fVenda" value="' + esc(v.dataVenda || (c ? "" : hojeIso)) + '"></div>' +
+    '<div class="field"><label for="fEntrega">Data limite de entrega</label><input type="date" id="fEntrega" value="' + esc(v.dueDate) + '"><div class="nota" style="margin-top:4px">Se ficar vazia, o painel coloca 30 dias a partir da saída de Aprovação.</div></div>' +
+    '<div class="field"><label for="fLink">Link da conversa do cliente</label><input type="url" id="fLink" value="' + esc(v.linkConversa) + '" placeholder="Ex: https://wa.me/55..."></div>' +
+    '<div class="field inteiro"><label for="fNotas">Observações</label><textarea id="fNotas" placeholder="Detalhes, prazos, combinações...">' + esc(v.notes) + "</textarea></div>" +
+    '<div class="field inteiro"><label for="fArquivo">Contrato em PDF e foto da joia (ou de inspiração)</label><div class="photos-grid" id="gradeArquivos"></div>' +
+    '<input type="file" id="fArquivo" accept="image/*,application/pdf" multiple><div class="upload-status" id="statusUpload">Dica: você também pode colar uma foto aqui com Ctrl+V.</div></div>' +
+    "</div>";
+}
+function desenharArquivos() {
+  const g = document.getElementById("gradeArquivos"); if (!g) return;
+  g.innerHTML = "";
+  ui.arquivos.forEach((item, idx) => {
+    const d = document.createElement("div");
+    d.className = "photo-thumb";
+    d.innerHTML = item.type === "image"
+      ? '<img src="' + item.data + '" alt="">'
+      : '<div class="pdf-thumb" role="button" tabindex="0"><span class="pdf-label">PDF</span><span class="pdf-name">' + esc(item.name) + "</span></div>";
+    const rm = document.createElement("button");
+    rm.type = "button"; rm.className = "remove-photo"; rm.title = "Remover"; rm.setAttribute("aria-label", "Remover " + (item.name || "arquivo")); rm.textContent = "×";
+    rm.onclick = e => { e.stopPropagation(); ui.arquivos.splice(idx, 1); ui.detSujo = true; desenharArquivos(); };
+    d.appendChild(rm);
+    d.onclick = () => item.type === "image" ? abrirLightbox(item.data) : abrirPdf(item.data);
+    g.appendChild(d);
+  });
+}
+function ligarDetalhes() {
+  desenharArquivos();
+  modal.querySelectorAll(".c-corpo input, .c-corpo textarea").forEach(el => el.addEventListener("input", () => { ui.detSujo = true; }));
+  modal.querySelectorAll('input[name="fTipo"]').forEach(el => el.addEventListener("change", () => { ui.detSujo = true; }));
+  const inp = document.getElementById("fArquivo");
+  inp.addEventListener("change", async () => { await adicionarArquivos(Array.from(inp.files || [])); inp.value = ""; });
+}
+async function adicionarArquivos(files) {
+  const st = document.getElementById("statusUpload");
+  for (const file of files) {
+    const img = file.type.startsWith("image/"), pdf = file.type === "application/pdf";
+    try {
+      let data;
+      if (img) { st.textContent = "Processando " + file.name + "..."; data = await compressImage(file); }
+      else if (pdf) { st.textContent = "Comprimindo " + file.name + "..."; data = await compressPdfFile(file, st); }
+      else { data = await readFileAsDataURL(file); }
+      ui.arquivos.push({ name: file.name || "foto.jpg", type: img ? "image" : "pdf", data });
+      ui.detSujo = true;
+      desenharArquivos();
+    } catch (e) { console.error(e); toast("Não consegui processar " + file.name); }
+  }
+  if (st) st.textContent = "Anexo(s) prontos. Clique em Salvar para confirmar.";
+}
+document.addEventListener("paste", e => {
+  if (overlay.classList.contains("hidden") || ui.aba !== "det") return;
+  const itens = Array.from((e.clipboardData && e.clipboardData.items) || []).filter(it => it.type.startsWith("image/"));
+  if (!itens.length) return;
+  e.preventDefault();
+  adicionarArquivos(itens.map(it => { const f = it.getAsFile(); return new File([f], "foto-colada.png", { type: f.type }); }));
+});
+async function salvarDetalhes() {
+  const val = id => (document.getElementById(id).value || "").trim();
+  const client = val("fCliente");
+  if (!client) { toast("Preencha ao menos o nome do cliente"); document.getElementById("fCliente").focus(); return; }
+  const tamanho = Math.round(ui.arquivos.reduce((s, f) => s + f.data.length, 0) / 1024);
+  if (tamanho > 900) { document.getElementById("statusUpload").textContent = "Os anexos somam " + tamanho + "KB e passam do limite de 900KB. Remova algum antes de salvar."; return; }
+  const tipo = (modal.querySelector('input[name="fTipo"]:checked') || {}).value || "catalogo";
+  const dados = {
+    client, model: val("fModelo"), tipo, ouro: val("fOuro"), investment: val("fValor"),
+    dataVenda: val("fVenda"), linkConversa: val("fLink"), notes: val("fNotas"), files: ui.arquivos
+  };
+  const entrega = val("fEntrega");
+  const btn = modal.querySelector('[data-acao="salvarDet"]');
+  btn.disabled = true; btn.textContent = "Salvando...";
+  try {
+    if (ui.novo) {
+      if (entrega) dados.dueDate = entrega;
+      dados.status = APROV;
+      dados.materiais = [];
+      dados.projeto3d = tipo === "personalizado" ? { feito: false } : { feito: true, catalogo: true };
+      await store.criar(dados);
+      ui.detSujo = false;
+      fecharCartao(true);
+      toast("Encomenda criada em Aprovação");
+    } else {
+      const c = cardAberto();
+      dados.dueDate = entrega ? entrega : APAGAR;
+      dados.photos = APAGAR; dados.photoUrl = APAGAR;
+      const tipoAntes = c.tipo || "catalogo";
+      if (tipo !== tipoAntes) {
+        const p3 = c.projeto3d || {};
+        if (tipo === "personalizado" && (p3.catalogo || !c.projeto3d)) dados.projeto3d = { feito: false };
+        if (tipo === "catalogo" && !p3.feito) dados.projeto3d = { feito: true, catalogo: true };
+        const extra = verificarPronta(c, dados);
+        if (extra) toast(extra);
+      }
+      await store.atualizar(c.id, dados);
+      ui.detSujo = false;
+      toast("Encomenda atualizada");
+    }
+  } catch (e) { console.error(e); toast("Erro ao salvar, tente de novo"); }
+  finally { if (btn.isConnected) { btn.disabled = false; btn.textContent = ui.novo ? "Criar encomenda" : "Salvar alterações"; } }
+}
+
+/* ---------- Aba: Materiais ---------- */
+function htmlMateriais(c) {
+  const i = info(c);
+  const t = hoje();
+  let faixa = "";
+  if (i.st === APROV) faixa = '<div class="faixa neutro">A compra começa quando a encomenda sair de Aprovação. Você já pode cadastrar os materiais.</div>';
+  else if (!i.mats.length) faixa = '<div class="faixa ' + (i.inicioReal ? "ambar" : "neutro") + '">Nenhum material cadastrado ainda.' + (i.limiteCompra ? " A compra vai até " + dm(i.limiteCompra) + "." : "") + "</div>";
+  else if (i.aComprar.length) {
+    if (!i.limiteCompra) faixa = '<div class="faixa ambar">' + i.aComprar.length + (i.aComprar.length === 1 ? " item para comprar." : " itens para comprar.") + "</div>";
+    else {
+      const n = dias(t, i.limiteCompra);
+      faixa = '<div class="faixa ' + (n < 0 ? "vermelho" : "ambar") + '">' + i.aComprar.length + (i.aComprar.length === 1 ? " item ainda por comprar. " : " itens ainda por comprar. ") +
+        (n < 0 ? "A compra está atrasada desde " + dm(i.limiteCompra) + "." : n === 0 ? "A compra vence hoje." : "A compra vai até " + dm(i.limiteCompra) + " (" + n + (n === 1 ? " dia" : " dias") + ").") + "</div>";
+    }
+  } else if (i.matsOk) faixa = '<div class="faixa ok">Todos os materiais estão no atelier.</div>';
+  else faixa = '<div class="faixa ok">Tudo comprado. Falta chegar: ' + i.aCaminho.map(m => esc(m.nome)).join(", ") + ".</div>";
+
+  const medias = mediasChegada();
+  let h = faixa;
+  i.mats.forEach((m, idx) => {
+    const d = m.datas || {};
+    const partes = [];
+    if (d.tenho) partes.push("Já tinha (marcado " + dm(d.tenho.d) + ")");
+    if (d.comprar) partes.push("Precisa comprar " + dm(d.comprar.d));
+    if (d.comprado) partes.push("Comprado " + dm(d.comprado.d));
+    if (d.recebido) partes.push("Chegou " + dm(d.recebido.d) + (d.comprado ? " (" + dias(d.comprado.d, d.recebido.d) + " dias)" : ""));
+    if (m.status === "comprado" && d.comprado) {
+      const med = medias[m.tipo || "outro"];
+      partes.push("há " + dias(d.comprado.d, t) + " dias a caminho" + (med ? ", média de " + med.media.toFixed(0) + " dias" : ""));
+    }
+    h += '<div class="mat"><div class="mat-topo"><div class="mat-nome"><span class="mat-tipo">' + TIPOS_MAT[m.tipo || "outro"] + '</span><input type="text" value="' + esc(m.nome) + '" data-renomear="' + idx + '" aria-label="Nome do material"></div>' +
+      '<div class="estados" role="group" aria-label="Status de ' + esc(m.nome) + '">' +
+      ["tenho", "comprar", "comprado", "recebido"].map(s => '<button type="button" class="e-' + s + '" aria-pressed="' + (m.status === s) + '" data-acao="mat" data-id="' + c.id + '" data-i="' + idx + '" data-st="' + s + '">' + bolinha(s) + MAT[s].rot + "</button>").join("") +
+      '</div><button type="button" class="mat-remover" data-acao="remMat" data-i="' + idx + '" aria-label="Remover ' + esc(m.nome) + '">✕</button></div>' +
+      (partes.length ? '<div class="mat-datas">' + partes.join(" · ") + "</div>" : "") + "</div>";
+  });
+  const sugestoes = [["ouro", c.ouro ? "Ouro " + c.ouro.toLowerCase() : "Ouro"], ["pedra", "Pedra principal"], ["pedra", "Pedras laterais"]];
+  h += '<div class="novo-mat"><b style="font-size:14px">Adicionar material</b>' +
+    '<div class="pilulas" role="group" aria-label="Sugestões">' + sugestoes.map(([tp, n]) => '<button type="button" data-sugestao="' + esc(n) + '" data-tipo="' + tp + '">' + esc(n) + "</button>").join("") + "</div>" +
+    '<div class="linha"><input type="text" id="novoMatNome" placeholder="Ex: Moissanite 6 mm" aria-label="Nome do material"></div>' +
+    '<div class="linha"><span class="nota" style="margin:0">Tipo:</span><div class="pilulas" role="group" aria-label="Tipo do material">' +
+    Object.keys(TIPOS_MAT).map(k => '<button type="button" data-novotipo="' + k + '" aria-pressed="' + (ui.novoMatTipo === k) + '">' + TIPOS_MAT[k] + "</button>").join("") + "</div></div>" +
+    '<div class="linha"><button type="button" class="btn btn-grande" data-acao="addMat" data-st="tenho">' + bolinha("tenho") + " Já tenho</button>" +
+    '<button type="button" class="btn btn-grande" data-acao="addMat" data-st="comprar">' + bolinha("comprar") + " Preciso comprar</button></div></div>" +
+    '<p class="nota">Regra do painel: a compra dos materiais acontece em até ' + cfg.diasCompra + " dias depois que a encomenda sai de Aprovação. Cada clique grava a data do dia sozinho.</p>";
+  return h;
+}
+function adicionarMaterial(c, status) {
+  const campo = document.getElementById("novoMatNome");
+  let nome = (campo.value || "").trim();
+  if (!nome) nome = ui.novoMatTipo === "ouro" ? (c.ouro ? "Ouro " + c.ouro.toLowerCase() : "Ouro") : TIPOS_MAT[ui.novoMatTipo];
+  const m = { id: novoId(), nome, tipo: ui.novoMatTipo, status, datas: {} };
+  m.datas = datasParaStatus(m, status);
+  const mats = [...limpo(c.materiais || []), m];
+  const p = { materiais: mats };
+  const extra = verificarPronta(c, p);
+  gravar(c, p, extra || (nome + " adicionado: " + MAT[status].rot.toLowerCase()));
+}
+
+/* ---------- Aba: Etapas da joia ---------- */
+function htmlEtapas(c) {
+  const i = info(c);
+  const et = etapasDe(c);
+  const p3 = c.projeto3d || {};
+  let proj;
+  if (i.proj) proj = '<span class="val">' + (p3.d ? "Finalizado em " + dm(p3.d.d) : (c.tipo === "personalizado" ? "Finalizado" : "Modelo do catálogo, já existe")) + '</span><button type="button" class="btn" data-acao="proj" data-v="0">Reabrir</button>';
+  else proj = '<span class="val">Pendente</span><button type="button" class="btn btn-solid btn-grande" data-acao="proj" data-v="1">Marcar 3D finalizado</button>';
+  let h = '<div class="trilhas">' +
+    '<div class="trilha"><span class="rotulo">Trilha 1 · Materiais (prazo de ' + cfg.diasCompra + ' dias)</span><span class="val">' +
+    (i.mats.length ? i.prontos + " de " + i.mats.length + " materiais no atelier" : "Nenhum material cadastrado") + '</span><button type="button" class="btn-text" style="align-self:flex-start;padding-left:0" data-aba="mat">Ver materiais</button></div>' +
+    '<div class="trilha"><span class="rotulo">Trilha 2 · Projeto 3D (sem prazo fixo)</span><div class="linha">' + proj + "</div></div></div>";
+  if (i.ativo && c.dueDate && !i.tudoPronto && i.st === AFAZER) {
+    const corte = addDias(c.dueDate, -i.avisoDias);
+    h += '<div class="faixa ' + (i.apertando ? "ambar" : "neutro") + '">Corte: se em ' + dm(corte) + " (" + i.avisoDias + " dias antes da entrega) o projeto 3D ou os materiais não estiverem prontos, o painel avisa vocês dois." + "</div>";
+  }
+  const passo = (n, tit, desc, estado, acao) => '<div class="etapa ' + estado + '"><span class="num">' + (estado === "feita" ? ICONE_CHECK.replace("<svg", '<svg width="14" height="14"') : n) + '</span><div class="txt"><b>' + tit + "</b><span>" + desc + "</span></div>" + acao + "</div>";
+  const feito = (m, txt) => '<span class="feito-em">' + txt + " " + dm(m.d) + "</span>";
+
+  /* 1 · Pronta */
+  const prontaD = c.prontaEm && c.prontaEm.d;
+  h += passo(1, "Pronta para pré-produção", prontaD ? "Materiais e projeto 3D prontos." : (i.tudoPronto ? "Tudo pronto." : "Automático quando tudo estiver pronto. Falta: " + esc(i.falta.join(", ")) + "."),
+    prontaD || i.tudoPronto ? "feita" : "", prontaD ? feito(c.prontaEm, "Em") : "");
+  /* 2 · Pré-produção */
+  let a2 = "", e2 = "";
+  if (et.preFim) { e2 = "feita"; a2 = feito(et.preFim, "Concluída"); }
+  else if (et.preInicio) { e2 = "agora"; a2 = '<span class="nota" style="margin:0">Iniciada ' + dm(et.preInicio.d) + '</span><button type="button" class="btn btn-solid btn-grande" data-acao="etapa" data-e="preFim">Concluir pré-produção</button>'; }
+  else if (i.st !== APROV) { e2 = i.tudoPronto ? "agora" : ""; a2 = '<button type="button" class="btn ' + (i.tudoPronto ? "btn-solid " : "") + 'btn-grande" data-acao="etapa" data-e="preInicio">Iniciar pré-produção</button>'; }
+  h += passo(2, "Pré-produção", "Impressão do protótipo na impressora 3D.", e2, a2);
+  /* 3 · Produção */
+  let a3 = "", e3 = "";
+  if (et.prodFim) { e3 = "feita"; a3 = feito(et.prodFim, "Joia finalizada em"); }
+  else if (et.preFim || i.st === EXEC) { e3 = "agora"; a3 = '<button type="button" class="btn btn-solid btn-grande" data-acao="etapa" data-e="prodFim">Concluir produção</button>'; }
+  h += passo(3, "Produção", "Fundição, acabamento e o resto, geralmente em um dia.", e3, a3);
+  /* 4 · Enviada */
+  let a4 = "", e4 = "";
+  if (et.enviada) { e4 = "feita"; a4 = feito(et.enviada, "Enviada") + (c.rastreio ? '<span class="nota" style="margin:0">Rastreio: ' + esc(c.rastreio) + "</span>" : ""); }
+  else if (et.prodFim) { e4 = "agora"; a4 = '<input type="text" id="rastreio" placeholder="Código de rastreio" aria-label="Código de rastreio" value="' + esc(c.rastreio) + '"><button type="button" class="btn btn-solid btn-grande" data-acao="etapa" data-e="enviada">Marcar como enviada</button>'; }
+  h += passo(4, "Pronta e enviada", "Com o código de rastreio. A encomenda vai para Finalizados.", e4, a4);
+  h += '<p class="nota">Concluir a pré-produção leva o cartão para Em execução. Marcar como enviada leva para Finalizados. Da coluna Pronta para Pré-produção quem move é você, quando começar.</p>';
+  return h;
+}
+async function concluirEtapa(c, e) {
+  const t = hoje();
+  const i = info(c);
+  const et = { ...etapasDe(c) };
+  let p = {}, msg = "";
+  if (e === "preInicio") {
+    if (!i.tudoPronto && !(await confirmar("Ainda falta: " + i.falta.join(", ") + ". Iniciar a pré-produção mesmo assim?", "Iniciar mesmo assim"))) return;
+    et.preInicio = { d: t }; p.etapas = et; patchMover(c, PRE, p); msg = "Pré-produção iniciada";
+  } else if (e === "preFim") {
+    et.preFim = { d: t }; p.etapas = et; patchMover(c, EXEC, p); msg = "Pré-produção concluída. A joia foi para Em execução";
+  } else if (e === "prodFim") {
+    et.prodFim = { d: t }; p.etapas = et; if (statusDe(c) !== EXEC && statusDe(c) !== FIM) patchMover(c, EXEC, p); msg = "Produção concluída. Joia finalizada";
+  } else if (e === "enviada") {
+    const r = (document.getElementById("rastreio") || {}).value || "";
+    if (!r.trim() && !(await confirmar("Marcar como enviada sem o código de rastreio?", "Marcar sem código"))) return;
+    et.enviada = { d: t }; p.etapas = et; p.rastreio = r.trim(); patchMover(c, FIM, p); msg = "Joia enviada e movida para Finalizados";
+  }
+  gravar(c, p, msg);
+}
+
+/* ---------- Aba: Histórico ---------- */
+function eventos(c) {
+  const ev = [];
+  const add = (marco, txt, ref) => { if (marco && marco.d) ev.push({ d: marco.d, ed: !!marco.ed, txt, ref }); };
+  const criado = deTimestamp(c.createdAt);
+  if (criado) ev.push({ d: criado, txt: "Encomenda cadastrada", ref: null });
+  add(c.inicio, "Saiu de Aprovação. Contagem do prazo iniciada.", { k: "inicio" });
+  (c.movimentos || []).forEach((m, x) => { if (m.de !== APROV) add(m, "Movido de " + NOME_COLUNA[m.de] + " para " + NOME_COLUNA[m.para], { k: "mov", x }); });
+  (c.materiais || []).forEach((m, x) => {
+    const d = m.datas || {};
+    add(d.tenho, m.nome + ": já tinha no atelier", { k: "mat", x, s: "tenho" });
+    add(d.comprar, m.nome + ": precisa comprar", { k: "mat", x, s: "comprar" });
+    add(d.comprado, m.nome + ": comprado", { k: "mat", x, s: "comprado" });
+    add(d.recebido, m.nome + ": chegou" + (d.comprado ? " (" + dias(d.comprado.d, d.recebido.d) + " dias depois da compra)" : ""), { k: "mat", x, s: "recebido" });
+  });
+  if (c.projeto3d && c.projeto3d.d) add(c.projeto3d.d, "Projeto 3D finalizado", { k: "proj" });
+  add(c.prontaEm, "Tudo pronto para a pré-produção", { k: "pronta" });
+  const et = etapasDe(c);
+  add(et.preInicio, "Pré-produção iniciada (protótipo)", { k: "et", e: "preInicio" });
+  add(et.preFim, "Pré-produção concluída", { k: "et", e: "preFim" });
+  add(et.prodFim, "Produção concluída, joia finalizada", { k: "et", e: "prodFim" });
+  add(et.enviada, "Joia enviada" + (c.rastreio ? ". Rastreio: " + c.rastreio : ""), { k: "et", e: "enviada" });
+  (c.avisos || []).forEach((a, x) => add(a, "Lohana avisou o cliente: " + (ROTULO_MARCO[a.k] || "contato").toLowerCase(), { k: "aviso", x }));
+  const i = info(c);
+  if (i.compraAtrasada) ev.push({ d: addDias(i.limiteCompra, 1), txt: "Prazo de compra venceu sem a compra marcada (" + i.aComprar.length + (i.aComprar.length === 1 ? " item" : " itens") + ")", ref: null, alerta: true });
+  if (i.vencida) ev.push({ d: addDias(c.dueDate, 1), txt: "Data de entrega venceu", ref: null, alerta: true });
+  return ev.sort((a, b) => a.d.localeCompare(b.d));
+}
+function htmlHistorico(c) {
+  const i = info(c);
+  const ev = eventos(c);
+  let resumo = '<div class="hist-resumo">';
+  if (i.inicio && c.dueDate) resumo += "<span>Prazo total <b>" + dias(i.inicio, c.dueDate) + " dias</b>" + (i.inicioReal ? "" : " (início estimado)") + "</span>";
+  if (i.ativo && i.diasRest != null) resumo += "<span>" + (i.diasRest < 0 ? "Atrasada há <b>" + (-i.diasRest) + " dias</b>" : "Faltam <b>" + i.diasRest + " dias</b>") + "</span>";
+  if (i.inicio && i.ativo) resumo += "<span>Hoje é o <b>dia " + Math.max(0, dias(i.inicio, hoje())) + "</b></span>";
+  resumo += "</div>";
+  if (!ev.length) return resumo + '<div class="faixa neutro">Nenhum registro ainda.</div>';
+  const chave = r => r ? JSON.stringify(r) : "";
+  return resumo + '<div class="hist">' + ev.map(e => {
+    const editando = e.ref && ui.editandoData === chave(e.ref);
+    return '<div class="hist-item"' + (e.alerta ? ' style="border-color:var(--m-comprar)"' : "") + '><span class="dt">' + dm(e.d) + '</span><span class="tx">' + esc(e.txt) + (e.ed ? '<span class="editado">editado</span>' : "") + "</span>" +
+      (editando ? '<input type="date" id="editData" value="' + e.d + '" aria-label="Nova data"><button type="button" class="btn btn-solid" data-acao="salvarData" data-ref=\'' + esc(chave(e.ref)) + "'>OK</button>"
+        : e.ref ? '<button type="button" class="lapis" data-acao="editarData" data-ref=\'' + esc(chave(e.ref)) + '\' aria-label="Corrigir a data de: ' + esc(e.txt) + '" title="Corrigir a data">' + ICONE_LAPIS + "</button>" : "") + "</div>";
+  }).join("") + '</div><p class="nota">Esqueceu de marcar no dia? Use o lápis para corrigir. A data corrigida fica marcada como "editado".</p>';
+}
+function salvarData(c, refTxt, novaData) {
+  if (!novaData) return;
+  const ref = JSON.parse(refTxt);
+  const marco = { d: novaData, ed: true };
+  let p = {};
+  if (ref.k === "inicio") p.inicio = marco;
+  else if (ref.k === "pronta") p.prontaEm = marco;
+  else if (ref.k === "proj") p.projeto3d = { ...(c.projeto3d || {}), d: marco };
+  else if (ref.k === "mov") { const l = limpo(c.movimentos || []); l[ref.x] = { ...l[ref.x], ...marco }; p.movimentos = l; }
+  else if (ref.k === "aviso") { const l = limpo(c.avisos || []); l[ref.x] = { ...l[ref.x], ...marco }; p.avisos = l; }
+  else if (ref.k === "et") { const et = limpo(etapasDe(c)); et[ref.e] = marco; p.etapas = et; }
+  else if (ref.k === "mat") { const l = limpo(c.materiais || []); l[ref.x].datas = { ...(l[ref.x].datas || {}), [ref.s]: marco }; p.materiais = l; }
+  ui.editandoData = null;
+  gravar(c, p, "Data corrigida para " + dm(novaData));
+}
+
+/* ============================================================
+   CLIQUES (um só ouvinte para a página toda)
+   ============================================================ */
+document.addEventListener("click", async e => {
+  const alvo = e.target.closest("[data-acao],[data-filtro],[data-visao],[data-ir],[data-colcel],[data-aba],[data-sugestao],[data-novotipo],[data-fechar-ajustes]");
+  if (!alvo) {
+    const card = e.target.closest(".card");
+    if (card) abrirCartao(card.dataset.id);
+    return;
+  }
+  const d = alvo.dataset;
+  if (d.fecharAjustes !== undefined) { document.getElementById("ajustesOverlay").classList.add("hidden"); return; }
+  if (d.visao) { ui.visao = d.visao; ui.filtro = ""; desenhar(); window.scrollTo(0, 0); return; }
+  if (d.ir) { ui.visao = d.ir; desenhar(); window.scrollTo(0, 0); return; }
+  if (d.filtro !== undefined) { ui.filtro = ui.filtro === d.filtro ? "" : d.filtro; desenhar(); return; }
+  if (d.colcel) { ui.colCelular = d.colcel; desenhar(); return; }
+  if (d.sugestao) { const el = document.getElementById("novoMatNome"); el.value = d.sugestao; ui.novoMatTipo = d.tipo; modal.querySelectorAll("[data-novotipo]").forEach(b => b.setAttribute("aria-pressed", b.dataset.novotipo === d.tipo)); el.focus(); return; }
+  if (d.novotipo) { ui.novoMatTipo = d.novotipo; modal.querySelectorAll("[data-novotipo]").forEach(b => b.setAttribute("aria-pressed", b.dataset.novotipo === d.novotipo)); return; }
+  if (d.aba && !d.acao) {
+    if (ui.detSujo && ui.aba === "det" && d.aba !== "det" && !(await confirmar("Sair dos detalhes sem salvar as alterações?", "Sair sem salvar"))) return;
+    if (d.aba !== "det") ui.detSujo = false;
+    if (!overlay.classList.contains("hidden")) { const c = cardAberto(); ui.aba = d.aba; ui.editandoData = null; if (c && d.aba === "det") ui.arquivos = [...arquivosDe(c)]; desenharCartao(true); }
+    return;
+  }
+  const c = cards.find(x => x.id === d.id) || cardAberto();
+  switch (d.acao) {
+    case "abrir": abrirCartao(d.id, d.aba); break;
+    case "zoom": { const f = c && fotoDe(c); if (f) abrirLightbox(f); break; }
+    case "pdf": { const p = c && contratoDe(c); if (p) abrirPdf(p.data); break; }
+    case "bol": avancarBolinha(c, Number(d.i)); break;
+    case "mat": mudarMaterial(c, Number(d.i), d.st); break;
+    case "mes": { const el = alvo; ui.mesesAbertos[d.mes] = el.getAttribute("aria-expanded") !== "true"; desenhar(); break; }
+    case "pasta": ui.pastaAberta = !ui.pastaAberta; if (!ui.pastaAberta) ui.buscaFim = ""; desenhar(); break;
+    case "fechar": fecharCartao(); break;
+    case "salvarDet": salvarDetalhes(); break;
+    case "excluir":
+      if (await confirmar("Excluir esta encomenda? Essa ação não pode ser desfeita.", "Excluir")) { store.excluir(c.id).then(() => { ui.detSujo = false; fecharCartao(true); toast("Encomenda excluída"); }); }
+      break;
+    case "addMat": adicionarMaterial(c, d.st); break;
+    case "remMat": {
+      const m = (c.materiais || [])[Number(d.i)];
+      if (m && (await confirmar("Remover " + m.nome + " da lista de materiais?", "Remover"))) { const l = limpo(c.materiais); l.splice(Number(d.i), 1); const p = { materiais: l }; const extra = verificarPronta(c, p); gravar(c, p, extra || m.nome + " removido"); }
+      break;
+    }
+    case "proj": {
+      const feito = d.v === "1";
+      const p = { projeto3d: feito ? { feito: true, d: { d: hoje() } } : { feito: false } };
+      const extra = verificarPronta(c, p);
+      gravar(c, p, extra || (feito ? "Projeto 3D finalizado" : "Projeto 3D reaberto"));
+      break;
+    }
+    case "etapa": concluirEtapa(c, d.e); break;
+    case "editarData": ui.editandoData = d.ref; desenharCartao(false); break;
+    case "salvarData": salvarData(c, d.ref, (document.getElementById("editData") || {}).value); break;
+    case "avisado": {
+      const a = avisoPendente(c); if (!a) break;
+      gravar(c, { avisos: [...limpo(c.avisos || []), { d: hoje(), k: a.k }] }, "Contato registrado: " + c.client);
+      break;
+    }
+  }
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("card")) { e.preventDefault(); abrirCartao(e.target.dataset.id); return; }
+  if (e.key === "Escape") {
+    if (!document.getElementById("confirmaOverlay").classList.contains("hidden")) { document.getElementById("confirmaNao").click(); return; }
+    if (document.getElementById("lightbox").classList.contains("aberto")) { fecharLightbox(); return; }
+    if (!document.getElementById("ajustesOverlay").classList.contains("hidden")) { document.getElementById("ajustesOverlay").classList.add("hidden"); return; }
+    if (!overlay.classList.contains("hidden")) fecharCartao();
+  }
+  if (e.key === "Enter" && e.target.id === "editData") { const c = cardAberto(); const b = modal.querySelector('[data-acao="salvarData"]'); if (c && b) salvarData(c, b.dataset.ref, e.target.value); }
+});
+document.addEventListener("change", e => {
+  if (e.target.dataset && e.target.dataset.renomear !== undefined) {
+    const c = cardAberto(); const idx = Number(e.target.dataset.renomear); const nome = e.target.value.trim();
+    if (c && nome) { const l = limpo(c.materiais); if (l[idx].nome !== nome) { l[idx].nome = nome; gravar(c, { materiais: l }, "Nome atualizado", false); } }
+  }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "busca") { ui.busca = e.target.value; desenhar(); }
+  if (e.target.id === "buscaFim") { ui.buscaFim = e.target.value; desenhar(); }
+  if (e.target.id === "diasCliente") { ui.diasCliente = e.target.value; const r = document.getElementById("resCalc"); if (r) r.innerHTML = htmlCalc(); }
+});
+overlay.addEventListener("click", e => { if (e.target === overlay) fecharCartao(); });
+document.getElementById("ajustesOverlay").addEventListener("click", e => { if (e.target.id === "ajustesOverlay") e.target.classList.add("hidden"); });
+document.getElementById("addBtn").addEventListener("click", abrirNovo);
+
+/* Arrastar e soltar entre colunas (computador) */
+document.addEventListener("dragstart", e => { const c = e.target.closest && e.target.closest(".card"); if (c) e.dataTransfer.setData("text/plain", c.dataset.id); });
+document.addEventListener("dragover", e => { const col = e.target.closest && e.target.closest(".coluna"); if (col) { e.preventDefault(); col.classList.add("sobre"); } });
+document.addEventListener("dragleave", e => { const col = e.target.closest && e.target.closest(".coluna"); if (col && !col.contains(e.relatedTarget)) col.classList.remove("sobre"); });
+document.addEventListener("drop", e => {
+  const col = e.target.closest && e.target.closest(".coluna"); if (!col) return;
+  e.preventDefault(); col.classList.remove("sobre");
+  const c = cards.find(x => x.id === e.dataTransfer.getData("text/plain"));
+  if (c && statusDe(c) !== col.dataset.col) moverCard(c, col.dataset.col);
+});
+
+/* Ajustes */
+document.getElementById("ajustesBtn").addEventListener("click", () => {
+  document.getElementById("ajCompra").value = cfg.diasCompra;
+  document.getElementById("ajLimite").value = cfg.limiteCurto;
+  document.getElementById("ajLongo").value = cfg.avisoLongo;
+  document.getElementById("ajCurto").value = cfg.avisoCurto;
+  document.getElementById("ajConfeccao").value = cfg.diasConfeccao;
+  document.getElementById("ajustesOverlay").classList.remove("hidden");
+});
+document.getElementById("ajSalvar").addEventListener("click", () => {
+  const n = id => Math.max(1, parseInt(document.getElementById(id).value, 10) || 1);
+  const novo = { diasCompra: n("ajCompra"), limiteCurto: n("ajLimite"), avisoLongo: n("ajLongo"), avisoCurto: n("ajCurto"), diasConfeccao: n("ajConfeccao") };
+  store.salvarConfig(novo).then(() => { document.getElementById("ajustesOverlay").classList.add("hidden"); toast("Ajustes salvos"); })
+    .catch(err => { console.error(err); toast("Não consegui salvar os ajustes"); });
+});
+
+/* ============================================================
+   COMPRESSÃO DE FOTOS E PDF (igual à versão anterior)
+   ============================================================ */
+function compressImage(file, maxWidth = 700, quality = 0.6) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale; canvas.height = img.height * scale;
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = e => resolve(e.target.result); r.onerror = reject; r.readAsDataURL(file); });
+}
+async function compressPDF(file, maxWidthPx = 1100, quality = 0.6) {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const { jsPDF } = window.jspdf;
+  let out = null;
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: Math.min(1, maxWidthPx / base.width) });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width); canvas.height = Math.round(viewport.height);
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+    const img = canvas.toDataURL("image/jpeg", quality);
+    if (!out) out = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+    else out.addPage([canvas.width, canvas.height]);
+    out.addImage(img, "JPEG", 0, 0, canvas.width, canvas.height);
+  }
+  return out.output("datauristring").replace(/;filename=[^;]*/, "");
+}
+async function compressPdfFile(file, st) {
+  const original = await readFileAsDataURL(file);
+  if (!window.pdfjsLib || !window.jspdf) return original;
+  try {
+    const comp = await compressPDF(file);
+    if (comp.length < original.length) { if (st) st.textContent = file.name + ": comprimido (~" + Math.round((1 - comp.length / original.length) * 100) + "% menor)"; return comp; }
+    if (st) st.textContent = file.name + ": já estava leve, mantido original";
+    return original;
+  } catch (err) { console.error(err); if (st) st.textContent = file.name + ": não consegui comprimir, anexado original"; return original; }
+}
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ============================================================
+   INÍCIO
+   ============================================================ */
+store.ouvirConfig(c => { cfg = { ...CONFIG_PADRAO, ...c }; desenhar(); if (!overlay.classList.contains("hidden")) desenharCartao(false); });
+store.ouvir(lista => {
+  cards = lista;
+  carregou = true;
+  desenhar();
+  if (!overlay.classList.contains("hidden") && !ui.novo) desenharCartao(false);
+}, err => {
+  console.error("Erro ao carregar dados:", err);
+  conteudo.innerHTML = '<p style="text-align:center;color:var(--danger)">Erro ao conectar com o banco de dados. Confira a configuração do Firebase no topo do código.</p>';
+});
+desenhar();
+</script>
+
+</body>
+</html>
