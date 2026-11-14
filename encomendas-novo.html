@@ -132,6 +132,29 @@
   .mini-et li.falta { color: var(--alerta-vermelho-tx); }
   .mini-et li.falta::before { background: repeating-linear-gradient(90deg, var(--m-comprar) 0 3px, transparent 3px 5px); }
   .card-meta { font-size: 11px; color: var(--text-muted); }
+  .mat-chip.mais { padding: 2px 9px; border-style: dashed; color: var(--gold); }
+  button.aviso-linha { font-family: inherit; cursor: pointer; text-align: left; }
+  button.aviso-linha.revisar:hover { background: var(--alerta-ambar-bg); }
+  .mini-et .mini-btn { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+  .qa { border: 1px solid var(--gold-soft); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); cursor: default; }
+  .qa-tit { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--gold); }
+  .qa-sug { display: flex; flex-wrap: wrap; gap: 4px; }
+  .qa-sug button, .qa-acoes button, .qa-fechar { font: inherit; font-size: 11.5px; font-weight: 600; border: 1px solid var(--border); background: var(--bg-elevated-2); color: var(--text-secondary); border-radius: 999px; padding: 4px 9px; cursor: pointer; min-height: 28px; }
+  .qa-sug button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+  .qa-input { width: 100%; background: var(--bg-elevated-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px; }
+  .qa-input:focus { outline: none; border-color: var(--gold); }
+  .qa-acoes { display: flex; gap: 4px; flex-wrap: wrap; }
+  .qa-acoes button { display: inline-flex; align-items: center; gap: 5px; border-radius: 8px; color: var(--text); }
+  .qa-acoes button:hover, .qa-sug button:hover { border-color: var(--gold-soft); }
+  .qa-acoes .bol { width: 13px; height: 13px; }
+  .qa-fechar { align-self: flex-end; border-radius: 8px; }
+
+  /* Recorte da foto do contrato */
+  .modal.recorte { max-width: 900px; }
+  .rec-area { position: relative; display: block; width: fit-content; max-width: 100%; margin: 10px auto 0; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; border: 1px solid var(--border); background: #fff; overflow: hidden; }
+  .rec-area canvas { display: block; max-width: 100%; height: auto; max-height: 62vh; width: auto; }
+  .rec-sel { position: absolute; border: 2px solid var(--gold); background: rgba(216,167,106,.15); box-shadow: 0 0 0 9999px rgba(0,0,0,.4); pointer-events: none; }
+  .rec-status { font-size: 13px; color: var(--text-secondary); margin: 8px 0 0; min-height: 18px; }
 
   /* Finalizados em verde */
   .coluna-fim .coluna-qtd { background: var(--ok-bg); color: var(--ok-tx); }
@@ -348,6 +371,7 @@
     .mat-chip { min-height: 34px; font-size: 12px; padding: 4px 10px 4px 6px; }
     .mat-chip .nm { max-width: 200px; }
     .mini-et li { font-size: 10.5px; }
+    .qa-sug button, .qa-acoes button, .qa-fechar { min-height: 36px; font-size: 13px; }
     .bol { width: 20px; height: 20px; }
     .duas { grid-template-columns: 1fr; }
     .trilhas, .grade2 { grid-template-columns: 1fr; }
@@ -425,6 +449,21 @@
 <div class="lightbox" id="lightbox" onclick="fecharLightbox()">
   <button class="lightbox-fechar" onclick="fecharLightbox()" aria-label="Fechar">✕</button>
   <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- Recorte da foto do contrato -->
+<div class="modal-overlay hidden" id="recorteOverlay" style="z-index:240">
+  <div class="modal recorte" role="dialog" aria-modal="true" aria-labelledby="recTit">
+    <h2 id="recTit">Foto da joia a partir do contrato</h2>
+    <p class="nota" style="margin:0">Escolha a página e arraste o dedo ou o mouse sobre a foto da joia para marcar o recorte.</p>
+    <div class="pilulas" id="recPaginas" role="group" aria-label="Páginas do contrato" style="margin-top:10px"></div>
+    <div class="rec-area" id="recArea"><canvas id="recCanvas" aria-label="Página do contrato"></canvas><div class="rec-sel" id="recSel" hidden></div></div>
+    <p class="rec-status" id="recStatus"></p>
+    <div class="modal-actions">
+      <button class="btn-text" id="recCancelar">Cancelar</button>
+      <button class="btn btn-solid" id="recUsar" disabled>Usar este recorte</button>
+    </div>
+  </div>
 </div>
 
 <!-- Confirmação -->
@@ -565,7 +604,7 @@ let carregou = false;
 const ui = {
   visao: "quadro", filtro: "", busca: "", pastaAberta: false, buscaFim: "",
   colCelular: AFAZER, abertoId: null, aba: "mat", novo: false, editandoData: null,
-  rascunho: null, mesesAbertos: {}, arquivos: [], detSujo: false, novoMatTipo: "pedra", diasCliente: ""
+  rascunho: null, mesesAbertos: {}, qa: null, qaNome: "", qaTipo: "pedra", qaTexto: "", arquivos: [], detSujo: false, novoMatTipo: "pedra", diasCliente: ""
 };
 
 /* ============================================================
@@ -579,6 +618,7 @@ function arquivosDe(c) {
 }
 function fotoDe(c) { const f = arquivosDe(c).find(x => x.type === "image"); return f ? f.data : null; }
 function contratoDe(c) { return arquivosDe(c).find(x => x.type === "pdf") || null; }
+function temContrato(c) { return !!contratoDe(c) || (DEMO && !!c.demoContrato); }
 function projetoFeito(c) { return c.projeto3d ? !!c.projeto3d.feito : c.tipo !== "personalizado"; }
 function etapasDe(c) { return c.etapas || {}; }
 function pronto(m) { return m.status === "tenho" || m.status === "recebido"; }
@@ -901,26 +941,45 @@ function htmlCard(c) {
   if (i.vencida || i.compraAtrasada) classes.push("vermelho"); else if (i.apertando) classes.push("ambar");
   if (ui.filtro && !bateFiltro(c, i)) classes.push("apagado");
 
+  const editavel = i.st !== FIM;
+  const qaAberto = ui.qa === c.id;
+  const btnMais = editavel && !qaAberto && (i.st === APROV || i.st === AFAZER) ? '<button type="button" class="mat-chip mais" data-acao="qa" data-id="' + c.id + '" aria-label="Adicionar material em ' + esc(c.client) + '">+ material</button>' : "";
   let mats = "";
   if (i.mats.length) {
     mats = '<div class="mat-chips">' + i.mats.map((m, idx) =>
-      '<button type="button" class="mat-chip st-' + m.status + '" data-acao="bol" data-id="' + c.id + '" data-i="' + idx + '" aria-label="' + esc(m.nome) + ": " + MAT[m.status].rot + '. Toque para avançar." title="' + esc(m.nome) + ": " + MAT[m.status].rot + '">' + bolinha(m.status) + '<span class="nm">' + esc(m.nome) + "</span></button>").join("") + "</div>";
-  }
+      '<button type="button" class="mat-chip st-' + m.status + '" data-acao="bol" data-id="' + c.id + '" data-i="' + idx + '" aria-label="' + esc(m.nome) + ": " + MAT[m.status].rot + '. Toque para avançar." title="' + esc(m.nome) + ": " + MAT[m.status].rot + '">' + bolinha(m.status) + '<span class="nm">' + esc(m.nome) + "</span></button>").join("") + btnMais + "</div>";
+  } else if (i.st === APROV) mats = btnMais ? '<div class="mat-chips">' + btnMais + "</div>" : "";
+  const qa = qaAberto ? htmlQuickAdd(c) : "";
   const etapas = i.ativo ? miniEtapas(c, i) : "";
   const meta = i.ativo && (i.semana || i.mats.length) ? '<div class="card-meta">' + [i.semana && i.st !== PRONTA ? "Semana " + Math.min(i.semana, 5) : "", i.mats.length ? i.prontos + " de " + i.mats.length + " materiais prontos" : ""].filter(Boolean).join(" · ") + "</div>" : "";
   let linha = "";
   if (i.vencida) linha += '<div class="aviso-linha vermelho mini">Venceu há ' + (-i.diasRest) + (i.diasRest === -1 ? " dia" : " dias") + "</div>";
-  if ((i.st === AFAZER || i.st === PRE) && !i.mats.length) linha += '<div class="aviso-linha revisar mini" title="Abra o cartão e cadastre os materiais na aba Materiais">' + ICONE_LAPIS.replace('width="16" height="16"', 'width="12" height="12"') + "Revise a matéria-prima desta joia</div>";
+  if ((i.st === AFAZER || i.st === PRE || i.st === EXEC) && !i.mats.length && !qaAberto) linha += '<button type="button" class="aviso-linha revisar mini" data-acao="qa" data-id="' + c.id + '" title="Toque para cadastrar os materiais aqui mesmo">' + ICONE_LAPIS.replace('width="16" height="16"', 'width="12" height="12"') + "Revise a matéria-prima desta joia</button>";
   if (i.st === APROV) linha = '<div class="aviso-linha neutro">Aguardando pagamento. Sem contagem de prazo.</div>';
   else if (i.compraAtrasada) linha += '<div class="aviso-linha vermelho">Compra atrasada desde ' + dm(i.limiteCompra) + "</div>";
   else if (i.apertando) linha += '<div class="aviso-linha ambar">Prazo apertando. Falta: ' + esc(i.falta.join(", ")) + "</div>";
   else if (i.ativo && i.aComprar.length && i.limiteCompra) linha += '<div class="aviso-linha vermelho">Comprar até ' + dm(i.limiteCompra) + "</div>";
   else if (i.st === PRONTA) linha += '<div class="aviso-linha ok">Tudo pronto para iniciar</div>';
 
-  return '<article class="' + classes.join(" ") + '" draggable="true" tabindex="0" data-id="' + c.id + '" aria-label="Abrir ' + esc(c.client || "encomenda") + '">' +
+  return '<article class="' + classes.join(" ") + '" draggable="' + (!qaAberto) + '" tabindex="0" data-id="' + c.id + '" aria-label="Abrir ' + esc(c.client || "encomenda") + '">' +
     '<div class="card-top">' + fotoMini(c, "card-foto") +
     '<div class="card-txt"><span class="card-nome">' + esc(c.client || "Sem nome") + '</span><span class="card-sub">' + esc(c.model || "Sem modelo") + "</span>" + (c.investment ? '<span class="card-sub">' + valorTxt(c) + "</span>" : "") + "</div>" +
-    (prazo ? '<span class="prazo ' + prazoCls + '">' + prazo + "</span>" : "") + "</div>" + etapas + mats + meta + linha + "</article>";
+    (prazo ? '<span class="prazo ' + prazoCls + '">' + prazo + "</span>" : "") + "</div>" + etapas + mats + qa + meta + linha + "</article>";
+}
+function htmlQuickAdd(c) {
+  const sug = [["ouro", c.ouro ? "Ouro " + c.ouro.toLowerCase() : "Ouro"], ["pedra", "Pedra principal"], ["pedra", "Pedras laterais"]];
+  return '<div class="qa">' +
+    '<span class="qa-tit">Adicionar material</span>' +
+    '<div class="qa-sug" role="group" aria-label="Sugestões">' + sug.map(([t, n]) => '<button type="button" data-acao="qaNome" data-id="' + c.id + '" data-nome="' + esc(n) + '" data-tipo="' + t + '" aria-pressed="' + (ui.qaNome === n && !ui.qaTexto) + '">' + esc(n) + "</button>").join("") + "</div>" +
+    '<input type="text" class="qa-input" id="qaTexto" placeholder="Ou escreva: Moissanite 6 mm" aria-label="Nome do material" value="' + esc(ui.qaTexto) + '">' +
+    '<div class="qa-acoes"><button type="button" data-acao="qaAdd" data-id="' + c.id + '" data-st="tenho">' + bolinha("tenho") + 'Já tenho</button><button type="button" data-acao="qaAdd" data-id="' + c.id + '" data-st="comprar">' + bolinha("comprar") + "Preciso comprar</button></div>" +
+    '<button type="button" class="qa-fechar" data-acao="qaFechar">Pronto</button></div>';
+}
+function tipoPeloNome(n) {
+  const t = sem(n);
+  if (t.includes("ouro")) return "ouro";
+  if (/(pedra|diamante|moissanite|safira|esmeralda|rubi|zirc|brilhante|lab grown)/.test(t)) return "pedra";
+  return "outro";
 }
 function miniEtapas(c, i) {
   const et = etapasDe(c);
@@ -936,7 +995,9 @@ function miniEtapas(c, i) {
   const estado = sg => sg.ok ? "ok" : sg.falta ? "falta" : sg.agora ? "agora" : "";
   const fala = { ok: "feito", agora: "em andamento", falta: "sem lista", "": "a fazer" };
   return '<ol class="mini-et" aria-label="Etapas: ' + segs.map(sg => sg.nome + " " + fala[estado(sg)]).join(", ") + '">' +
-    segs.map(sg => '<li class="' + estado(sg) + '">' + sg.t + "</li>").join("") + "</ol>";
+    segs.map((sg, x) => '<li class="' + estado(sg) + '">' + (x === 0 && !sg.ok
+      ? '<button type="button" class="mini-btn" data-acao="proj" data-v="1" data-id="' + c.id + '" title="Toque quando o projeto 3D estiver finalizado" aria-label="Marcar projeto 3D finalizado">3D</button>'
+      : sg.t) + "</li>").join("") + "</ol>";
 }
 function ordenar(lista) {
   return lista.sort((a, b) => {
@@ -1134,7 +1195,7 @@ function desenhar() {
   if (ui.visao === "quadro") conteudo.innerHTML = htmlQuadro();
   else if (ui.visao === "compras") conteudo.innerHTML = htmlCompras();
   else conteudo.innerHTML = htmlPosVenda();
-  if (foco === "buscaFim" || foco === "diasCliente") { const el = document.getElementById(foco); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) { } } }
+  if (foco === "buscaFim" || foco === "diasCliente" || foco === "qaTexto") { const el = document.getElementById(foco); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) { } } }
 }
 
 /* ============================================================
@@ -1235,6 +1296,7 @@ function htmlDetalhes(c) {
     rapido = '<div class="det-rapido">' +
       (pdf ? '<button type="button" data-acao="pdf" data-id="' + c.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>Abrir contrato</button>' : "") +
       (foto ? '<button type="button" data-acao="zoom" data-id="' + c.id + '">Ver foto da joia</button>' : "") +
+      (temContrato(c) ? '<button type="button" data-acao="recortar" data-id="' + c.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>' + (foto ? "Trocar foto pelo recorte do contrato" : "Pegar a foto do contrato") + "</button>" : "") +
       (v.linkConversa ? '<a href="' + esc(v.linkConversa) + '" target="_blank" rel="noopener">Abrir conversa do cliente</a>' : "") + "</div>";
     if (rapido === '<div class="det-rapido"></div>') rapido = "";
   }
@@ -1397,7 +1459,10 @@ function adicionarMaterial(c, status) {
   const campo = document.getElementById("novoMatNome");
   let nome = (campo.value || "").trim();
   if (!nome) nome = ui.novoMatTipo === "ouro" ? (c.ouro ? "Ouro " + c.ouro.toLowerCase() : "Ouro") : TIPOS_MAT[ui.novoMatTipo];
-  const m = { id: novoId(), nome, tipo: ui.novoMatTipo, status, datas: {} };
+  novoMaterial(c, nome, ui.novoMatTipo, status);
+}
+function novoMaterial(c, nome, tipo, status) {
+  const m = { id: novoId(), nome, tipo, status, datas: {} };
   m.datas = datasParaStatus(m, status);
   const mats = [...limpo(c.materiais || []), m];
   const p = { materiais: mats };
@@ -1534,6 +1599,7 @@ function salvarData(c, refTxt, novaData) {
 document.addEventListener("click", async e => {
   const alvo = e.target.closest("[data-acao],[data-filtro],[data-visao],[data-ir],[data-colcel],[data-aba],[data-sugestao],[data-novotipo],[data-fechar-ajustes]");
   if (!alvo) {
+    if (e.target.closest(".qa")) return;
     const card = e.target.closest(".card");
     if (card) abrirCartao(card.dataset.id);
     return;
@@ -1567,6 +1633,18 @@ document.addEventListener("click", async e => {
       if (await confirmar("Excluir esta encomenda? Essa ação não pode ser desfeita.", "Excluir")) { store.excluir(c.id).then(() => { ui.detSujo = false; fecharCartao(true); toast("Encomenda excluída"); }); }
       break;
     case "addMat": adicionarMaterial(c, d.st); break;
+    case "qa": ui.qa = d.id; ui.qaNome = ""; ui.qaTexto = ""; desenhar(); setTimeout(() => { const el = document.getElementById("qaTexto"); if (el && !window.matchMedia("(max-width: 760px)").matches) el.focus(); }, 0); break;
+    case "qaFechar": ui.qa = null; ui.qaNome = ""; ui.qaTexto = ""; desenhar(); break;
+    case "qaNome": ui.qaNome = d.nome; ui.qaTipo = d.tipo; ui.qaTexto = ""; desenhar(); break;
+    case "qaAdd": {
+      const nome = (ui.qaTexto || "").trim() || ui.qaNome;
+      if (!nome) { toast("Escolha uma sugestão ou escreva o material"); break; }
+      const tipo = (ui.qaTexto || "").trim() ? tipoPeloNome(nome) : ui.qaTipo;
+      ui.qaNome = ""; ui.qaTexto = "";
+      novoMaterial(c, nome, tipo, d.st);
+      break;
+    }
+    case "recortar": abrirRecorte(c); break;
     case "remMat": {
       const m = (c.materiais || [])[Number(d.i)];
       if (m && (await confirmar("Remover " + m.nome + " da lista de materiais?", "Remover"))) { const l = limpo(c.materiais); l.splice(Number(d.i), 1); const p = { materiais: l }; const extra = verificarPronta(c, p); gravar(c, p, extra || m.nome + " removido"); }
@@ -1593,6 +1671,8 @@ document.addEventListener("keydown", e => {
   if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("card")) { e.preventDefault(); abrirCartao(e.target.dataset.id); return; }
   if (e.key === "Escape") {
     if (!document.getElementById("confirmaOverlay").classList.contains("hidden")) { document.getElementById("confirmaNao").click(); return; }
+    if (!document.getElementById("recorteOverlay").classList.contains("hidden")) { fecharRecorte(); return; }
+    if (ui.qa) { ui.qa = null; desenhar(); return; }
     if (document.getElementById("lightbox").classList.contains("aberto")) { fecharLightbox(); return; }
     if (!document.getElementById("ajustesOverlay").classList.contains("hidden")) { document.getElementById("ajustesOverlay").classList.add("hidden"); return; }
     if (!overlay.classList.contains("hidden")) fecharCartao();
@@ -1607,6 +1687,7 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("input", e => {
   if (e.target.id === "busca") { ui.busca = e.target.value; desenhar(); }
+  if (e.target.id === "qaTexto") { ui.qaTexto = e.target.value; if (ui.qaNome) { ui.qaNome = ""; document.querySelectorAll(".qa-sug button").forEach(b => b.setAttribute("aria-pressed", "false")); } }
   if (e.target.id === "buscaFim") { ui.buscaFim = e.target.value; desenhar(); }
   if (e.target.id === "diasCliente") { ui.diasCliente = e.target.value; const r = document.getElementById("resCalc"); if (r) r.innerHTML = htmlCalc(); }
 });
@@ -1640,6 +1721,104 @@ document.getElementById("ajSalvar").addEventListener("click", () => {
   store.salvarConfig(novo).then(() => { document.getElementById("ajustesOverlay").classList.add("hidden"); toast("Ajustes salvos"); })
     .catch(err => { console.error(err); toast("Não consegui salvar os ajustes"); });
 });
+
+/* ============================================================
+   RECORTE DA FOTO DA JOIA A PARTIR DO CONTRATO
+   ============================================================ */
+const rec = { paginas: [], atual: 0, sel: null, inicio: null, cardId: null };
+function carregarImagem(src) { return new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = src; }); }
+async function abrirRecorte(c) {
+  const ov = document.getElementById("recorteOverlay");
+  const st = document.getElementById("recStatus");
+  rec.cardId = c.id; rec.atual = 0; rec.sel = null; rec.paginas = [];
+  document.getElementById("recSel").hidden = true;
+  document.getElementById("recUsar").disabled = true;
+  document.getElementById("recPaginas").innerHTML = "";
+  const cv = document.getElementById("recCanvas"); cv.width = 10; cv.height = 10;
+  ov.classList.remove("hidden");
+  st.textContent = "Abrindo o contrato...";
+  try {
+    if (DEMO && c.demoContrato) rec.paginas = [c.demoContrato];
+    else {
+      if (!window.pdfjsLib) throw new Error("leitor de PDF não carregou");
+      const pdf = contratoDe(c);
+      const bin = atob(pdf.data.split(",")[1]);
+      const bytes = new Uint8Array(bin.length);
+      for (let x = 0; x < bin.length; x++) bytes[x] = bin.charCodeAt(x);
+      const doc = await pdfjsLib.getDocument({ data: bytes }).promise;
+      for (let n = 1; n <= Math.min(doc.numPages, 8); n++) rec.paginas.push({ doc, n });
+    }
+    document.getElementById("recPaginas").innerHTML = rec.paginas.length > 1
+      ? rec.paginas.map((_, x) => '<button type="button" data-pag="' + x + '" aria-pressed="' + (x === 0) + '">Página ' + (x + 1) + "</button>").join("") : "";
+    await desenharPaginaRecorte();
+  } catch (e) { console.error(e); st.textContent = "Não consegui abrir o contrato. Tente de novo ou anexe a foto direto."; }
+}
+async function desenharPaginaRecorte() {
+  const cv = document.getElementById("recCanvas");
+  const st = document.getElementById("recStatus");
+  const item = rec.paginas[rec.atual];
+  rec.sel = null; document.getElementById("recSel").hidden = true; document.getElementById("recUsar").disabled = true;
+  st.textContent = "Carregando a página...";
+  if (typeof item === "string") {
+    const im = await carregarImagem(item);
+    const w = 1200, h = Math.round(im.naturalHeight * w / im.naturalWidth);
+    cv.width = w; cv.height = h; cv.getContext("2d").drawImage(im, 0, 0, w, h);
+  } else {
+    const page = await item.doc.getPage(item.n);
+    const base = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: 1400 / base.width });
+    cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  }
+  st.textContent = "Arraste sobre a foto da joia.";
+}
+function fecharRecorte() { document.getElementById("recorteOverlay").classList.add("hidden"); rec.paginas = []; }
+(function ligarRecorte() {
+  const area = document.getElementById("recArea"), sel = document.getElementById("recSel");
+  const ponto = e => { const r = area.getBoundingClientRect(); return { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) }; };
+  const mostrar = () => { const s = rec.sel; sel.hidden = !s; if (s) Object.assign(sel.style, { left: s.x + "px", top: s.y + "px", width: s.w + "px", height: s.h + "px" }); };
+  area.addEventListener("pointerdown", e => { if (!rec.paginas.length) return; e.preventDefault(); area.setPointerCapture(e.pointerId); rec.inicio = ponto(e); rec.sel = { x: rec.inicio.x, y: rec.inicio.y, w: 0, h: 0 }; mostrar(); });
+  area.addEventListener("pointermove", e => {
+    if (!rec.inicio) return;
+    const p = ponto(e), a = rec.inicio;
+    rec.sel = { x: Math.min(a.x, p.x), y: Math.min(a.y, p.y), w: Math.abs(p.x - a.x), h: Math.abs(p.y - a.y) }; mostrar();
+  });
+  const soltar = () => {
+    if (!rec.inicio) return; rec.inicio = null;
+    const ok = rec.sel && rec.sel.w > 12 && rec.sel.h > 12;
+    if (!ok) { rec.sel = null; mostrar(); }
+    document.getElementById("recUsar").disabled = !ok;
+    document.getElementById("recStatus").textContent = ok ? "Se ficou bom, toque em Usar este recorte. Para refazer, é só arrastar de novo." : "Arraste sobre a foto da joia.";
+  };
+  area.addEventListener("pointerup", soltar);
+  area.addEventListener("pointercancel", soltar);
+  document.getElementById("recPaginas").addEventListener("click", e => {
+    const b = e.target.closest("[data-pag]"); if (!b) return;
+    rec.atual = Number(b.dataset.pag);
+    document.querySelectorAll("#recPaginas [data-pag]").forEach(x => x.setAttribute("aria-pressed", x === b));
+    desenharPaginaRecorte();
+  });
+  document.getElementById("recCancelar").addEventListener("click", fecharRecorte);
+  document.getElementById("recorteOverlay").addEventListener("click", e => { if (e.target.id === "recorteOverlay") fecharRecorte(); });
+  document.getElementById("recUsar").addEventListener("click", () => {
+    const cv = document.getElementById("recCanvas"); const s = rec.sel; if (!s) return;
+    const k = cv.width / cv.getBoundingClientRect().width;
+    const sx = s.x * k, sy = s.y * k, sw = s.w * k, sh = s.h * k;
+    const esc2 = Math.min(1, 700 / sw);
+    const out = document.createElement("canvas");
+    out.width = Math.round(sw * esc2); out.height = Math.round(sh * esc2);
+    out.getContext("2d").drawImage(cv, sx, sy, sw, sh, 0, 0, out.width, out.height);
+    const data = out.toDataURL("image/jpeg", 0.75);
+    fecharRecorte();
+    if (overlay.classList.contains("hidden") || ui.abertoId !== rec.cardId || ui.aba !== "det") return;
+    ui.arquivos = [{ name: "foto-do-contrato.jpg", type: "image", data }, ...ui.arquivos.filter(f => f.name !== "foto-do-contrato.jpg")];
+    ui.detSujo = true;
+    desenharArquivos();
+    const stu = document.getElementById("statusUpload"); if (stu) stu.textContent = "Foto recortada do contrato. Clique em Salvar alterações para guardar.";
+    toast("Foto pronta. Clique em Salvar alterações para guardar.");
+  });
+})();
 
 /* ============================================================
    COMPRESSÃO DE FOTOS E PDF (igual à versão anterior)
